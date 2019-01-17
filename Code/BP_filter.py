@@ -23,7 +23,7 @@ else:
     axis = 'square'
 
 del ni,nj
-#plt.figure(1)
+plt.figure(1)
 #plt.subplot(221)
 plt.title('Sample Image')
 plt.imshow(img_gs,cmap='gray')
