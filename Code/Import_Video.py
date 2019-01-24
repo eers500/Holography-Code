@@ -12,7 +12,7 @@ cap = cv2.VideoCapture('MF1_30Hz_200us_awaysection.avi')
 cap.isOpened()
 
 count = 0
-succes = True
+success = True
 while success:
     succes,image = cap.read()
 #%%
@@ -21,11 +21,21 @@ import numpy as np
 import cv2
 
 vidcap = cv2.VideoCapture("MF1_30Hz_200us_awaysection.avi")
-image = vidcap.read()
-num_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+success,image = vidcap.read()
+#im = image[:,:,0]
+#a = im[:,:,0]
+#num_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+#plt.imshow(a,cmap="gray")
+
+imStack = np.image[:,:,0]
+imStack.reshape(())
+while success:
+    success,fr = vidcap.read()
+    frame = fr[:,:,0]
+    imStack = np.ma.concatenate(imStack,frame,axis=2)
 
 
-
+#%%
 #print(vidcap.read())
 success,image = vidcap.read()
 count = 0

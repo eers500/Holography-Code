@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import matplotlib.image as mpimg
-import numpy as np
+
 # Read image
 import matplotlib.pyplot as plt
 from functions import Bandpass_Filter
