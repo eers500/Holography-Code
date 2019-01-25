@@ -24,15 +24,15 @@ vidcap = cv2.VideoCapture("MF1_30Hz_200us_awaysection.avi")
 success,image = vidcap.read()
 #im = image[:,:,0]
 #a = im[:,:,0]
-#num_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+num_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
 #plt.imshow(a,cmap="gray")
 
-imStack = np.image[:,:,0]
-imStack.reshape(())
+imStack = image[:,:,0]
+#imStack.reshape(())
 while success:
     success,fr = vidcap.read()
     frame = fr[:,:,0]
-    imStack = np.ma.concatenate(imStack,frame,axis=2)
+    imStack = np.dstack((imStack,frame))
 
 
 #%%
