@@ -46,27 +46,60 @@ time = time.time()-t1
     
 #  16.5
 #%%
-import av
-import av.datasets
-
-vid = "MF1_30Hz_200us_awaysection.avi"
-container = av.open(vid)
-
-# Signal that we only want to look at keyframes.
-stream = container.streams.video[0]
-stream.codec_context.skip_frame = 'NONKEY'
-
-for frame in container.decode(stream):
-
-    print(frame)
-
-    # We use `frame.pts` as `frame.index` won't make must sense with the `skip_frame`.
-    frame.to_image().save(
-        'night-sky.{:04d}.jpg'.format(frame.pts),
-        quality=80,
-    )
+#import av
+#import av.datasets
+#
+#vid = "MF1_30Hz_200us_awaysection.avi"
+#container = av.open(vid)
+#
+## Signal that we only want to look at keyframes.
+#stream = container.streams.video[0]
+#stream.codec_context.skip_frame = 'NONKEY'
+#
+#for frame in container.decode(stream):
+#
+#    print(frame)
+#
+#    # We use `frame.pts` as `frame.index` won't make must sense with the `skip_frame`.
+#    frame.to_image().save(
+#        'night-sky.{:04d}.jpg'.format(frame.pts),
+#        quality=80,
+#    )
 #%%
-import av    
-for frame in container.decode(video=0):
-    frame.to_image.
+import cv2
+import moviepy
+from moviepy.editor import VideoFileClip
+import time
 
+t = time.time()
+vid = "MF1_30Hz_200us_awaysection.avi"
+clip = VideoFileClip(vid) 
+count =1
+for frames in clip.iter_frames():
+    gray_frames = cv2.cvtColor(frames, cv2.COLOR_RGB2GRAY)
+#    print frames.shape()
+#    print gray_frames.shape
+    count+=1
+#    print(count)
+time = time.time()-t
+
+#    )
+#%%
+import cv2
+import moviepy
+from moviepy.editor import VideoFileClip
+import time
+import numpy as np
+
+t = time.time()
+vid = "MF1_30Hz_200us_awaysection.avi"
+clip = moviepy.editor.VideoFileClip(vid) 
+f = np.empty(np.size(clip))
+i = 1
+for frames in clip.iter_frames():
+    i = i+1
+    a = np.array(frames[:,:,0])
+    f = np.dstack((f,a))
+    print(i)
+f = f[:,:,1:]    
+time = time.time()-t

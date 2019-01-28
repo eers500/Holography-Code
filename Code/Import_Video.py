@@ -17,13 +17,13 @@ imStack = image[:,:,0]
 #    imStack = np.dstack((imStack,frame))
 #    i = i+1
 
-#t0 = time.time()
+t0 = time.time()
 for ii in range(1,num_frames):
         success,fr = vidcap.read()
         frame = fr[:,:,0]
         imStack = np.dstack((imStack,frame))
-#t1 = time.time()
-#time = t1-t0        
+t1 = time.time()
+time = t1-t0        
 #%%
 #for i in range(imStack.shape[2]):
 #    plt.imshow(imStack[:,:,i])
