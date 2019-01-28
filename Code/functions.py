@@ -36,8 +36,10 @@ def square_image(img):
     return imgs, axis, d
 
 #%% Bandpass filter
-# Large cutoff size (Pixels) xl = 50
-# Small cutoff size (Pixels) xs = 20
+# Input: img - Grayscale image array (2D)
+#        xl  - Large cutoff size (Pixels)
+#        xs  - Small cutoff size (Pixels)
+# Output: img_filt - filtered image
 def Bandpass_Filter(img,xl,xs):
     import numpy as np
     # FFT the grayscale image
@@ -67,3 +69,25 @@ def Bandpass_Filter(img,xl,xs):
     img_filt = np.rot90(np.real(img_filt),2)
     
     return  img_filt
+
+#%% Import video as stack of images in a 3D array
+#   Input:  video   - path to video file
+#   Output: imStack - 3D array of stacked images
+def videoImport(video):
+    import numpy as np
+    import cv2
+    import time
+    
+    vidcap = cv2.VideoCapture(video)
+    success,image = vidcap.read()
+    num_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+    imStack = image[:,:,0] 
+    t0 = time.time()
+    for ii in range(1,num_frames):
+            success,fr = vidcap.read()
+            frame = fr[:,:,0]
+            imStack = np.dstack((imStack,frame))
+    t1 = time.time()
+    time = t1-t0
+    
+    return imStack
