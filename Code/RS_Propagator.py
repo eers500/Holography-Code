@@ -21,7 +21,7 @@ ny = size[1]
 #%%
 lambdaa = 0.525                                  # Wavelength of field
 nm = 1                                           # Refraction index of medium
-k = 2*m.pi/lambdaa                                # wavenumber 
+k = 2*m.pi/lambdaa                               # wavenumber 
 
 x = np.arange(nx, dtype = np.float)
 y = np.arange(ny, dtype = np.float)
@@ -36,13 +36,10 @@ HZ = Hz(xx,yy,zz)
 EE = np.empty([nx,ny,z.shape[0]], dtype=np.complex)
 for ii in range(z.shape[0]):
     EE[:,:,ii] = Efft[:,:]*HZ[:,:,ii]
-    E = np.real(np.fft.fft2(EE))
+    E = np.abs(np.fft.fft2(EE))
 
 #%% 
 import matplotlib.pyplot as plt
 #
-#plt.figure(1)
-#plt.imshow(imgFILT, cmap = 'gray')
-#
-#plt.figure(2)
-#plt.imshow(imgFILTs, cmap = 'gray')
+plt.figure(1)
+plt.imshow(np.log10(E[:,:,8]), cmap = 'gray')

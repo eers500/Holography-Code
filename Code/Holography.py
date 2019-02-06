@@ -7,9 +7,8 @@ from functions import Bandpass_Filter
 
 img = mpimg.imread('MF1_30Hz_200us_away_median.png')
 
-# Large cutoff size (Pixels)
+# Large and small cutoff size (Pixels)
 xl = 50
-# Small cutoff size (Pixels)
 xs = 20
 
 hol = Bandpass_Filter(img,xl,xs)
