@@ -4,7 +4,6 @@ import math as m
 import matplotlib.image as mpimg
 from scipy import signal
 import numpy as np
-import math as m
 
 img = mpimg.imread('MF1_30Hz_200us_away_median.png')
 
@@ -30,7 +29,8 @@ z = np.arange(1,10, dtype = np.float)
 xx,yy,zz = np.meshgrid(x,y,z)
 
 #%% Rayleigh-Sommerfeld Back-Propagator
-Hz = lambda x,y,z: (2*m.pi)**(-1)*z*(np.exp(1j*k*(x**2+y**2+z**2)**(1/2)))*(1j*k*(x**2+y**2+z**2)**(-1)-(x**2+y**2+z**2)**(-3/2))
+Hz = lambda x,y,z: (2*m.pi)**(-1)*z*(np.exp(1j*k*(x**2+y**2+z**2)**(1/2)))*\
+                    (1j*k*(x**2+y**2+z**2)**(-1)-(x**2+y**2+z**2)**(-3/2))
 HZ = Hz(xx,yy,zz)
 
 EE = np.empty([nx,ny,z.shape[0]], dtype=np.complex)
