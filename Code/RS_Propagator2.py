@@ -23,18 +23,22 @@ k = 2*m.pi/lambdaa                               # wavenumber
 x = np.arange(nx, dtype = np.float)
 y = np.arange(ny, dtype = np.float)
 z = np.arange(1,10, dtype = np.float)
-
 xx,yy,zz = np.meshgrid(x,y,z)
 
-Hz = lambda x,y,z: (2*m.pi)**(-1)*z*(np.exp(1j*k*(x**2+y**2+z**2)**(1/2)))*\
+B = np.fft.fft2(b)
+
+hZ = lambda x,y,z: (2*m.pi)**(-1)*z*(np.exp(1j*k*(x**2+y**2+z**2)**(1/2)))*\
                     (1j*k*(x**2+y**2+z**2)**(-1)-(x**2+y**2+z**2)**(-3/2))
-HZ = Hz(xx,yy,zz)
+hz = hZ(xx,yy,-zz)
+Hz = np.fft.fft2(hz)
 
-
-    
-    
-    
-    
+BH = np.empty_like(B)    
+#BH = np.empty([nx,ny,z.shape[2]], dtype=np.complex)
+for ii in range(Hz.shape[2]):
+    BB = B*Hz[:,:,ii]
+    BB = (1/(4*m.pi)*BB*np.exp(-1j*k*z[ii])
+    BH = np.dstack((BH,BB))
+      
     
     
     
