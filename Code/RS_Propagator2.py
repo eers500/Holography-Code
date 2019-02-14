@@ -21,14 +21,14 @@ size = np.shape(b)
 nx = size[0]
 ny = size[1]
 
-lambdaa = 0.525                                  # Wavelength of field
-nm = 1                                           # Refraction index of medium
-k = (2*m.pi/lambdaa)*nm                               # wavenumber 
+lambdaa = 0.6324                                 # Wavelength of field HeNe
+nm = 1.336                                       # Refraction index of medium (water)
+k = (2*m.pi*nm/lambdaa)                          # wavenumber 
 
 x = np.arange(nx, dtype = np.float)
 y = np.arange(ny, dtype = np.float)
-z = np.arange(1,200, dtype = np.float)
-xx,yy,zz = np.meshgrid(x,y,z)
+z = -np.arange(1,20, dtype = np.float)
+#xx,yy,zz = np.meshgrid(x,y,z)
 del x,y
 
 B = np.fft.fft2(b)
@@ -67,14 +67,14 @@ Es = np.empty([ny,ny,z.shape[0]], dtype = np.complex)
 #Ess = np.empty([ny,ny,z.shape[0]]) 
    
 for ii in range(z.shape[0]):
-    Hqz = np.exp(ik*z[ii])
+    Hqz = np.exp(ik*z[ii])              # RS Back Propagator
     TE = E*Hqz
     TE = np.fft.ifftshift(TE)
     TE = np.fft.fft2(TE)
     Es[:,:,ii] = TE
-    Es[:,:,ii] = np.rot90(np.rot90(Es[:,:,ii]))
-    dx = ndimage.sobel(abs(Es[:,:,ii]), 1)
-    dy = ndimage.sobel(abs(Es[:,:,ii]), 0)
+    Es[:,:,ii] = np.rot90(np.rot90(Es[:,:,ii]))   # Sobel filter
+    dx = ndimage.sobel(abs(Es[:,:,ii])**2, 1)     # Sobel filter
+    dy = ndimage.sobel(abs(Es[:,:,ii])**2, 0)     # Sobel filter
     Es[:,:,ii] = np.hypot(dx, dy)
     
     
@@ -90,5 +90,5 @@ for ii in range(z.shape[0]):
 #scipy.misc.imsave('sobel.jpg', Ess)
 #%%
 import matplotlib.pyplot as plt
-plt.imshow(abs(Es[:,:,198]), cmap = 'gray')    
-scipy.misc.imsave('198.png',abs(Es[:,:,198]))    
+plt.imshow(abs(Es[:,:,18]), cmap = 'gray')    
+#scipy.misc.imsave('198.png',abs(Es[:,:,18]))    
