@@ -75,7 +75,7 @@ for ii in range(z.shape[0]):
     Es[:,:,ii] = np.rot90(np.rot90(Es[:,:,ii]))   # Sobel filter
     dx = ndimage.sobel(abs(Es[:,:,ii])**2, 1)     # Sobel filter
     dy = ndimage.sobel(abs(Es[:,:,ii])**2, 0)     # Sobel filter
-    Es[:,:,ii] = np.hypot(dx, dy)
+    Es[:,:,ii] = np.real(np.hypot(dx, dy))
     
     
 #%% Sobel filter    
@@ -90,5 +90,5 @@ for ii in range(z.shape[0]):
 #scipy.misc.imsave('sobel.jpg', Ess)
 #%%
 import matplotlib.pyplot as plt
-plt.imshow(abs(Es[:,:,18]), cmap = 'gray')    
+plt.imshow(np.real(Es[:,:,18]), cmap = 'gray')    
 #scipy.misc.imsave('198.png',abs(Es[:,:,18]))    
