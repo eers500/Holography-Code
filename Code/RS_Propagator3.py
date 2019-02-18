@@ -24,11 +24,19 @@ FT = np.fft.fft2(IN-1)
 
 n = 1.3326
 lambdaa = 0.532
+k = 2*m.pi*n/lambdaa
 N = np.shape(IN)[0]
-fs = np.arange(N)/N - 0.5
+nx = np.matrix(np.arange(N)/N - 0.5)
+nx = np.tile(nx,(N,1))
+ny = np.transpose(nx)
+#ny = np.tile(ny,(1,N))
+fs = 1
 z = np.arange(1,21)
 
 #%%
-for ii in range(N):
-    for jj in range(N):
-        P[i,j] = (lambdaa*)
+#qsq = ((lambdaa/(N*n))*nx)**2 + ((lambdaa/(N*n))*ny)**2
+P = np.empty_like(IB)
+for i in range(N):
+    for j in range(N):
+#        print(i,j)
+        P[i,j] = ((lambdaa*fs)/(N*n))**2*((i-N/2)**2+(j-N/2)**2)
