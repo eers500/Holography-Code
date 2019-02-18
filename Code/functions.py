@@ -68,7 +68,7 @@ def Bandpass_Filter(img,xl,xs):
     img_filt= np.fft.fft2(img_filt)       
     img_filt = np.rot90(np.real(img_filt),2)
     
-    return  img_filt
+    return  img_filt, BP
 
 #%% Import video as stack of images in a 3D array
 #   Input:  video   - path to video file
