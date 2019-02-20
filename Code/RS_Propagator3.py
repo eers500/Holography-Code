@@ -23,7 +23,7 @@ _,BP = Bandpass_Filter(IN,30,120)
 FT = np.fft.fft2(IN-1)
 
 n = 1.3326
-lambdaa = 0.532
+lambdaa = 0.6328           #HeNe
 k = 2*m.pi*n/lambdaa
 N = np.shape(IN)[0]
 nx = np.matrix(np.arange(N)/N - 0.5)
@@ -48,8 +48,10 @@ Iz = R
 for k in range(z.shape[0]):
     for i in range(N):
         for j in range(N):
-            R[i,j,k] = np.exp((-1j*k*z[k])*Q[i,j])
-    Iz[:,:,k] = 1+np.fft.ifft2(BP*FT*R[:,:,k])
+#            R[i,j,k] = np.exp((-1j*k*z[k])*Q[i,j])
+            R[i,j,k] = np.exp(Q[i,j])
+
+    Iz[:,:,k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:,:,k])
         
 Iz = np.real(Iz)
 Im = 50*(Iz - 1) + 128
