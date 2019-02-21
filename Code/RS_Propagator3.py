@@ -11,7 +11,7 @@ t0 = time.time()
 I = mpimg.imread('131118-1.png')
 #img = mpimg.imread('MF1_30Hz_200us_away_median.png')
 #%% Median image
-IB = signal.medfilt2d(I, kernel_size = 3)
+IB = mpimg.imread('AVG_131118-1.png')
 iz = np.where(IB == 0)
 IB[IB == 0] = np.median(IB)
 

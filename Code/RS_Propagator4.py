@@ -11,9 +11,10 @@ t0 = time.time()
 I = mpimg.imread('131118-1.png')
 #img = mpimg.imread('MF1_30Hz_200us_away_median.png')
 #%% Median image
-IB = signal.medfilt2d(I, kernel_size = 3)
+IB = mpimg.imread('AVG_131118-1.png')
+#IB = signal.medfilt2d(I, kernel_size = 3)
 iz = np.where(IB == 0)
-IB[IB == 0] = np.median(IB)
+IB[IB == 0] = np.average(IB)
 
 IN = I/IB
 
@@ -24,18 +25,12 @@ _,BP = Bandpass_Filter(IN,30,120)
 nx = I.shape[0]
 ny = I.shape[1]
 
-n = 1.3326
-lambdaa = 0.6328/n           #HeNe
-mpp = 0.135                  #Magnification
-k = 2*m.pi*mpp/lambdaa
+n = 1.3226
+lambdaa = 0.642           #HeNe
+fs = 1.422                #Sampling Frequency px/um
 N = np.shape(IN)[0]
-qx = np.matrix(np.arange(N) - N/2) * lambdaa/(nx*mpp)
-qsq = np.power(qx,2)
-#qx = np.tile(nx,(N,1))
-qy = np.transpose(nx)
-#ny = np.tile(ny,(1,N))
-fs = 1
 z = np.arange(1,21)
+K = 2*m.pi*n/lambdaa      #Wavenumber
 
 #%%
 #qsq = ((lambdaa/(N*n))*nx)**2 + ((lambdaa/(N*n))*ny)**2
@@ -52,14 +47,15 @@ Iz = R
 for k in range(z.shape[0]):
     for i in range(N):
         for j in range(N):
-#            R[i,j,k] = np.exp((-1j*k*z[k])*Q[i,j])
-            R[i,j,k] = np.exp(Q[i,j])
+            R[i,j,k] = np.exp((-1j*K*z[k])*Q[i,j])
+#            R[i,j,k] = np.exp(Q[i,j])
 
     Iz[:,:,k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:,:,k])
         
 Iz = np.real(Iz)
-Im = 50*(Iz - 1) + 128
+Im = (20/np.std(Iz))*(Iz - np.mean(Iz)) + 128
 
 t = time.time() - t0           
 
 plt.imshow(Im[:,:,19], cmap = 'gray')
+plt.colorbar()
