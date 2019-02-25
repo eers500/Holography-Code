@@ -61,14 +61,14 @@ def Bandpass_Filter(img,xl,xs):
             LCO[ii, jj] = np.exp(-((ii-MIS/2)**2+(jj-MIS/2)**2)*(2*xl/MIS)**2)
             SCO[ii, jj] = np.exp(-((ii-MIS/2)**2+(jj-MIS/2)**2)*(2*xs/MIS)**2)            
     BP = SCO - LCO  
-         
+    BPP = np.fft.ifftshift(BP)     
     # Filter image 
     filtered = BP*img_fft
     img_filt = np.fft.ifftshift(filtered) 
     img_filt= np.fft.fft2(img_filt)       
     img_filt = np.rot90(np.real(img_filt),2)
     
-    return  img_filt, BP
+    return  img_filt, BPP
 
 #%% Import video as stack of images in a 3D array
 #   Input:  video   - path to video file
