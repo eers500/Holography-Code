@@ -32,7 +32,7 @@ lambdaa = 0.642           #HeNe
 fs = 1.422                #Sampling Frequency px/um
 Ni = np.shape(IN)[0]
 Nj = np.shape(IN)[1]
-z = 0.01*np.arange(1,1001)
+z = 7.11*np.arange(1,151)
 K = 2*m.pi*n/lambdaa      #Wavenumber
 
 #%%
@@ -70,7 +70,7 @@ t = time.time() - t0
 for i in range(np.shape(z)[0]):
     plt.imshow(Im[:,:,i], cmap = 'gray')
     plt.savefig('{}.png'.format(i+1))
-#    plt.clf()
+    plt.clf()
 
 
 
