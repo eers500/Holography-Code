@@ -32,7 +32,7 @@ lambdaa = 0.642           #HeNe
 fs = 1.422                #Sampling Frequency px/um
 Ni = np.shape(IN)[0]
 Nj = np.shape(IN)[1]
-z = 7.11*np.arange(1,151)
+z = 0.05*np.arange(1,151)
 K = 2*m.pi*n/lambdaa      #Wavenumber
 
 #%%
@@ -61,20 +61,26 @@ Im = (20/np.std(Iz))*(Iz - np.mean(Iz)) + 128
 
 t = time.time() - t0           
 
-
+#%%
 #plt.imshow(Im[:,:,15], cmap = 'gray')
 #plt.colorbar()
 #
 
 #%%
-for i in range(np.shape(z)[0]):
-    plt.imshow(Im[:,:,i], cmap = 'gray')
-    plt.savefig('{}.png'.format(i+1))
-    plt.clf()
+#for i in range(np.shape(z)[0]):
+#    plt.imshow(Im[:,:,i], cmap = 'gray')
+#    plt.savefig('{}.png'.format(i+1))
+#    plt.clf()
+#%%
+from cv2 import VideoWriter, VideoWriter_fourcc
 
+fourcc =VideoWriter_fourcc(*'MP42')
+video = VideoWriter('./frameStack.mp4', fourcc, float(24), (Nj, Ni))
 
+for i in range(Im.shape[2]-1):
+    frame = np.uint8(Im[:,:,i])
+    video.write(frame)
+video.release()
 
-
-
-
+print(t/60)
 
