@@ -2,9 +2,7 @@
 # Rayleigh-Sommerfeld Back-Propagator
 import math as m
 import matplotlib.image as mpimg
-from scipy import signal
 import numpy as np
-import matplotlib.pyplot as plt
 import time
 
 t0 = time.time()
@@ -32,7 +30,8 @@ lambdaa = 0.642           #HeNe
 fs = 1.422                #Sampling Frequency px/um
 Ni = np.shape(IN)[0]
 Nj = np.shape(IN)[1]
-z = 0.05*np.arange(1,151)
+z = 0.0
+2*np.arange(1,151)
 K = 2*m.pi*n/lambdaa      #Wavenumber
 
 #%%
@@ -74,8 +73,8 @@ t = time.time() - t0
 #%%
 from cv2 import VideoWriter, VideoWriter_fourcc
 
-fourcc =VideoWriter_fourcc(*'MP42')
-video = VideoWriter('./frameStack.mp4', fourcc, float(24), (Nj, Ni))
+fourcc =VideoWriter_fourcc(*'H264')
+video = VideoWriter('./frameStack.avi', fourcc, float(24), (Nj, Ni))
 
 for i in range(Im.shape[2]-1):
     frame = np.uint8(Im[:,:,i])
