@@ -1,11 +1,13 @@
 #%% -*- coding: utf-8 -*-
 # Rayleigh-Sommerfeld Back-Propagator
 import math as m
+import time
 import matplotlib.image as mpimg
 import numpy as np
-import time
+from cv2 import VideoWriter, VideoWriter_fourcc
+from functions import Bandpass_Filter
 
-t0 = time.time()
+T0 = time.time()
 I = mpimg.imread('131118-1.png')
 #I = mpimg.imread('img_gs.png')
 #img = mpimg.imread('MF1_30Hz_200us_away_median.png')
@@ -13,52 +15,42 @@ I = mpimg.imread('131118-1.png')
 IB = mpimg.imread('AVG_131118-1.png')
 #IB = mpimg.imread('img_gs.png')
 #IB = signal.medfilt2d(I, kernel_size = 3)
-iz = np.where(IB == 0)
+IZ = np.where(IB == 0)
 IB[IB == 0] = np.average(IB)
 
 IN = I/IB
 
-from functions import Bandpass_Filter
-_,BP = Bandpass_Filter(IN,2,30)
+_, BP = Bandpass_Filter(IN, 2, 30)
 
-#FT = np.fft.fft2(IN-1)
-nx = I.shape[0]
-ny = I.shape[1]
-
-n = 1.3226
-lambdaa = 0.642           #HeNe
-fs = 1.422                #Sampling Frequency px/um
-Ni = np.shape(IN)[0]
-Nj = np.shape(IN)[1]
-z = 0.0
-2*np.arange(1,151)
-K = 2*m.pi*n/lambdaa      #Wavenumber
+N = 1.3226
+LAMBDA = 0.642           #HeNe
+FS = 1.422                #Sampling Frequency px/um
+NI = np.shape(IN)[0]
+NJ = np.shape(IN)[1]
+Z = 0.02*np.arange(1, 151)
+K = 2*m.pi*N/LAMBDA      #Wavenumber
 
 #%%
 #qsq = ((lambdaa/(N*n))*nx)**2 + ((lambdaa/(N*n))*ny)**2
-P = np.empty_like(IB, dtype = complex)
-for i in range(Ni):
-    for j in range(Nj):
-#        print(i,j)
-        P[i,j] = ((lambdaa*fs)/(max([Ni,Nj])*n))**2*((i-Ni/2)**2+(j-Nj/2)**2)
-        
+P = np.empty_like(IB, dtype=complex)
+for i in range(NI):
+    for j in range(NJ):
+        P[i, j] = ((LAMBDA*FS)/(max([NI, NJ])*N))**2*((i-NI/2)**2+(j-NJ/2)**2)
 Q = np.sqrt(1-P)-1
 Q = np.conj(Q)
 
-R = np.empty([Ni,Nj,z.shape[0]], dtype = complex)
-Iz = R
-for k in range(z.shape[0]):
-    for i in range(Ni):
-        for j in range(Nj):
-            R[i,j,k] = np.exp((-1j*K*z[k])*Q[i,j])
-#            R[i,j,k] = np.exp(Q[i,j])
+R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
+IZ = R
+for k in range(Z.shape[0]):
+    for i in range(NI):
+        for j in range(NJ):
+            R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
+    IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
 
-    Iz[:,:,k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:,:,k])
-        
-Iz = np.real(Iz)
-Im = (20/np.std(Iz))*(Iz - np.mean(Iz)) + 128
+IZ = np.real(IZ)
+IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
 
-t = time.time() - t0           
+T = time.time() - T0
 
 #%%
 #plt.imshow(Im[:,:,15], cmap = 'gray')
@@ -71,15 +63,12 @@ t = time.time() - t0
 #    plt.savefig('{}.png'.format(i+1))
 #    plt.clf()
 #%%
-from cv2 import VideoWriter, VideoWriter_fourcc
+FOURCC = VideoWriter_fourcc(*'MJPG')
+VIDEO = VideoWriter('./frameStack.avi', FOURCC, float(24), (NJ, NI))
 
-fourcc =VideoWriter_fourcc(*'H264')
-video = VideoWriter('./frameStack.avi', fourcc, float(24), (Nj, Ni))
+for i in range(IM.shape[2]-1):
+    frame = np.uint8(IM[:, :, i])
+    VIDEO.write(frame)
+VIDEO.release()
 
-for i in range(Im.shape[2]-1):
-    frame = np.uint8(Im[:,:,i])
-    video.write(frame)
-video.release()
-
-print(t/60)
-
+print(T/60)
