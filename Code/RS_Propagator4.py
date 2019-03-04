@@ -13,7 +13,7 @@ I = mpimg.imread('131118-1.png')
 #I = mpimg.imread('img_gs.png')
 #img = mpimg.imread('MF1_30Hz_200us_away_median.png')
 #%% Median image
-IB = mpimg.imread('AVG_131118-1.png')
+IB = mpimg.imread('AVG_131118-2.png')
 #IB = mpimg.imread('img_gs.png')
 #IB = signal.medfilt2d(I, kernel_size = 3)
 IZ = np.where(IB == 0)
@@ -50,6 +50,8 @@ for k in range(Z.shape[0]):
 
 IZ = np.real(IZ)
 IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
+IM = np.uint8(IM)
+#IM[IM < 0] = 0
 
 T = time.time() - T0
 
@@ -64,12 +66,12 @@ plt.colorbar()
 #    plt.savefig('{}.png'.format(i+1))
 #    plt.clf()
 #%%
-#FOURCC = VideoWriter_fourcc(*'MP42')
-#VIDEO = VideoWriter('./frameStack.mp4', FOURCC, float(24), (NJ, NI))
-#
-#for i in range(IM.shape[2]-1):
-#    frame = np.uint8(IM[:, :, i])
-#    VIDEO.write(frame)
-#VIDEO.release()
-#
-#print(T/60)
+FOURCC = VideoWriter_fourcc(*'MP42')
+VIDEO = VideoWriter('./frameStack.mp4', FOURCC, float(24), (NJ, NI))
+
+for i in range(IM.shape[2]-1):
+    frame = IM[:, :, i]
+    VIDEO.write(frame)
+VIDEO.release()
+
+print(T/60)
