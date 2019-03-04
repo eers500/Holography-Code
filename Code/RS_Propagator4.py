@@ -3,6 +3,7 @@
 import math as m
 import time
 import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import numpy as np
 from cv2 import VideoWriter, VideoWriter_fourcc
 from functions import Bandpass_Filter
@@ -53,9 +54,9 @@ IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
 T = time.time() - T0
 
 #%%
-#plt.imshow(Im[:,:,15], cmap = 'gray')
-#plt.colorbar()
-#
+plt.imshow(IM[:,:,15], cmap = 'gray')
+plt.colorbar()
+
 
 #%%
 #for i in range(np.shape(z)[0]):
@@ -63,12 +64,12 @@ T = time.time() - T0
 #    plt.savefig('{}.png'.format(i+1))
 #    plt.clf()
 #%%
-FOURCC = VideoWriter_fourcc(*'MJPG')
-VIDEO = VideoWriter('./frameStack.avi', FOURCC, float(24), (NJ, NI))
-
-for i in range(IM.shape[2]-1):
-    frame = np.uint8(IM[:, :, i])
-    VIDEO.write(frame)
-VIDEO.release()
-
-print(T/60)
+#FOURCC = VideoWriter_fourcc(*'MP42')
+#VIDEO = VideoWriter('./frameStack.mp4', FOURCC, float(24), (NJ, NI))
+#
+#for i in range(IM.shape[2]-1):
+#    frame = np.uint8(IM[:, :, i])
+#    VIDEO.write(frame)
+#VIDEO.release()
+#
+#print(T/60)

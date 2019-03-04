@@ -5,7 +5,7 @@ from numba import vectorize
  
 # This should be a substantially high value. On my test machine, this took
 # 33 seconds to run via the CPU and just over 3 seconds on the GPU.
-NUM_ELEMENTS = 10000000
+NUM_ELEMENTS = 100000000
  
 # This is the CPU version.
 def vector_add_cpu(a, b):
