@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
+import numpy as np
 import matplotlib.image as mpimg
+import time
+from functions import rayleighSommerfeldPropagator, exportAVI
 
-# Read image
-import matplotlib.pyplot as plt
-from functions import Bandpass_Filter
+I = mpimg.imread('131118-1.png')
+I_median = mpimg.imread('AVG_131118-2.png')
+Z = 0.02*np.arange(1, 151)
 
-img = mpimg.imread('MF1_30Hz_200us_away_median.png')
+T0 = time.time()
+IM = rayleighSommerfeldPropagator(I, I_median, Z)
+T = (time.time()-T0)/60
+print(T)
 
-# Large and small cutoff size (Pixels)
-xl = 50
-xs = 20
-
-hol = Bandpass_Filter(img,xl,xs)
-
-plt.imshow(hol,cmap='gray')
+exportAVI(IM, IM.shape[0], IM.shape[1], 24)

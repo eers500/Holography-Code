@@ -40,7 +40,7 @@ def square_image(img):
 #        xl  - Large cutoff size (Pixels)
 #        xs  - Small cutoff size (Pixels)
 # Output: img_filt - filtered image
-def Bandpass_Filter(img,xl,xs):
+def bandpassFilter(img,xl,xs):
     import numpy as np
     # FFT the grayscale image
     imgfft = np.fft.fft2(img)
@@ -91,3 +91,68 @@ def videoImport(video):
     time = t1-t0
     
     return imStack
+
+#%% Export 3D array to .AVI movie file
+#   Input: IM should be a numpy 3D array
+#          NI: number of rows of array
+#          NJ: number of columns of array
+#          fps: frames per second of output file
+#   Output: .AVI file in working folder 
+def exportAVI(IM, NI, NJ, fps):
+    from cv2 import VideoWriter, VideoWriter_fourcc
+    FOURCC = VideoWriter_fourcc(*'MJPG')
+    VIDEO = VideoWriter('./frameStack.avi', FOURCC, float(fps), (NJ, NI),0)
+    
+    for i in range(IM.shape[2]-1):
+        frame = IM[:,:,i]
+    #    frame = np.random.randint(0, 255, (NI, NJ,3)).astype('uint8')
+        VIDEO.write(frame)
+        
+    VIDEO.release()
+    return 'Video exported successfully'
+
+#%% Rayleigh-Sommerfeld Back Propagator
+#   Inputs: I: hologram (grayscale)
+#           IM: median image
+#           Z: numpy array defining defocusing distances
+def rayleighSommerfeldPropagator(I, IM, Z):  
+    import math as m
+    import numpy as np
+    from functions import bandpassFilter
+        
+    # Divide by Median image
+    IM[IM == 0] = np.average(IM)
+    IN = I/IM
+    
+    # Bandpass Filter
+    _, BP = bandpassFilter(IN, 2, 30)
+    
+    # Patameters     #Set as input parameters
+    N = 1.3226               # Index of refraction
+    LAMBDA = 0.642           # HeNe
+    FS = 1.422               # Sampling Frequency px/um
+    NI = np.shape(IN)[0]     # Number of rows
+    NJ = np.shape(IN)[1]     # Nymber of columns
+    K = 2*m.pi*N/LAMBDA      # Wavenumber
+    
+    # Rayleigh-Sommerfeld Arrays
+    P = np.empty_like(IM, dtype=complex)
+    for i in range(NI):
+        for j in range(NJ):
+            P[i, j] = ((LAMBDA*FS)/(max([NI, NJ])*N))**2*((i-NI/2)**2+(j-NJ/2)**2)
+            
+    Q = np.sqrt(1-P)-1
+    Q = np.conj(Q)    
+    R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
+    IZ = R
+    for k in range(Z.shape[0]):
+        for i in range(NI):
+            for j in range(NJ):
+                R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
+        IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
+    
+    IZ = np.real(IZ)
+    IMM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
+    IMM = np.uint8(IMM)
+    
+    return IMM

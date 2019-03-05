@@ -3,10 +3,9 @@
 import math as m
 import time
 import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
-from cv2 import VideoWriter, VideoWriter_fourcc
-from functions import Bandpass_Filter
+from functions import bandpassFilter, exportAVI
 
 T0 = time.time()
 I = mpimg.imread('131118-1.png')
@@ -16,12 +15,11 @@ I = mpimg.imread('131118-1.png')
 IB = mpimg.imread('AVG_131118-2.png')
 #IB = mpimg.imread('img_gs.png')
 #IB = signal.medfilt2d(I, kernel_size = 3)
-IZ = np.where(IB == 0)
+#IZ = np.where(IB == 0)
 IB[IB == 0] = np.average(IB)
-
 IN = I/IB
 
-_, BP = Bandpass_Filter(IN, 2, 30)
+_, BP = bandpassFilter(IN, 2, 30)
 
 N = 1.3226
 LAMBDA = 0.642           #HeNe
@@ -51,13 +49,12 @@ for k in range(Z.shape[0]):
 IZ = np.real(IZ)
 IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
 IM = np.uint8(IM)
-#IM[IM < 0] = 0
 
 T = time.time() - T0
 
 #%%
-plt.imshow(IM[:,:,15], cmap = 'gray')
-plt.colorbar()
+#plt.imshow(IM[:,:,15], cmap = 'gray')
+#plt.colorbar()
 
 
 #%%
@@ -66,14 +63,7 @@ plt.colorbar()
 #    plt.savefig('{}.png'.format(i+1))
 #    plt.clf()
 #%%
-FOURCC = VideoWriter_fourcc(*'MJPG')
-VIDEO = VideoWriter('./frameStack.avi', FOURCC, float(24), (NJ, NI),0)
-
-for i in range(IM.shape[2]-1):
-    frame = IM[:,:,i]
-#    frame = np.random.randint(0, 255, (NI, NJ,3)).astype('uint8')
-    VIDEO.write(frame)
-VIDEO.release()
+exportAVI(IM, NI, NJ, 24)
 
 print(T/60)
  
