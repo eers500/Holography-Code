@@ -66,12 +66,14 @@ plt.colorbar()
 #    plt.savefig('{}.png'.format(i+1))
 #    plt.clf()
 #%%
-FOURCC = VideoWriter_fourcc(*'MP42')
-VIDEO = VideoWriter('./frameStack.mp4', FOURCC, float(24), (NJ, NI))
+FOURCC = VideoWriter_fourcc(*'MJPG')
+VIDEO = VideoWriter('./frameStack.avi', FOURCC, float(24), (NJ, NI),0)
 
 for i in range(IM.shape[2]-1):
-    frame = IM[:, :, i]
+    frame = IM[:,:,i]
+#    frame = np.random.randint(0, 255, (NI, NJ,3)).astype('uint8')
     VIDEO.write(frame)
 VIDEO.release()
 
 print(T/60)
+ 
