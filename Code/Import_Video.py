@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 import time
 
-vid = "MF1_30Hz_200us_awaysection.avi"
+vid = "frameStack.avi"
 vidcap = cv2.VideoCapture(vid)
 success,image = vidcap.read()
 num_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))

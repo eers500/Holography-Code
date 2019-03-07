@@ -76,34 +76,31 @@ def bandpassFilter(img,xl,xs):
 def videoImport(video):
     import numpy as np
     import cv2
-    import time
     
     vidcap = cv2.VideoCapture(video)
     success,image = vidcap.read()
     num_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
     imStack = image[:,:,0] 
-    t0 = time.time()
+
     for ii in range(1,num_frames):
             success,fr = vidcap.read()
             frame = fr[:,:,0]
             imStack = np.dstack((imStack,frame))
-    t1 = time.time()
-    time = t1-t0
     
     return imStack
 
 #%% Export 3D array to .AVI movie file
-#   Input: IM should be a numpy 3D array
-#          NI: number of rows of array
-#          NJ: number of columns of array
-#          fps: frames per second of output file
+#   Input:  IM - numpy 3D array
+#           NI - number of rows of array
+#           NJ - number of columns of array
+#          fps - frames per second of output file
 #   Output: .AVI file in working folder 
 def exportAVI(IM, NI, NJ, fps):
     from cv2 import VideoWriter, VideoWriter_fourcc
     FOURCC = VideoWriter_fourcc(*'MJPG')
-    VIDEO = VideoWriter('./frameStack.avi', FOURCC, float(fps), (NJ, NI),0)
+    VIDEO = VideoWriter('./gradientStack.avi', FOURCC, float(fps), (NJ, NI),0)
     
-    for i in range(IM.shape[2]-1):
+    for i in range(IM.shape[2]):
         frame = IM[:,:,i]
     #    frame = np.random.randint(0, 255, (NI, NJ,3)).astype('uint8')
         VIDEO.write(frame)
@@ -112,9 +109,10 @@ def exportAVI(IM, NI, NJ, fps):
     return 'Video exported successfully'
 
 #%% Rayleigh-Sommerfeld Back Propagator
-#   Inputs: I: hologram (grayscale)
-#           IM: median image
-#           Z: numpy array defining defocusing distances
+#   Inputs:   I - hologram (grayscale)
+#            IM - median image
+#             Z - numpy array defining defocusing distances
+#   Output: IMM - 3D array representing stack of images at different Z
 def rayleighSommerfeldPropagator(I, IM, Z):  
     import math as m
     import numpy as np
