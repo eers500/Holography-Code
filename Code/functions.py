@@ -72,22 +72,32 @@ def bandpassFilter(img,xl,xs):
 
 #%% Import video as stack of images in a 3D array
 #   Input:  video   - path to video file
-#   Output: imStack - 3D array of stacked images
+#   Output: imStack - 3D array of stacked images in 8-bit
 def videoImport(video):
-    import numpy as np
     import cv2
+    import numpy as np
     
-    vidcap = cv2.VideoCapture(video)
-    success,image = vidcap.read()
-    num_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
-    imStack = image[:,:,0] 
+    CAP = cv2.VideoCapture(video)
+    NUM_FRAMES = int(CAP.get(cv2.CAP_PROP_FRAME_COUNT))
+    WIDTH = int(CAP.get(cv2.CAP_PROP_FRAME_WIDTH))
+    HEIGHT = int(CAP.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    
+    IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('uint8'))
+    IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH))
+    
+    I = 0
+    SUCCESS = True
+    
+    while (I < NUM_FRAMES  and SUCCESS):
+        SUCCESS, IMG[I] = CAP.read()
+        IM_STACK[I] = IMG[I, :, :, 1]
+    #    STACK[FC] = 
+        I += 1
+    
+    CAP.release()
+    IM_STACK = np.swapaxes(np.swapaxes(IM_STACK, 0, 2), 0, 1)
 
-    for ii in range(1,num_frames):
-            success,fr = vidcap.read()
-            frame = fr[:,:,0]
-            imStack = np.dstack((imStack,frame))
-    
-    return imStack
+    return IM_STACK
 
 #%% Export 3D array to .AVI movie file
 #   Input:  IM - numpy 3D array
