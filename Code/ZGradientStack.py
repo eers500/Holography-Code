@@ -25,12 +25,12 @@ SZ_FFT = np.fft.fftn(SZ, IM.shape)
 
 PROD = IM_FFT*SZ_FFT
 CONV = np.real(np.fft.ifftn(PROD))
-CONV = (20/np.std(CONV))*(CONV - np.mean(CONV)) + 128
+#CONV = (20/np.std(CONV))*(CONV - np.mean(CONV)) + 128
 CONV[CONV<100] = 0
 CONV = np.uint8(CONV)
 #del IM_FFT, PROD
 
-exportAVI(CONV, IM.shape[0], IM.shape[1], 24)
+exportAVI('gradientStack.avi',CONV, IM.shape[0], IM.shape[1], 24)
 print(time.time()-T0)
 
 #%%

@@ -12,7 +12,7 @@ T0 = time.time()
 IM = rayleighSommerfeldPropagator(I, I_median, Z)
 
 
-exportAVI(IM, IM.shape[0], IM.shape[1], 24)
+exportAVI('frameStack.avi',IM, IM.shape[0], IM.shape[1], 24)
 
 #%%
 from functions import videoImport

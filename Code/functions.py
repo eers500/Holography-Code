@@ -95,10 +95,13 @@ def videoImport(video):
 #           NJ - number of columns of array
 #          fps - frames per second of output file
 #   Output: .AVI file in working folder 
-def exportAVI(IM, NI, NJ, fps):
+def exportAVI(filename,IM, NI, NJ, fps):
+    import os
     from cv2 import VideoWriter, VideoWriter_fourcc
+    dir = os.getcwd()
+    filename = os.path.join(dir,filename)
     FOURCC = VideoWriter_fourcc(*'MJPG')
-    VIDEO = VideoWriter('./gradientStack.avi', FOURCC, float(fps), (NJ, NI),0)
+    VIDEO = VideoWriter(filename, FOURCC, float(fps), (NJ, NI),0)
     
     for i in range(IM.shape[2]):
         frame = IM[:,:,i]
