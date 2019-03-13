@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import time
 #from mpl_toolkits.mplot3d import Axes3D
 from functions import rayleighSommerfeldPropagator, exportAVI
@@ -34,6 +34,7 @@ CONV = np.uint8(CONV)
 exportAVI('gradientStack.avi',CONV, CONV.shape[0], CONV.shape[1], 24)
 exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
 print(time.time()-T0)
+del T0
 
 #%%
 #plt.imshow(CONV[:,:,100], cmap='gray')
