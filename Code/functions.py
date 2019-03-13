@@ -167,3 +167,14 @@ def rayleighSommerfeldPropagator(I, IM, Z):
     IMM = np.uint8(IMM)
     
     return IMM
+
+#%% Median Image
+def medianImage(VID):
+    import numpy as np
+    import time
+    from functions import videoImport
+
+#    VID = videoImport('131118-1.avi')
+    MEAN = np.median(VID, axis=2)
+
+    return MEAN
