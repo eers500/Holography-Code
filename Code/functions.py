@@ -42,6 +42,7 @@ def square_image(img):
 # Output: img_filt - filtered image
 def bandpassFilter(img,xl,xs):
     import numpy as np
+    
     # FFT the grayscale image
     imgfft = np.fft.fft2(img)
     img_fft = np.fft.fftshift(imgfft)
@@ -49,7 +50,7 @@ def bandpassFilter(img,xl,xs):
     del imgfft
     
     # Pre filter image information
-    [ni,nj]=img_amp.shape
+    [ni,nj] = img_amp.shape
     MIS = ni
          
     # Create bandpass filter when BigAxis == 
@@ -91,7 +92,6 @@ def videoImport(video):
     while (I < NUM_FRAMES  and SUCCESS):
         SUCCESS, IMG[I] = CAP.read()
         IM_STACK[I] = IMG[I, :, :, 1]
-    #    STACK[FC] = 
         I += 1
     
     CAP.release()
@@ -122,18 +122,18 @@ def exportAVI(filename,IM, NI, NJ, fps):
     return 'Video exported successfully'
 
 #%% Rayleigh-Sommerfeld Back Propagator
-#   Inputs:   I - hologram (grayscale)
-#            IM - median image
-#             Z - numpy array defining defocusing distances
-#   Output: IMM - 3D array representing stack of images at different Z
-def rayleighSommerfeldPropagator(I, IM, Z):  
+#   Inputs:          I - hologram (grayscale)
+#             I_MEDIAN - median image
+#                    Z - numpy array defining defocusing distances
+#   Output:        IMM - 3D array representing stack of images at different Z
+def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):  
     import math as m
     import numpy as np
     from functions import bandpassFilter
         
     # Divide by Median image
-    IM[IM == 0] = np.average(IM)
-    IN = I/IM
+    I_MEDIAN[I_MEDIAN == 0] = np.average(I_MEDIAN)
+    IN = I/I_MEDIAN
     
     # Bandpass Filter
     _, BP = bandpassFilter(IN, 2, 30)
@@ -147,7 +147,7 @@ def rayleighSommerfeldPropagator(I, IM, Z):
     K = 2*m.pi*N/LAMBDA      # Wavenumber
     
     # Rayleigh-Sommerfeld Arrays
-    P = np.empty_like(IM, dtype=complex)
+    P = np.empty_like(I_MEDIAN, dtype=complex)
     for i in range(NI):
         for j in range(NJ):
             P[i, j] = ((LAMBDA*FS)/(max([NI, NJ])*N))**2*((i-NI/2)**2+(j-NJ/2)**2)
@@ -163,10 +163,10 @@ def rayleighSommerfeldPropagator(I, IM, Z):
         IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
     
     IZ = np.real(IZ)
-    IMM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
-    IMM = np.uint8(IMM)
+    IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
+    IM = np.uint8(IM)
     
-    return IMM
+    return IM
 
 #%% Median Image
 #   Input:   VID - 3D numpy array of video file

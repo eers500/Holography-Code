@@ -48,9 +48,20 @@ for k in range(Z.shape[0]):
 
 IZ = np.real(IZ)
 IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
+
+#IZZ = IZ - np.min(IZ)
+#IM = (20/np.std(IZZ))*(IZZ - np.mean(IZZ)) + 128
+#IM = IZZ/np.max(IZZ) *255
+
+
 IM = np.uint8(IM)
+#IM = IM.astype(dtype='uint8')
 
 T = time.time() - T0
+
+#    IZ = np.real(IZ)
+#    IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
+#    IM = np.uint8(IM)
 
 #%%
 #plt.imshow(IM[:,:,15], cmap = 'gray')
@@ -63,7 +74,7 @@ T = time.time() - T0
 #    plt.savefig('{}.png'.format(i+1))
 #    plt.clf()
 #%%
-exportAVI(IM, NI, NJ, 24)
+exportAVI('aaa.avi', IM, NI, NJ, 24)
 
 print(T/60)
  
