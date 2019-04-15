@@ -22,8 +22,8 @@ IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
 GS = f.zGradientStack(I, I_MEDIAN, Z)
 
 #%% From Labview code
-from functions import videoImport
-GS = videoImport('131118-1_(frame0)gradient.avi')
+#from functions import videoImport
+#GS = videoImport('131118-1_(frame0)gradient.avi')
 
 #%% Find (x,y,z) of cells
 LOCS = np.zeros((1,3))
