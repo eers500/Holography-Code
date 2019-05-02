@@ -93,6 +93,7 @@ def videoImport(video):
         SUCCESS, IMG[I] = CAP.read()
         IM_STACK[I] = IMG[I, :, :, 1]
         I += 1
+        print(('VI', I))
     
     CAP.release()
     IM_STACK = np.swapaxes(np.swapaxes(IM_STACK, 0, 2), 0, 1)
@@ -156,12 +157,13 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
     Q = np.conj(Q)    
     R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
     IZ = R
-    for k in range(Z.shape[0]):
+    for k in range(Z.shape[0]):        
         for i in range(NI):
             for j in range(NJ):
                 R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
         IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
-    
+        print(('RS' ,k, i, j))
+            
     IZ = np.real(IZ)
     IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
     IM = np.uint8(IM)
@@ -174,6 +176,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
 def medianImage(VID):
     import numpy as np
 
+    print('MI')
     MEAN = np.median(VID, axis=2)
 
     return MEAN
@@ -214,5 +217,5 @@ def zGradientStack(I, I_MEDIAN, Z):
     
 #    exportAVI('gradientStack.avi',CONV, CONV.shape[0], CONV.shape[1], 24)
 #    exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
-    return CONV
+    return CONV, IM
 
