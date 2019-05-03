@@ -9,9 +9,13 @@ from functions import rayleighSommerfeldPropagator, exportAVI
 
 T0 = time.time()
 I = mpimg.imread('131118-1.png')
+#I = np.uint8(255*I/I.max())
 I_MEDIAN = mpimg.imread('AVG_131118-2.png')
+#I_MEDIAN = np.uint8(255*I_MEDIAN/I_MEDIAN.max())
+
 Z = 0.02*np.arange(1, 151)
 IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
+plt.imshow(IM[:,:,100], cmap='gray')
 
 #%% Sobel-type kernel
 SZ0 = np.array(([-1, -2, -1], [-2, -4, -2], [-1, -2, -1]), dtype='float')
@@ -27,9 +31,10 @@ SZ_FFT = np.fft.fftn(SZ, IM_FFT.shape)
 PROD = IM_FFT*SZ_FFT
 CONV = np.real(np.fft.ifftn(PROD))
 #CONV = (20/np.std(CONV))*(CONV - np.mean(CONV)) + 128
-CONV1 = np.delete(CONV, [0,1], axis=2)
-CONV[CONV<100] = 0
-CONV1 = np.uint8(CONV)
+CONV = np.delete(CONV, [0,1], axis=2)
+CONV[CONV<0] = 0
+CONV = 255*CONV/np.max(CONV)
+CONV = np.uint8(CONV)
 #del IM_FFT, PROD
 
 #%% Esport results as .AVI

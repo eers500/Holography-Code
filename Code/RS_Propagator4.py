@@ -3,7 +3,7 @@
 import math as m
 import time
 import matplotlib.image as mpimg
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 from functions import bandpassFilter, exportAVI
 
@@ -45,6 +45,7 @@ for k in range(Z.shape[0]):
         for j in range(NJ):
             R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
     IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
+    print(('RS' ,k, i, j))
 
 IZ = np.real(IZ)
 IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
@@ -64,7 +65,7 @@ T = time.time() - T0
 #    IM = np.uint8(IM)
 
 #%%
-#plt.imshow(IM[:,:,15], cmap = 'gray')
+plt.imshow(IZ[:,:,115], cmap = 'gray')
 #plt.colorbar()
 
 
@@ -74,7 +75,9 @@ T = time.time() - T0
 #    plt.savefig('{}.png'.format(i+1))
 #    plt.clf()
 #%%
-exportAVI('aaa.avi', IM, NI, NJ, 24)
+IZZ = IZ - np.min(IZ)
+IZZ = np.uint8(255*IZZ/np.max(IZZ))
+exportAVI('IZ.avi', IZZ, NI, NJ, 24)
 
 print(T/60)
  
