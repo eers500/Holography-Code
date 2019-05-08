@@ -138,6 +138,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
     
     # Bandpass Filter
     _, BP = bandpassFilter(IN, 2, 30)
+    E = BP*np.fft.fft2(IN - 1)
     
     # Patameters     #Set as input parameters
     N = 1.3226               # Index of refraction
@@ -157,12 +158,16 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
     Q = np.conj(Q)    
     R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
     IZ = R
-    for k in range(Z.shape[0]):        
-        for i in range(NI):
-            for j in range(NJ):
-                R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
-        IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
-        print(('RS' ,k, i, j))
+#    for k in range(Z.shape[0]):        
+#        for i in range(NI):
+#            for j in range(NJ):
+#                R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
+#        IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
+#        print(('RS' ,k, i, j))
+    for k in range(Z.shape[0]):
+        R[:, :, k] = np.exp((-1j*K*Z[k]*Q))
+        IZ[:, :, k] = 1 + np.fft.ifft2(E*R[:, :, k])
+        print(('RS', k))
             
     IZ = np.real(IZ)
     IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128

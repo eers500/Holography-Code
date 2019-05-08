@@ -40,13 +40,25 @@ Q = np.conj(Q)
 
 R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
 IZ = R
+#for k in range(Z.shape[0]):
+#    for i in range(NI):
+#        for j in range(NJ):
+#            R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
+#    IZ[:, :, k] = 1+np.fft.ifft2(E*R[:, :, k])
+#    print(('RS' ,k, i, j))
 for k in range(Z.shape[0]):
-    for i in range(NI):
-        for j in range(NJ):
-            R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
-    IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
-    print(('RS' ,k, i, j))
+    R[:, :, k] = np.exp((-1j*K*Z[k]*Q))
+    IZ[:, :, k] = 1 + np.fft.ifft2(E*R[:, :, k])
+    print(('RS', k))
+
 
 IZ = np.real(IZ)
 IM = 50*(IZ - 1) + 128
-IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
+#IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
+
+IMM = IM/np.max(IM)*255
+IMM = np.uint8(IMM)
+
+print(time.time() - T0)
+#%%
+plt.imshow(IMM[:,:,115], cmap = 'gray')

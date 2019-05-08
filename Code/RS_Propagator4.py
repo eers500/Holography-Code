@@ -68,8 +68,9 @@ T = time.time() - T0
 IMM = IM/np.max(IM)*255
 IMM = np.uint8(IMM)
 
+print(time.time()-T0)
 #%%
-plt.imshow(IM[:,:,19], cmap = 'gray')
+#plt.imshow(IM[:,:,19], cmap = 'gray')
 #plt.colorbar()
 
 
@@ -79,9 +80,9 @@ plt.imshow(IM[:,:,19], cmap = 'gray')
 #    plt.savefig('{}.png'.format(i+1))
 #    plt.clf()
 #%%
-IZZ = IZ - np.min(IZ)
-IZZ = np.uint8(255*IZZ/np.max(IZZ))
-exportAVI('IM.avi', IMM, NI, NJ, 24)
-
-print(T/60)
- 
+#IZZ = IZ - np.min(IZ)
+#IZZ = np.uint8(255*IZZ/np.max(IZZ))
+#exportAVI('IM.avi', IMM, NI, NJ, 24)
+#
+#print(T/60)
+# 
