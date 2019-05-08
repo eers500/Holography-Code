@@ -48,6 +48,7 @@ for k in range(Z.shape[0]):
     print(('RS' ,k, i, j))
 
 IZ = np.real(IZ)
+IM = 50*(IZ - 1) + 128
 IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
 
 #IZZ = IZ - np.min(IZ)
@@ -63,9 +64,12 @@ T = time.time() - T0
 #    IZ = np.real(IZ)
 #    IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
 #    IM = np.uint8(IM)
+#%%
+IMM = IM/np.max(IM)*255
+IMM = np.uint8(IMM)
 
 #%%
-plt.imshow(IZ[:,:,115], cmap = 'gray')
+plt.imshow(IM[:,:,19], cmap = 'gray')
 #plt.colorbar()
 
 
@@ -77,7 +81,7 @@ plt.imshow(IZ[:,:,115], cmap = 'gray')
 #%%
 IZZ = IZ - np.min(IZ)
 IZZ = np.uint8(255*IZZ/np.max(IZZ))
-exportAVI('IZ.avi', IZZ, NI, NJ, 24)
+exportAVI('IM.avi', IMM, NI, NJ, 24)
 
 print(T/60)
  

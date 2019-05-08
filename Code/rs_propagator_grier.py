@@ -19,8 +19,6 @@ IB = mpimg.imread('AVG_131118-2.png')
 IB[IB == 0] = np.average(IB)
 IN = I/IB
 
-_, BP = bandpassFilter(IN, 2, 30)
-
 N = 1.3226
 LAMBDA = 0.642           #HeNe
 FS = 1.422                #Sampling Frequency px/um
@@ -29,6 +27,8 @@ NJ = np.shape(IN)[1]
 Z = 0.02*np.arange(1, 151)
 K = 2*m.pi*N/LAMBDA      #Wavenumber
 
+_, BP = bandpassFilter(IN, 2, 30)
+E = BP*np.fft.fft2(IN - 1)
 #%%
 #qsq = ((lambdaa/(N*n))*nx)**2 + ((lambdaa/(N*n))*ny)**2
 P = np.empty_like(IB, dtype=complex)
