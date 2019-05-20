@@ -14,7 +14,7 @@ PATH = tk.filedialog.askopenfilename()
 VID = f.videoImport(PATH)
 I_MEDIAN = f.medianImage(VID)
 #I = mpimg.imread('131118-1.png')
-Z = 0.02*np.arange(1, 151)
+Z = 10*np.arange(1, 151)
 
 #%%
 I = VID[:, :, 0]

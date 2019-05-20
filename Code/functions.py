@@ -134,7 +134,9 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
         
     # Divide by Median image
     I_MEDIAN[I_MEDIAN == 0] = np.average(I_MEDIAN)
-    IN = I/I_MEDIAN
+#    IN = I/I_MEDIAN
+    IN = I - I_MEDIAN
+    IN[IN < 0] = 0
     
     # Bandpass Filter
     _, BP = bandpassFilter(IN, 2, 30)
@@ -157,7 +159,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
     Q = np.sqrt(1-P)-1
     Q = np.conj(Q)    
     R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
-    IZ = R
+    IZ = np.empty_like(R, dtype=float)
 #    for k in range(Z.shape[0]):        
 #        for i in range(NI):
 #            for j in range(NJ):
@@ -166,20 +168,22 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
 #        print(('RS' ,k, i, j))
     for k in range(Z.shape[0]):
         R[:, :, k] = np.exp((-1j*K*Z[k]*Q))
-        IZ[:, :, k] = 1 + np.fft.ifft2(E*R[:, :, k])
-        print(('RS', k))
+        IZ[:, :, k] = 1 + np.real(np.fft.ifft2(E*R[:, :, k]))
+#        print(('RS', k))
             
-    IZ = np.real(IZ)
-    IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
-    IM = np.uint8(IM)
+        #Converted to 8-bit
+#        IZ8 = np.uint8((IZ - np.min(IZ))*255)
+#        IZ8 = np.uint8(IZ8/np.max(IZ8)*255)
+#        IZ8 = np.uint8(255*(IZ8/255)**2)
     
-    return IM
+    return IZ
 
 #%% Median Image
 #   Input:   VID - 3D numpy array of video file
 #   Output: MEAN - 2D pixel mean array
 def medianImage(VID):
     import numpy as np
+    from scipy import ndimage
 
     print('MI')
     MEAN = np.median(VID, axis=2)
@@ -212,10 +216,7 @@ def zGradientStack(I, I_MEDIAN, Z):
     IM_FFT = np.fft.fftn(np.dstack([IM[:,:,0:2], IM]))
     SZ_FFT = np.fft.fftn(SZ, IM_FFT.shape)
     
-    PROD = IM_FFT*SZ_FFT
-    CONV = np.real(np.fft.ifftn(PROD))
-    #CONV = (20/np.std(CONV))*(CONV - np.mean(CONV)) + 128
-    CONV = np.delete(CONV, [0,1], axis=2)
+    CONV = ndimage.convolve(IM, SZ, mode='mirror')  
     CONV[CONV<100] = 0
     CONV = np.uint8(CONV)
     #del IM_FFT, PROD

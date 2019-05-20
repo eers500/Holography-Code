@@ -13,6 +13,8 @@ PATH = tk.filedialog.askopenfilename()
 
 VID = f.videoImport(PATH)
 I_MEDIAN = f.medianImage(VID)
+import scipy.misc
+scipy.misc.imsave('AVG_20-02-19_ECOLI_HCB1_100Hz_290us_10x_1.png', I_MEDIAN)
 #I = mpimg.imread('131118-1.png')
 Z = 0.02*np.arange(1, 151)
 
