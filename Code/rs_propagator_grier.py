@@ -53,18 +53,28 @@ for k in range(Z.shape[0]):
     BAR.next()
 BAR.finish()
 #    print(('RS', k))
-IZ8 = np.uint8((IZ - np.min(IZ))*255)
-IZ8 = np.uint8(IZ8/np.max(IZ8)*255)
-IZ8 = np.uint8(255*(IZ8/255)**2)
-#IM = 50*(IZ - 1) + 128
+#IZ8 = np.uint8((IZ - np.min(IZ))*255)
+#IZ8 = np.uint8(IZ8/np.max(IZ8)*255)
+#IZ8 = np.uint8(255*(IZ8/255)**2)
+IM = 50*(IZ - 1) + 128
 #IMM = IM/np.max(IM)*255
-#IMM = np.uint8(IMM)
+IMM = np.uint8(IM)
 
 print(time.time() - T0)
 #%%
-#plt.imshow(IMM[:,:,149], cmap = 'gray')
+plt.imshow(GSS[:,:,149], cmap = 'gray')
 
 #%%
 #IZZ = (IZ-np.min(IZ))/np.max((IZ-np.min(IZ)))*255
 #IZZZ = np.uint8(IZZ)
 exportAVI('IZZ.avi',IZZ, IZZ.shape[0], IZZ.shape[1], 24)
+#%%
+nx = np.arange(0,np.shape(im)[0],1)
+ny = np.arange(0,np.shape(im)[1],1)
+
+xx,yy = np.meshgrid(ny, nx)
+ax = plt.axes(projection='3d')
+zz = np.exp(-((xx-200)**2+(yy-200)*22))
+imm = im
+imm[imm<1]==0
+ax.plot_surface(xx,yy,imm)

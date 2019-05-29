@@ -9,11 +9,11 @@ from scipy import ndimage
 from functions import rayleighSommerfeldPropagator, exportAVI
 
 T0 = time.time()
-#I = mpimg.imread('131118-1.png')
-#I_MEDIAN = mpimg.imread('AVG_131118-2.png')
+I = mpimg.imread('131118-1.png')
+I_MEDIAN = mpimg.imread('AVG_131118-1.png')
 
-I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
-I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
+#I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
+#I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
 
 Z = 0.02*np.arange(1, 151)
 IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
@@ -35,26 +35,40 @@ del SZ0, SZ1, SZ2, I, I_MEDIAN, Z
 ##CONV = (20/np.std(CONV))*(CONV - np.mean(CONV)) + 128
 #CONV = np.delete(CONV, [0,1], axis=2)
 #%% Convolution IM*SZ
-CONV = ndimage.convolve(IM, SZ, mode='mirror')  
-
+IMM = np.dstack((IM[:,:,0][:, :, np.newaxis], IM, IM[:,:,-1][:, :, np.newaxis]))
+GS = ndimage.convolve(IMM, SZ, mode='mirror')  
+GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
+del IMM
 #%%
-CONV[CONV<140] = 0
+GS[GS<0] = 0
 
 # For visualization
-CONV = CONV - np.min(CONV)
-CONV = CONV/np.max(CONV)*255
-#CONV = 255*(CONV/255)**2
-#CONV = np.uint8(CONV)
+GS = GS - np.min(GS)
+IM = IM - np.min(IM)
 
-CONV = 255*CONV/np.max(CONV)
-CONV = np.uint8(CONV)
+GS = GS/np.max(GS)*255
+IM = IM/np.max(IM)*255
+#GS = 255*(GS/255)**2
+#GS = np.uint8(GS)
+
+GS = 255*GS/np.max(GS)
+GS = np.uint8(GS)
+IM = np.uint8(IM)
 #del IM_FFT, PROD
 
+GS = GS + 128
+
 #%% Esport results as .AVI
-exportAVI('gradientStack.avi',CONV, CONV.shape[0], CONV.shape[1], 24)
-exportAVI('frameStack.avi', np.uint8(IM), IM.shape[0], IM.shape[1], 24)
+exportAVI('gradientStack.avi',GS, GS.shape[0], GS.shape[1], 24)
+exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
 print(time.time()-T0)
 del T0
 
 #%% Plot
-plt.imshow(CONV[:,:,100], cmap='gray')
+plt.imshow(IM[:,:,100], cmap='gray')
+
+#%%
+#from skimage import img_as_ubyte
+#
+#GSS = img_as_ubyte(GS)
+#IMS = img_as_ubyte(IM/np.max(IM))

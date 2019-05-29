@@ -198,6 +198,7 @@ def medianImage(VID):
 #           
 def zGradientStack(I, I_MEDIAN, Z):
     import numpy as np
+    from scipy import ndimage
     from functions import rayleighSommerfeldPropagator, exportAVI
     
 #    I = mpimg.imread('131118-1.png')
@@ -212,16 +213,13 @@ def zGradientStack(I, I_MEDIAN, Z):
     SZ = np.stack((SZ0, SZ1, SZ2), axis=2)
     del SZ0, SZ1, SZ2, I, I_MEDIAN, Z
     
-    #%% Convolution IM*SZ
-    IM_FFT = np.fft.fftn(np.dstack([IM[:,:,0:2], IM]))
-    SZ_FFT = np.fft.fftn(SZ, IM_FFT.shape)
-    
-    CONV = ndimage.convolve(IM, SZ, mode='mirror')  
-    CONV[CONV<100] = 0
-    CONV = np.uint8(CONV)
-    #del IM_FFT, PROD
+    #%% Convolution IM*SZ    
+    IMM = np.dstack((IM[:,:,0][:, :, np.newaxis], IM, IM[:,:,-1][:, :, np.newaxis]))
+    GS = ndimage.convolve(IM, SZ, mode='mirror')  
+    GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
+    del IMM
     
 #    exportAVI('gradientStack.avi',CONV, CONV.shape[0], CONV.shape[1], 24)
 #    exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
-    return CONV, IM
+    return GS, IM
 

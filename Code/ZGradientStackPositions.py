@@ -14,12 +14,12 @@ PATH = tk.filedialog.askopenfilename()
 VID = f.videoImport(PATH)
 I_MEDIAN = f.medianImage(VID)
 #I = mpimg.imread('131118-1.png')
-Z = 10*np.arange(1, 151)
+Z = 0.02*np.arange(1, 151)
 
 #%%
 I = VID[:, :, 0]
 #IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
-GS, IM = f.zGradientStack(I, I_MEDIAN, Z)    # GradientStacj and RS propagator
+GS, IM = f.zGradientStack(I, I_MEDIAN, Z)    # GradientStack and RS propagator
 
 #%% From Labview code
 #from functions import videoImport
