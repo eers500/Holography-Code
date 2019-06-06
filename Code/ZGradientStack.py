@@ -15,7 +15,7 @@ I_MEDIAN = mpimg.imread('AVG_131118-1.png')
 #I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
 #I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
 
-Z = 0.02*np.arange(1, 151)
+Z = 0.2*np.arange(1, 151)
 IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
 #plt.imshow(np.uint8(IM[:,:,140]), cmap='gray')
 
@@ -40,32 +40,32 @@ GS = ndimage.convolve(IMM, SZ, mode='mirror')
 GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
 del IMM
 #%%
-GS[GS<0] = 0
+GS[GS<0.4] = 0
 
-# For visualization
-GS = GS - np.min(GS)
-IM = IM - np.min(IM)
-
-GS = GS/np.max(GS)*255
-IM = IM/np.max(IM)*255
-#GS = 255*(GS/255)**2
+## For visualization
+#GS = GS - np.min(GS)
+#IM = IM - np.min(IM)
+#
+#GS = GS/np.max(GS)*255
+#IM = IM/np.max(IM)*255
+##GS = 255*(GS/255)**2
+##GS = np.uint8(GS)
+#
+#GS = 255*GS/np.max(GS)
 #GS = np.uint8(GS)
-
-GS = 255*GS/np.max(GS)
-GS = np.uint8(GS)
-IM = np.uint8(IM)
-#del IM_FFT, PROD
-
-GS = GS + 128
+#IM = np.uint8(IM)
+##del IM_FFT, PROD
+#
+#GS = GS + 128
 
 #%% Esport results as .AVI
-exportAVI('gradientStack.avi',GS, GS.shape[0], GS.shape[1], 24)
-exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
-print(time.time()-T0)
+#exportAVI('gradientStack.avi',GS, GS.shape[0], GS.shape[1], 24)
+#exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
+#print(time.time()-T0)
 del T0
 
 #%% Plot
-plt.imshow(IM[:,:,100], cmap='gray')
+#plt.imshow(IM[:,:,100], cmap='gray')
 
 #%%
 #from skimage import img_as_ubyte

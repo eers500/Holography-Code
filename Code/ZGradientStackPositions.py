@@ -9,18 +9,18 @@ from skimage.feature import peak_local_max
 
 T0 = time.time()
 tk.Tk().withdraw()
-PATH = tk.filedialog.askopenfilename()
+PATH = tk.filedialog.askopenfilename(title = "Select file",filetypes = (("avi files","*.avi"),("all files","*.*")))
 
 VID = f.videoImport(PATH)
 I_MEDIAN = f.medianImage(VID)
 #I = mpimg.imread('131118-1.png')
-Z = 0.02*np.arange(1, 151)
-
+Z =0.2*np.arange(1, 151)
+THRESHOLD = 0.4
 #%%
 I = VID[:, :, 0]
 #IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
 GS, IM = f.zGradientStack(I, I_MEDIAN, Z)    # GradientStack and RS propagator
-
+GS[GS<THRESHOLD] = 0
 #%% From Labview code
 #from functions import videoImport
 #GS = videoImport('131118-1_(frame0)gradient.avi')
@@ -37,14 +37,14 @@ LOCS = np.delete(LOCS, 0, 0)
 np.savetxt('locs.txt', LOCS)    
 print(time.time()-T0)
 #%%
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import pyplot
-
-fig = pyplot.figure()
-ax = Axes3D(fig)
-
-ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2])
-pyplot.show()
+#from mpl_toolkits.mplot3d import Axes3D
+#from matplotlib import pyplot
+#
+#fig = pyplot.figure()
+#ax = Axes3D(fig)
+#
+#ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2])
+#pyplot.show()
     
     
     

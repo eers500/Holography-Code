@@ -134,8 +134,8 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
         
     # Divide by Median image
     I_MEDIAN[I_MEDIAN == 0] = np.average(I_MEDIAN)
-#    IN = I/I_MEDIAN
-    IN = I - I_MEDIAN
+    IN = I/I_MEDIAN
+#    IN = I - I_MEDIAN
     IN[IN < 0] = 0
     
     # Bandpass Filter
@@ -215,9 +215,10 @@ def zGradientStack(I, I_MEDIAN, Z):
     
     #%% Convolution IM*SZ    
     IMM = np.dstack((IM[:,:,0][:, :, np.newaxis], IM, IM[:,:,-1][:, :, np.newaxis]))
-    GS = ndimage.convolve(IM, SZ, mode='mirror')  
+    GS = ndimage.convolve(IMM, SZ, mode='mirror')  
     GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
     del IMM
+    
     
 #    exportAVI('gradientStack.avi',CONV, CONV.shape[0], CONV.shape[1], 24)
 #    exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
