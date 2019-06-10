@@ -15,7 +15,7 @@ VID = f.videoImport(PATH)
 I_MEDIAN = f.medianImage(VID)
 #I = mpimg.imread('131118-1.png')
 Z =0.2*np.arange(1, 151)
-THRESHOLD = 0.4
+THRESHOLD = 0.3
 #%%
 I = VID[:, :, 0]
 #IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
@@ -37,14 +37,12 @@ LOCS = np.delete(LOCS, 0, 0)
 np.savetxt('locs.txt', LOCS)    
 print(time.time()-T0)
 #%%
-#from mpl_toolkits.mplot3d import Axes3D
-#from matplotlib import pyplot
-#
-#fig = pyplot.figure()
-#ax = Axes3D(fig)
-#
-#ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2])
-#pyplot.show()
-    
-    
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot
+
+fig = pyplot.figure()
+ax = Axes3D(fig)
+
+ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2])
+pyplot.show()
     

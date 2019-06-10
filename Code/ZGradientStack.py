@@ -9,11 +9,11 @@ from scipy import ndimage
 from functions import rayleighSommerfeldPropagator, exportAVI
 
 T0 = time.time()
-I = mpimg.imread('131118-1.png')
-I_MEDIAN = mpimg.imread('AVG_131118-1.png')
+#I = mpimg.imread('131118-1.png')
+#I_MEDIAN = mpimg.imread('AVG_131118-1.png')
 
-#I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
-#I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
+I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
+I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
 
 Z = 0.2*np.arange(1, 151)
 IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
@@ -24,7 +24,7 @@ SZ0 = np.array(([-1, -2, -1], [-2, -4, -2], [-1, -2, -1]), dtype='float')
 SZ1 = np.zeros_like(SZ0)
 SZ2 = -SZ0
 SZ = np.stack((SZ0, SZ1, SZ2), axis=2)
-del SZ0, SZ1, SZ2, I, I_MEDIAN, Z
+del SZ0, SZ1, SZ2, I_MEDIAN, Z
 
 #%% Convolution IM*SZ
 #IM_FFT = np.fft.fftn(np.dstack([IM[:,:,0:2], IM]))
@@ -40,7 +40,8 @@ GS = ndimage.convolve(IMM, SZ, mode='mirror')
 GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
 del IMM
 #%%
-GS[GS<0.4] = 0
+THRESHOLD = 0.2
+GS[GS<THRESHOLD] = 0
 
 ## For visualization
 #GS = GS - np.min(GS)
