@@ -62,7 +62,7 @@ IZ8 = np.uint8(255*(IZ8/255)**2)
 
 print(time.time() - T0)
 #%%
-#plt.imshow(IMM[:,:,149], cmap = 'gray')
+#plt.imshow(IZ[:, :, 149], cmap = 'gray')
 
 #%%
 #IZZ = (IZ-np.min(IZ))/np.max((IZ-np.min(IZ)))*255
