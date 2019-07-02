@@ -42,6 +42,7 @@ def square_image(img):
 # Output: img_filt - filtered image
 def bandpassFilter(img,xl,xs):
     import numpy as np
+    
     # FFT the grayscale image
     imgfft = np.fft.fft2(img)
     img_fft = np.fft.fftshift(imgfft)
@@ -49,7 +50,7 @@ def bandpassFilter(img,xl,xs):
     del imgfft
     
     # Pre filter image information
-    [ni,nj]=img_amp.shape
+    [ni,nj] = img_amp.shape
     MIS = ni
          
     # Create bandpass filter when BigAxis == 
@@ -72,22 +73,32 @@ def bandpassFilter(img,xl,xs):
 
 #%% Import video as stack of images in a 3D array
 #   Input:  video   - path to video file
-#   Output: imStack - 3D array of stacked images
+#   Output: imStack - 3D array of stacked images in 8-bit
 def videoImport(video):
-    import numpy as np
     import cv2
+    import numpy as np
     
-    vidcap = cv2.VideoCapture(video)
-    success,image = vidcap.read()
-    num_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
-    imStack = image[:,:,0] 
+    CAP = cv2.VideoCapture(video)
+    NUM_FRAMES = int(CAP.get(cv2.CAP_PROP_FRAME_COUNT))
+    WIDTH = int(CAP.get(cv2.CAP_PROP_FRAME_WIDTH))
+    HEIGHT = int(CAP.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    
+    IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('uint8'))
+    IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH))
+    
+    I = 0
+    SUCCESS = True
+    
+    while (I < NUM_FRAMES  and SUCCESS):
+        SUCCESS, IMG[I] = CAP.read()
+        IM_STACK[I] = IMG[I, :, :, 1]
+        I += 1
+        print(('VI', I))
+    
+    CAP.release()
+    IM_STACK = np.swapaxes(np.swapaxes(IM_STACK, 0, 2), 0, 1)
 
-    for ii in range(1,num_frames):
-            success,fr = vidcap.read()
-            frame = fr[:,:,0]
-            imStack = np.dstack((imStack,frame))
-    
-    return imStack
+    return IM_STACK
 
 #%% Export 3D array to .AVI movie file
 #   Input:  IM - numpy 3D array
@@ -112,21 +123,24 @@ def exportAVI(filename,IM, NI, NJ, fps):
     return 'Video exported successfully'
 
 #%% Rayleigh-Sommerfeld Back Propagator
-#   Inputs:   I - hologram (grayscale)
-#            IM - median image
-#             Z - numpy array defining defocusing distances
-#   Output: IMM - 3D array representing stack of images at different Z
-def rayleighSommerfeldPropagator(I, IM, Z):  
+#   Inputs:          I - hologram (grayscale)
+#             I_MEDIAN - median image
+#                    Z - numpy array defining defocusing distances
+#   Output:        IMM - 3D array representing stack of images at different Z
+def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):  
     import math as m
     import numpy as np
     from functions import bandpassFilter
         
     # Divide by Median image
-    IM[IM == 0] = np.average(IM)
-    IN = I/IM
+    I_MEDIAN[I_MEDIAN == 0] = np.average(I_MEDIAN)
+    IN = I/I_MEDIAN
+#    IN = I - I_MEDIAN
+    IN[IN < 0] = 0
     
     # Bandpass Filter
     _, BP = bandpassFilter(IN, 2, 30)
+    E = BP*np.fft.fft2(IN - 1)
     
     # Patameters     #Set as input parameters
     N = 1.3226               # Index of refraction
@@ -137,7 +151,7 @@ def rayleighSommerfeldPropagator(I, IM, Z):
     K = 2*m.pi*N/LAMBDA      # Wavenumber
     
     # Rayleigh-Sommerfeld Arrays
-    P = np.empty_like(IM, dtype=complex)
+    P = np.empty_like(I_MEDIAN, dtype=complex)
     for i in range(NI):
         for j in range(NJ):
             P[i, j] = ((LAMBDA*FS)/(max([NI, NJ])*N))**2*((i-NI/2)**2+(j-NJ/2)**2)
@@ -145,15 +159,68 @@ def rayleighSommerfeldPropagator(I, IM, Z):
     Q = np.sqrt(1-P)-1
     Q = np.conj(Q)    
     R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
-    IZ = R
+    IZ = np.empty_like(R, dtype=float)
+#    for k in range(Z.shape[0]):        
+#        for i in range(NI):
+#            for j in range(NJ):
+#                R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
+#        IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
+#        print(('RS' ,k, i, j))
     for k in range(Z.shape[0]):
-        for i in range(NI):
-            for j in range(NJ):
-                R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
-        IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
+        R[:, :, k] = np.exp((-1j*K*Z[k]*Q))
+        IZ[:, :, k] = 1 + np.real(np.fft.ifft2(E*R[:, :, k]))
+#        print(('RS', k))
+            
+        #Converted to 8-bit
+#        IZ8 = np.uint8((IZ - np.min(IZ))*255)
+#        IZ8 = np.uint8(IZ8/np.max(IZ8)*255)
+#        IZ8 = np.uint8(255*(IZ8/255)**2)
     
-    IZ = np.real(IZ)
-    IMM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
-    IMM = np.uint8(IMM)
+    return IZ
+
+#%% Median Image
+#   Input:   VID - 3D numpy array of video file
+#   Output: MEAN - 2D pixel mean array
+def medianImage(VID):
+    import numpy as np
+    from scipy import ndimage
+
+    print('MI')
+    MEAN = np.median(VID, axis=2)
+
+    return MEAN
+
+#%% Z-Gradient Stack
+ #   Inputs:   I - hologram (grayscale)
+#            IM - median image
+#             Z - numpy array defining defocusing distances
+#   Output: CONV - 3D array representing stack of images at different Z
+#           
+def zGradientStack(I, I_MEDIAN, Z):
+    import numpy as np
+    from scipy import ndimage
+    from functions import rayleighSommerfeldPropagator, exportAVI
     
-    return IMM
+#    I = mpimg.imread('131118-1.png')
+#    I_MEDIAN = mpimg.imread('AVG_131118-2.png')
+#    Z = 0.02*np.arange(1, 151)
+    IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
+    
+    #%% Sobel-type kernel
+    SZ0 = np.array(([-1, -2, -1], [-2, -4, -2], [-1, -2, -1]), dtype='float')
+    SZ1 = np.zeros_like(SZ0)
+    SZ2 = -SZ0
+    SZ = np.stack((SZ0, SZ1, SZ2), axis=2)
+    del SZ0, SZ1, SZ2, I, I_MEDIAN, Z
+    
+    #%% Convolution IM*SZ    
+    IMM = np.dstack((IM[:,:,0][:, :, np.newaxis], IM, IM[:,:,-1][:, :, np.newaxis]))
+    GS = ndimage.convolve(IMM, SZ, mode='mirror')  
+    GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
+    del IMM
+    
+    
+#    exportAVI('gradientStack.avi',CONV, CONV.shape[0], CONV.shape[1], 24)
+#    exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
+    return GS, IM
+

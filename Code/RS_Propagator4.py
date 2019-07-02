@@ -3,7 +3,7 @@
 import math as m
 import time
 import matplotlib.image as mpimg
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 from functions import bandpassFilter, exportAVI
 
@@ -45,15 +45,32 @@ for k in range(Z.shape[0]):
         for j in range(NJ):
             R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
     IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
+    print(('RS' ,k, i, j))
 
 IZ = np.real(IZ)
+IM = 50*(IZ - 1) + 128
 IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
+
+#IZZ = IZ - np.min(IZ)
+#IM = (20/np.std(IZZ))*(IZZ - np.mean(IZZ)) + 128
+#IM = IZZ/np.max(IZZ) *255
+
+
 IM = np.uint8(IM)
+#IM = IM.astype(dtype='uint8')
 
 T = time.time() - T0
 
+#    IZ = np.real(IZ)
+#    IM = (20/np.std(IZ))*(IZ - np.mean(IZ)) + 128
+#    IM = np.uint8(IM)
 #%%
-#plt.imshow(IM[:,:,15], cmap = 'gray')
+IMM = IM/np.max(IM)*255
+IMM = np.uint8(IMM)
+
+print(time.time()-T0)
+#%%
+#plt.imshow(IM[:,:,19], cmap = 'gray')
 #plt.colorbar()
 
 
@@ -63,7 +80,9 @@ T = time.time() - T0
 #    plt.savefig('{}.png'.format(i+1))
 #    plt.clf()
 #%%
-exportAVI(IM, NI, NJ, 24)
-
-print(T/60)
- 
+#IZZ = IZ - np.min(IZ)
+#IZZ = np.uint8(255*IZZ/np.max(IZZ))
+#exportAVI('IM.avi', IMM, NI, NJ, 24)
+#
+#print(T/60)
+# 
