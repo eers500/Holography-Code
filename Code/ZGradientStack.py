@@ -87,7 +87,7 @@ ax.set_ylabel('y (pixels)', fontsize='18')
 ax.set_zlabel('z (slices)', fontsize='18')
 pyplot.show()
 
-## Surface plot bokeh
+## Plot bokeh
 from bokeh.plotting import figure, show, output_file
 
 
