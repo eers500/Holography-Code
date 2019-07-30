@@ -66,8 +66,9 @@ GS[GS<THRESHOLD] = 0
 del T0
 
 ## Plot
-plt.imshow(GS[:,:,12], cmap='gray')
-plt.title('E.coli Raw Hologram', fontsize='20')
+G = GS[:, :, 36]
+plt.imshow(-G, cmap='gray')
+plt.title('Gradient Stack Slice #36', fontsize='20')
 plt.xlabel('x (pixels)', fontsize='18')
 plt.ylabel('y (pixels)', fontsize='18')
 
@@ -101,3 +102,9 @@ p.image(image=[im[::-1]], x=0, y=0, dw=512, dh=512, palette="Spectral11")
 output_file("image.html", title="image.py example")
 
 show(p)  # open a browser
+
+##
+GG = mpimg.imread("Result of MF1_30Hz_200us_awaysection-1.png")
+
+plt.imshow(GG, cmap='gray')
+plt.title('Normalized Hologram', fontsize='20')

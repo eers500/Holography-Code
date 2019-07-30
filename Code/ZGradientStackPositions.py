@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 import numpy as np
-# import matplotlib.image as mpimg
+import matplotlib.image as mpimg
 import time
 import functions as f
 import tkinter as tk
@@ -13,10 +13,11 @@ tk.Tk().withdraw()
 PATH = tk.filedialog.askopenfilename(title="Select file", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
 
 VID = f.videoImport(PATH)
-I_MEDIAN = f.medianImage(VID)
+# I_MEDIAN = f.medianImage(VID)
+I_MEDIAN = mpimg.imread('MED_DMEM_s1_10x_50Hz_50us_away5-004-1.png')
 # I = mpimg.imread('131118-1.png')
-Z = 0.2 * np.arange(1, 151)
-THRESHOLD = 0.3
+Z = 0.02 * np.arange(1, 151)
+THRESHOLD = 0.2
 
 ##
 I = VID[:, :, 0]
