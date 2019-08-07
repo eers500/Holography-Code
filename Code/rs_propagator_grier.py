@@ -27,8 +27,13 @@ IN = I/IB   #divide
 
 N = 1.3226
 LAMBDA = 0.642           #HeNe
+<<<<<<< Updated upstream
 MAGNIFICATION = 20
 FS = 1.422/MAGNIFICATION                #Sampling Frequency px/um
+=======
+MPP = 10;                # Magnification: 10x, 20x, 50x, etc
+FS = 1.422                #Sampling Frequency px/um
+>>>>>>> Stashed changes
 NI = np.shape(IN)[0]
 NJ = np.shape(IN)[1]
 Z = FS*np.arange(1, 151)

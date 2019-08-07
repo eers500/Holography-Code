@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-## Import libraries and resources
+#%%
+# Import libraries and resources
 import numpy as np
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
@@ -15,18 +16,20 @@ T0 = time.time()
 I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
 I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
 
-Z = 0.2*np.arange(1, 151)
+Z = 0.156*np.arange(1, 151)
 IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
 # plt.imshow(np.uint8(IM[:,:,140]), cmap='gray')
 
-## Sobel-type kernel
+#%%
+# Sobel-type kernel
 SZ0 = np.array(([-1, -2, -1], [-2, -4, -2], [-1, -2, -1]), dtype='float')
 SZ1 = np.zeros_like(SZ0)
 SZ2 = -SZ0
 SZ = np.stack((SZ0, SZ1, SZ2), axis=2)
 del SZ0, SZ1, SZ2, Z
 
-## Convolution IM*SZ
+#%%
+# Convolution IM*SZ
 # IM_FFT = np.fft.fftn(np.dstack([IM[:,:,0:2], IM]))
 # SZ_FFT = np.fft.fftn(SZ, IM_FFT.shape)
 # PROD = IM_FFT*SZ_FFT
@@ -34,13 +37,15 @@ del SZ0, SZ1, SZ2, Z
 # CONV = (20/np.std(CONV))*(CONV - np.mean(CONV)) + 128
 # CONV = np.delete(CONV, [0,1], axis=2)
 
-## Convolution IM*SZ
+#%%
+# Convolution IM*SZ
+IM = IM**2        # Intensity of E field?
 IMM = np.dstack((IM[:,:,0][:, :, np.newaxis], IM, IM[:,:,-1][:, :, np.newaxis]))
 GS = ndimage.convolve(IMM, SZ, mode='mirror')  
 GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
 del IMM
 ##
-THRESHOLD = 0.2
+THRESHOLD = 0.3
 GS[GS<THRESHOLD] = 0
 
 ## For visualization
@@ -59,20 +64,29 @@ GS[GS<THRESHOLD] = 0
 
 # GS = GS + 128
 
-## Esport results as .AVI
+#%%
+# Export results as .AVI
 # exportAVI('gradientStack.avi',GS, GS.shape[0], GS.shape[1], 24)
 # exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
 # print(time.time()-T0)
 del T0
 
+<<<<<<< Updated upstream
 ## Plot
 G = GS[:, :, 36]
 plt.imshow(-G, cmap='gray')
 plt.title('Gradient Stack Slice #36', fontsize='20')
+=======
+#%%
+# Plot
+plt.imshow(GS[:,:,12], cmap='gray')
+plt.title('E.coli Raw Hologram', fontsize='20')
+>>>>>>> Stashed changes
 plt.xlabel('x (pixels)', fontsize='18')
 plt.ylabel('y (pixels)', fontsize='18')
 
-## 3D surace Plot
+#%%
+# 3D surace Plot
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
 
@@ -88,7 +102,8 @@ ax.set_ylabel('y (pixels)', fontsize='18')
 ax.set_zlabel('z (slices)', fontsize='18')
 pyplot.show()
 
-## Plot bokeh
+#%%
+# Plot bokeh
 from bokeh.plotting import figure, show, output_file
 
 

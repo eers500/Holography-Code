@@ -2,12 +2,23 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7f70c00b-9785-4f5a-8902-3e0107957bd1" name="Default Changelist" comment="">
+<<<<<<< Updated upstream
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/131118-1.png" beforeDir="false" afterPath="$PROJECT_DIR$/131118-1.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/3d_slices_viewer.py" beforeDir="false" afterPath="$PROJECT_DIR$/3d_slices_viewer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AVG_131118-1.png" beforeDir="false" afterPath="$PROJECT_DIR$/AVG_131118-1.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ZGradientStack.py" beforeDir="false" afterPath="$PROJECT_DIR$/ZGradientStack.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ZGradientStackPositions.py" beforeDir="false" afterPath="$PROJECT_DIR$/ZGradientStackPositions.py" afterDir="false" />
+=======
+      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/erick.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Code.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Code.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/3d_slices_viewer.py" beforeDir="false" afterPath="$PROJECT_DIR$/3d_slices_viewer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ZGradientStack.py" beforeDir="false" afterPath="$PROJECT_DIR$/ZGradientStack.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ZGradientStackPositions.py" beforeDir="false" afterPath="$PROJECT_DIR$/ZGradientStackPositions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/functions.py" afterDir="false" />
+>>>>>>> Stashed changes
       <change beforePath="$PROJECT_DIR$/image.html" beforeDir="false" afterPath="$PROJECT_DIR$/image.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rs_propagator_grier.py" beforeDir="false" afterPath="$PROJECT_DIR$/rs_propagator_grier.py" afterDir="false" />
     </list>
@@ -20,6 +31,7 @@
   <component name="FavoritesManager">
     <favorites_list name="Code" />
   </component>
+<<<<<<< Updated upstream
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="true">
@@ -109,6 +121,17 @@
     <property name="full.screen.before.presentation.mode" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="preferences.keymap" />
+=======
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="1OYCFv2YfQ9MXJu3yBKU4zyY21d" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../Correaltion_Project" />
+    <property name="settings.editor.selected.configurable" value="CellModeConfigurable" />
+>>>>>>> Stashed changes
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myShowVariablesByDefault" value="false" />
@@ -222,6 +245,7 @@
       <is-autoscroll-to-source value="true" />
     </todo-panel>
   </component>
+<<<<<<< Updated upstream
   <component name="ToolWindowManager">
     <frame x="-1928" y="-8" width="1936" height="1056" extended-state="7" />
     <editor active="true" />
@@ -324,5 +348,19 @@
         </state>
       </provider>
     </entry>
+=======
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+>>>>>>> Stashed changes
   </component>
 </project>

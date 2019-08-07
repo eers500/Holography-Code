@@ -1,4 +1,4 @@
-#%% Convert rgb image to grayscale using Y' = 0.299R'+0.587G' + 0.114B'
+## Convert rgb image to grayscale using Y' = 0.299R'+0.587G' + 0.114B'
 # Input:     img - RBG image
 # Output: img_gs - Grayscale image
 def rgb2gray(img):
@@ -11,7 +11,7 @@ def rgb2gray(img):
             
     return img_gs
 
-#%% Make image square by adding rows or columns of the mean value of the image np.mean(img)
+## Make image square by adding rows or columns of the mean value of the image np.mean(img)
 # Input: img - grayscale image
 # Output: imgs - square image
 #         axis - axis where data is added
@@ -35,7 +35,7 @@ def square_image(img):
             axis = 'square'            
     return imgs, axis, d
 
-#%% Bandpass filter
+## Bandpass filter
 # Input: img - Grayscale image array (2D)
 #        xl  - Large cutoff size (Pixels)
 #        xs  - Small cutoff size (Pixels)
@@ -71,7 +71,7 @@ def bandpassFilter(img,xl,xs):
     
     return  img_filt, BPP
 
-#%% Import video as stack of images in a 3D array
+## Import video as stack of images in a 3D array
 #   Input:  video   - path to video file
 #   Output: imStack - 3D array of stacked images in 8-bit
 def videoImport(video):
@@ -100,7 +100,7 @@ def videoImport(video):
 
     return IM_STACK
 
-#%% Export 3D array to .AVI movie file
+## Export 3D array to .AVI movie file
 #   Input:  IM - numpy 3D array
 #           NI - number of rows of array
 #           NJ - number of columns of array
@@ -122,7 +122,7 @@ def exportAVI(filename,IM, NI, NJ, fps):
     VIDEO.release()
     return 'Video exported successfully'
 
-#%% Rayleigh-Sommerfeld Back Propagator
+## Rayleigh-Sommerfeld Back Propagator
 #   Inputs:          I - hologram (grayscale)
 #             I_MEDIAN - median image
 #                    Z - numpy array defining defocusing distances
@@ -178,7 +178,8 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
     
     return IZ
 
-#%% Median Image
+#%%
+## Median Image
 #   Input:   VID - 3D numpy array of video file
 #   Output: MEAN - 2D pixel mean array
 def medianImage(VID):
@@ -190,8 +191,8 @@ def medianImage(VID):
 
     return MEAN
 
-#%% Z-Gradient Stack
- #   Inputs:   I - hologram (grayscale)
+##  Z-Gradient Stack
+#   Inputs:   I - hologram (grayscale)
 #            IM - median image
 #             Z - numpy array defining defocusing distances
 #   Output: CONV - 3D array representing stack of images at different Z
@@ -223,4 +224,13 @@ def zGradientStack(I, I_MEDIAN, Z):
 #    exportAVI('gradientStack.avi',CONV, CONV.shape[0], CONV.shape[1], 24)
 #    exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
     return GS, IM
+
+
+# %%
+# Data Cursor in plots
+def dataCursor():
+    import mpldatacursor
+    mpldatacursor.datacursor(hover=True, bbox=dict(alpha=1, fc='w'),
+                             formatter='x, y = {i}, {j}\nz = {z:.06g}'.format)
+    return 0
 

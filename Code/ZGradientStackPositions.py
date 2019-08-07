@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
-##
+#%%
 import numpy as np
 import matplotlib.image as mpimg
 import time
 import functions as f
-import tkinter as tk
-import tkinter.filedialog
+# import tkinter as tk
+# from  tkinter.filedialog import askopenfilename
+import easygui
 from skimage.feature import peak_local_max
 
-T0 = time.time()
-tk.Tk().withdraw()
-PATH = tk.filedialog.askopenfilename(title="Select file", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
+# tk.Tk().withdraw()
+# PATH = tk.filedialog.askopenfilename(title="Select file", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
+PATH = easygui.fileopenbox('Select a recording file', 'Recording', filetypes=['*.avi'])
 
+T0 = time.time()
 VID = f.videoImport(PATH)
 # I_MEDIAN = f.medianImage(VID)
 I_MEDIAN = mpimg.imread('MED_DMEM_s1_10x_50Hz_50us_away5-004-1.png')
@@ -19,17 +21,19 @@ I_MEDIAN = mpimg.imread('MED_DMEM_s1_10x_50Hz_50us_away5-004-1.png')
 Z = 0.02 * np.arange(1, 151)
 THRESHOLD = 0.2
 
-##
+#%%
 I = VID[:, :, 0]
 # IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
 GS, IM = f.zGradientStack(I, I_MEDIAN, Z)  # GradientStack and RS propagator
 GS[GS < THRESHOLD] = 0
 
-## From Labview code
+#%%
+# From Labview code
 # from functions import videoImport
 # GS = videoImport('131118-1_(frame0)gradient.avi')
 
-## Find (x,y,z) of cells
+#%%
+# Find (x,y,z) of cells
 LOCS = np.zeros((1, 3))
 for k in range(GS.shape[2]):
    PEAKS = peak_local_max(GS[:, :, k], indices=True)  # Check for peak radius
@@ -40,7 +44,9 @@ LOCS = np.delete(LOCS, 0, 0)
 
 np.savetxt('locs.txt', LOCS)
 print(time.time() - T0)
-## 3D Scatter Plot
+
+#%%
+# 3D Scatter Plot
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
 
