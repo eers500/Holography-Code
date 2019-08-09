@@ -1,53 +1,50 @@
 # -*- coding: utf-8 -*-
-## Rayleigh-Sommerfeld Back-Propagator
+#%%
+# Rayleigh-Sommerfeld Back-Propagator
 import math as m
 import time
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
-from functions import bandpassFilter, exportAVI
+from functions import bandpassFilter, exportAVI, dataCursor
 from progress.bar import Bar
 
 T0 = time.time()
 # I = mpimg.imread('131118-1.png')
 I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
-# I = np.uint8(I/np.max(I)*255)
+# I = mpimg.imread('10x_laser_50Hz_10us_g1036_bl1602-003.png')
 
-## Median image
+
+#%%
+# Median image
 # IB = mpimg.imread('AVG_131118-1.png')
 IB = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
-# IB = np.uint8(IB/np.max(IB)*255)
-# IB = mpimg.imread('img_gs.png')
-# IB = signal.medfilt2d(I, kernel_size = 3)
-# IZ = np.where(IB == 0)
-IB[IB == 0] = np.average(IB)
+# IB = mpimg.imread('MED_10x_laser_50Hz_10us_g1036_bl1602-003-1.png')
+
+IB[IB == 0] = np.mean(IB)
 IN = I/IB   #divide
 # IN = I - IB    #substract as in imageJ
 # IN[IN < 0] = 0
 
 N = 1.3226
 LAMBDA = 0.642           #HeNe
-<<<<<<< Updated upstream
-MAGNIFICATION = 20
-FS = 1.422/MAGNIFICATION                #Sampling Frequency px/um
-=======
-MPP = 10;                # Magnification: 10x, 20x, 50x, etc
-FS = 1.422                #Sampling Frequency px/um
->>>>>>> Stashed changes
+# MPP = 2              # Magnification: 10x, 20x, 50x, etc
+FS = 0.711                #Sampling Frequency px/um
 NI = np.shape(IN)[0]
 NJ = np.shape(IN)[1]
-Z = FS*np.arange(1, 151)
+Z = FS/2*np.arange(1, 151)
 K = 2*m.pi*N/LAMBDA      #Wavenumber
 
-_, BP = bandpassFilter(IN, 2, 30)
+IBAND, BP = bandpassFilter(IN, 2, 30)
 E = BP*np.fft.fft2(IN - 1)
 
-##
+#%%
 # qsq = ((lambdaa/(N*n))*nx)**2 + ((lambdaa/(N*n))*ny)**2
 P = np.empty_like(IB, dtype=complex)
 for i in range(NI):
     for j in range(NJ):
         P[i, j] = ((LAMBDA*FS)/(max([NI, NJ])*N))**2*((i-NI/2)**2+(j-NJ/2)**2)
+P = np.conj(P)
 Q = np.sqrt(1-P)-1
 
 if all(Z>0):
@@ -72,21 +69,22 @@ IZ8 = np.uint8(255*(IZ8/255)**2)
 
 print(time.time() - T0)
 
-##
+#%%
 # plt.imshow(IZ[:, :, 149], cmap = 'gray')
 
-##
-# IZZ = (IZ-np.min(IZ))/np.max((IZ-np.min(IZ)))*255
-# IZZZ = np.uint8(IZZ)
-# exportAVI('IZZ.avi',IZZ, IZZ.shape[0], IZZ.shape[1], 24)
+#%%
+IZZ = np.abs(IZ)**2
+IZZ = (IZZ-np.min(IZZ))/np.max((IZZ-np.min(IZZ)))*255
+IZZZ = np.uint8(255-IZZ)
+exportAVI('IZZZ.avi',IZZZ, IZZ.shape[0], IZZ.shape[1], 30)
 
-##
-minI = 0.8
-maxI = 1
-
-minO = 0
-maxO = 255
-
-INO = (IN - minI)*(((maxO - minO)/(maxI - minI)) + minO)
-
-plt.imshow(INO, cmap='gray')
+#%%
+# minI = 0.8
+# maxI = 1
+#
+# minO = 0
+# maxO = 255
+#
+# INO = (IN - minI)*(((maxO - minO)/(maxI - minI)) + minO)
+#
+# plt.imshow(INO, cmap='gray')
