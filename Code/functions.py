@@ -73,8 +73,9 @@ def bandpassFilter(img,xl,xs):
 
 ## Import video as stack of images in a 3D array
 #   Input:  video   - path to video file
+#               N   - frame number to import
 #   Output: imStack - 3D array of stacked images in 8-bit
-def videoImport(video):
+def videoImport(video, N):
     import cv2
     import numpy as np
     
@@ -83,20 +84,40 @@ def videoImport(video):
     WIDTH = int(CAP.get(cv2.CAP_PROP_FRAME_WIDTH))
     HEIGHT = int(CAP.get(cv2.CAP_PROP_FRAME_HEIGHT))
     
-    IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('uint8'))
-    IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH))
+    # IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('uint8'))
+    # IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH))
     
     I = 0
     SUCCESS = True
-    
-    while (I < NUM_FRAMES  and SUCCESS):
-        SUCCESS, IMG[I] = CAP.read()
-        IM_STACK[I] = IMG[I, :, :, 1]
-        I += 1
-        print(('VI', I))
-    
+
+    if N == 0:
+        IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('float32'))
+        IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH))
+
+        while (I < NUM_FRAMES  and SUCCESS):
+            SUCCESS, IMG[I] = CAP.read()
+            IM_STACK[I] = IMG[I, :, :, 1]
+            I += 1
+            print(('VI', I))
+
+    elif N > 0:
+        IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('float32'))
+        IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH))
+        STACK = IM_STACK
+
+        while (I < NUM_FRAMES and SUCCESS):
+            SUCCESS, IMG[I] = CAP.read()
+            STACK[I] = IMG[I, :, :, 1]
+            if I==N:
+                IM_STACK = IMG[I, :, :, 1]
+                FRAMENUM = I
+                print(('VI', I))
+            I += 1
+
     CAP.release()
-    IM_STACK = np.swapaxes(np.swapaxes(IM_STACK, 0, 2), 0, 1)
+
+    if N == 0:
+        IM_STACK = np.swapaxes(np.swapaxes(IM_STACK, 0, 2), 0, 1)
 
     return IM_STACK
 
@@ -191,7 +212,8 @@ def medianImage(VID):
 
     return MEAN
 
-##  Z-Gradient Stack
+#%%
+# Z-Gradient Stack
 #   Inputs:   I - hologram (grayscale)
 #            IM - median image
 #             Z - numpy array defining defocusing distances
@@ -225,12 +247,42 @@ def zGradientStack(I, I_MEDIAN, Z):
 #    exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
     return GS, IM
 
-
 # %%
 # Data Cursor in plots
-def dataCursor():
+def dataCursor1D():
     import mpldatacursor
     mpldatacursor.datacursor(hover=True, bbox=dict(alpha=1, fc='w'),
+                             formatter='x = {i}\ny = {y:.06g}'.format)
+    return 0
+
+# %%
+# Data Cursor in 2D plots
+def dataCursor2D():
+    import mpldatacursor
+    mpldatacursor.datacursor(display='multiple', hover=True, bbox=dict(alpha=1, fc='w'),
                              formatter='x, y = {i}, {j}\nz = {z:.06g}'.format)
     return 0
 
+# %%
+# Data Cursor in 3D plots
+def dataCursor3D():
+    import mpldatacursor
+    mpldatacursor.datacursor(hover=False, bbox=dict(alpha=1, fc='w'),
+                             formatter='x, y = {i}, {j}\nz = {z:.06g}'.format)
+    return 0
+
+#%%
+def histeq(im):
+    import numpy as np
+    from PIL import Image
+    # """  Histogram equalization of a grayscale image. """
+
+    # get image histogram
+    imhist,bins = np.histogram(im.flatten(), 256, normed=True)
+    cdf = imhist.cumsum() # cumulative distribution function
+    cdf = 255 * cdf / cdf[-1] # normalize
+
+    # use linear interpolation of cdf to find new pixel values
+    im2 = np.interp(im.flatten(),bins[:-1],cdf)
+
+    return im2.reshape(im.shape), cdf

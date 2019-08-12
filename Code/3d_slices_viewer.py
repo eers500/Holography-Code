@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from functions import dataCursor
+from functions import dataCursor2D
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -33,7 +33,7 @@ class IndexTracker(object):
 
 fig, ax = plt.subplots(1, 1)
 
-X = IM
+X = IZZ
 
 tracker = IndexTracker(ax, X)
 

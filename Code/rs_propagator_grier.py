@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 #%%
-# Rayleigh-Sommerfeld Back-Propagator
+##############################################################
+########### Rayleigh-Sommerfeld Back-Propagator ##############
+##############################################################
 import math as m
 import time
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
-from functions import bandpassFilter, exportAVI, dataCursor
-from progress.bar import Bar
+from functions import *
 
 T0 = time.time()
 # I = mpimg.imread('131118-1.png')
@@ -23,29 +24,26 @@ IB = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
 
 IB[IB == 0] = np.mean(IB)
 IN = I/IB   #divide
-# IN = I - IB    #substract as in imageJ
-# IN[IN < 0] = 0
 
 N = 1.3226
-LAMBDA = 0.642/N           #HeNe
-# MPP = 2              # Magnification: 10x, 20x, 50x, etc
-FS = 0.711*2                #Sampling Frequency px/um
+LAMBDA = 0.642/N               # HeNe
+# MPP = 2                      # Magnification: 10x, 20x, 50x, etc
+FS = 0.711                     # Sampling Frequency px/um
 NI = np.shape(IN)[0]
 NJ = np.shape(IN)[1]
-Z = np.arange(1, 151)
-K = 2*m.pi*N/LAMBDA      #Wavenumber
+SZ = 10                        # Step size in um
+Z = SZ*np.arange(1, 151)       # Number of steps
+K = 2*m.pi*N/LAMBDA            # Wavenumber
 
 IBAND, BP = bandpassFilter(IN, 2, 30)
-# E = BP*np.fft.fft2(IN - 1)
 E = np.fft.fftshift(BP)*np.fft.fftshift(np.fft.fft2(IN - 1))
 
 #%%
-# qsq = ((lambdaa/(N*n))*nx)**2 + ((lambdaa/(N*n))*ny)**2
 P = np.empty_like(IB, dtype=complex)
 for i in range(NI):
     for j in range(NJ):
         P[i, j] = ((LAMBDA*FS)/(max([NI, NJ])*N))**2*((i-NI/2)**2+(j-NJ/2)**2)
-P = np.conj(P)
+# P = np.conj(P)
 Q = np.sqrt(1-P)-1
 
 if all(Z>0):
@@ -56,8 +54,7 @@ IZ = np.empty_like(R, dtype=float)
 
 for k in range(Z.shape[0]):
     R[:, :, k] = np.exp((-1j*K*Z[k]*Q))
-    # IZ[:, :, k] = 1 + np.real(np.fft.ifft2(E*R[:, :, k]))
-    IZ[:, :, k] = 1 + np.real(np.fft.ifft2(np.fft.ifftshift(E*R[:, :, k])))
+    IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E*R[:, :, k])))
 
 print(time.time() - T0)
 
@@ -68,16 +65,11 @@ print(time.time() - T0)
 IM = 50*(IZ - 1) + 128
 IZZ = np.abs(IZ)**2
 IZZ = (IZZ-np.min(IZZ))/np.max((IZZ-np.min(IZZ)))*255
-IZZZ = np.uint8(255-IZZ)
+IZZZ = np.uint8(255 - IZZ)
 exportAVI('IZZZ.avi',IZZZ, IZZ.shape[0], IZZ.shape[1], 30)
 
 #%%
-# minI = 0.8
-# maxI = 1
-#
-# minO = 0
-# maxO = 255
-#
-# INO = (IN - minI)*(((maxO - minO)/(maxI - minI)) + minO)
-#
-# plt.imshow(INO, cmap='gray')
+# Histogram equalizaion for visualization
+# IZZ, CDF = histeq(IZ)
+# IZZZ = np.uint8(255 - IZZ)
+# exportAVI('IZZZ.avi',IZZZ, IZZ.shape[0], IZZ.shape[1], 30)
