@@ -1,3 +1,4 @@
+#%%
 ## Convert rgb image to grayscale using Y' = 0.299R'+0.587G' + 0.114B'
 # Input:     img - RBG image
 # Output: img_gs - Grayscale image
@@ -16,6 +17,8 @@ def rgb2gray(img):
 # Output: imgs - square image
 #         axis - axis where data is added
 #            d - number of rows/columns added
+
+#%%
 def square_image(img):
     import numpy as np
 
@@ -40,6 +43,8 @@ def square_image(img):
 #        xl  - Large cutoff size (Pixels)
 #        xs  - Small cutoff size (Pixels)
 # Output: img_filt - filtered image
+
+#%%
 def bandpassFilter(img,xl,xs):
     import numpy as np
     
@@ -75,6 +80,8 @@ def bandpassFilter(img,xl,xs):
 #   Input:  video   - path to video file
 #               N   - frame number to import
 #   Output: imStack - 3D array of stacked images in 8-bit
+
+#%%
 def videoImport(video, N):
     import cv2
     import numpy as np
@@ -113,7 +120,6 @@ def videoImport(video, N):
                 FRAMENUM = I
                 print(('VI', I))
             I += 1
-
     CAP.release()
 
     if N == 0:
@@ -121,6 +127,7 @@ def videoImport(video, N):
 
     return IM_STACK
 
+#%%
 ## Export 3D array to .AVI movie file
 #   Input:  IM - numpy 3D array
 #           NI - number of rows of array
@@ -148,27 +155,31 @@ def exportAVI(filename,IM, NI, NJ, fps):
 #             I_MEDIAN - median image
 #                    Z - numpy array defining defocusing distances
 #   Output:        IMM - 3D array representing stack of images at different Z
+
+#%%
 def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):  
     import math as m
     import numpy as np
     from functions import bandpassFilter
         
     # Divide by Median image
-    I_MEDIAN[I_MEDIAN == 0] = np.average(I_MEDIAN)
+    I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
     IN = I/I_MEDIAN
 #    IN = I - I_MEDIAN
-    IN[IN < 0] = 0
+#     IN[IN < 0] = 0
     
     # Bandpass Filter
     _, BP = bandpassFilter(IN, 2, 30)
-    E = BP*np.fft.fft2(IN - 1)
+    E = np.fft.fftshift(BP)*np.fft.fftshift(np.fft.fft2(IN - 1))
     
     # Patameters     #Set as input parameters
     N = 1.3226               # Index of refraction
-    LAMBDA = 0.642           # HeNe
-    FS = 1.422               # Sampling Frequency px/um
+    LAMBDA = 0.642/N           # HeNe
+    FS = 0.711               # Sampling Frequency px/um
     NI = np.shape(IN)[0]     # Number of rows
     NJ = np.shape(IN)[1]     # Nymber of columns
+    SZ = 10
+    Z = SZ*Z
     K = 2*m.pi*N/LAMBDA      # Wavenumber
     
     # Rayleigh-Sommerfeld Arrays
@@ -176,39 +187,38 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
     for i in range(NI):
         for j in range(NJ):
             P[i, j] = ((LAMBDA*FS)/(max([NI, NJ])*N))**2*((i-NI/2)**2+(j-NJ/2)**2)
-            
+
+    P = np.conj(P)
     Q = np.sqrt(1-P)-1
-    Q = np.conj(Q)    
+
+    if all(Z>0):
+        Q = np.conj(Q)
+
     R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
     IZ = np.empty_like(R, dtype=float)
-#    for k in range(Z.shape[0]):        
-#        for i in range(NI):
-#            for j in range(NJ):
-#                R[i, j, k] = np.exp((-1j*K*Z[k])*Q[i, j])
-#        IZ[:, :, k] = 1+np.fft.ifft2(BP*(np.fft.fft2(IN-1))*R[:, :, k])
-#        print(('RS' ,k, i, j))
+
     for k in range(Z.shape[0]):
         R[:, :, k] = np.exp((-1j*K*Z[k]*Q))
-        IZ[:, :, k] = 1 + np.real(np.fft.ifft2(E*R[:, :, k]))
+        IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R[:, :, k])))
 #        print(('RS', k))
-            
-        #Converted to 8-bit
-#        IZ8 = np.uint8((IZ - np.min(IZ))*255)
-#        IZ8 = np.uint8(IZ8/np.max(IZ8)*255)
-#        IZ8 = np.uint8(255*(IZ8/255)**2)
-    
     return IZ
 
 #%%
 ## Median Image
 #   Input:   VID - 3D numpy array of video file
 #   Output: MEAN - 2D pixel mean array
-def medianImage(VID):
+def medianImage(VID, numFrames):
     import numpy as np
-    from scipy import ndimage
+
+    def spaced_elements(array, numElems):
+        out = array[np.round(np.linspace(0, len(array) - 1, numElems)).astype(int)]
+        return out
+
+    N = np.shape(VID)[2]
+    id = spaced_elements(np.arange(N), numFrames)
 
     print('MI')
-    MEAN = np.median(VID, axis=2)
+    MEAN = np.median(VID[:, :, id], axis=2)
 
     return MEAN
 
@@ -218,7 +228,9 @@ def medianImage(VID):
 #            IM - median image
 #             Z - numpy array defining defocusing distances
 #   Output: CONV - 3D array representing stack of images at different Z
-#           
+#
+
+#%%
 def zGradientStack(I, I_MEDIAN, Z):
     import numpy as np
     from scipy import ndimage
@@ -236,7 +248,8 @@ def zGradientStack(I, I_MEDIAN, Z):
     SZ = np.stack((SZ0, SZ1, SZ2), axis=2)
     del SZ0, SZ1, SZ2, I, I_MEDIAN, Z
     
-    #%% Convolution IM*SZ    
+    #%% Convolution IM*SZ
+    IM = IM**2
     IMM = np.dstack((IM[:,:,0][:, :, np.newaxis], IM, IM[:,:,-1][:, :, np.newaxis]))
     GS = ndimage.convolve(IMM, SZ, mode='mirror')  
     GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
@@ -247,7 +260,7 @@ def zGradientStack(I, I_MEDIAN, Z):
 #    exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
     return GS, IM
 
-# %%
+#%%
 # Data Cursor in plots
 def dataCursor1D():
     import mpldatacursor
@@ -255,7 +268,7 @@ def dataCursor1D():
                              formatter='x = {i}\ny = {y:.06g}'.format)
     return 0
 
-# %%
+#%%
 # Data Cursor in 2D plots
 def dataCursor2D():
     import mpldatacursor
@@ -263,7 +276,7 @@ def dataCursor2D():
                              formatter='x, y = {i}, {j}\nz = {z:.06g}'.format)
     return 0
 
-# %%
+#%%
 # Data Cursor in 3D plots
 def dataCursor3D():
     import mpldatacursor

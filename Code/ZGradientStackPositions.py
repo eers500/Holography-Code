@@ -13,18 +13,21 @@ from skimage.feature import peak_local_max
 # PATH = tk.filedialog.askopenfilename(title="Select file", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
 PATH = easygui.fileopenbox('Select a recording file', 'Recording', filetypes=['*.avi'])
 
+# T0 = time.time()
+VID = f.videoImport(PATH, 0)
 T0 = time.time()
-VID = f.videoImport(PATH)
-# I_MEDIAN = f.medianImage(VID)
-I_MEDIAN = mpimg.imread('MED_DMEM_s1_10x_50Hz_50us_away5-004-1.png')
+I_MEDIAN = f.medianImage(VID, 20)
+# I_MEDIAN = mpimg.imread('MED_DMEM_s1_10x_50Hz_50us_away5-004-1.png')
 # I = mpimg.imread('131118-1.png')
-Z = 0.02 * np.arange(1, 151)
-THRESHOLD = 0.2
-
+Z = np.arange(1, 151)
+# THRESHOLD = 0.3
+T = time.time()-T0
+print(T)
 #%%
 I = VID[:, :, 0]
 # IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
 GS, IM = f.zGradientStack(I, I_MEDIAN, Z)  # GradientStack and RS propagator
+THRESHOLD = 0.3
 GS[GS < THRESHOLD] = 0
 
 #%%
@@ -53,13 +56,10 @@ from matplotlib import pyplot
 fig = pyplot.figure()
 ax = Axes3D(fig)
 
-ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2], s=50, marker='o')
+ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2], s=25, marker='o')
 ax.tick_params(axis='both', labelsize=10)
 ax.set_title('Cells Positions in 3D', fontsize='20')
 ax.set_xlabel('x (pixels)', fontsize='18')
 ax.set_ylabel('y (pixels)', fontsize='18')
 ax.set_zlabel('z (slices)', fontsize='18')
 pyplot.show()
-
-
-

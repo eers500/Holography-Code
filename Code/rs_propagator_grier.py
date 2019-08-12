@@ -66,6 +66,7 @@ IM = 50*(IZ - 1) + 128
 IZZ = np.abs(IZ)**2
 IZZ = (IZZ-np.min(IZZ))/np.max((IZZ-np.min(IZZ)))*255
 IZZZ = np.uint8(255 - IZZ)
+# IZZZ = np.uint8(255 - IM)
 exportAVI('IZZZ.avi',IZZZ, IZZ.shape[0], IZZ.shape[1], 30)
 
 #%%
