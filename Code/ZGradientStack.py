@@ -16,8 +16,15 @@ T0 = time.time()
 I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
 I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
 
+N = 1.3226
+LAMBDA = 0.642              # HeNe
+FS = 0.711                     # Sampling Frequency px/um
+SZ = 10                        # # Step size um
+NUMSTEPS = 150
+
 Z = np.arange(1, 151)
-IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
+IM = rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)
+
 # plt.imshow(np.uint8(IM[:,:,140]), cmap='gray')
 
 #%%

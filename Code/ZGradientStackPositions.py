@@ -2,6 +2,7 @@
 #%%
 import numpy as np
 import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import time
 import functions as f
 # import tkinter as tk
@@ -9,25 +10,25 @@ import functions as f
 import easygui
 from skimage.feature import peak_local_max
 
-# tk.Tk().withdraw()
-# PATH = tk.filedialog.askopenfilename(title="Select file", filetypes=(("avi files", "*.avi"), ("all files", "*.*")))
-PATH = easygui.fileopenbox('Select a recording file', 'Recording', filetypes=['*.avi'])
-
+A = f.guiImport()
+#%%
+PATH = A[0]
 # T0 = time.time()
 VID = f.videoImport(PATH, 0)
 T0 = time.time()
-I_MEDIAN = f.medianImage(VID, 20)
-# I_MEDIAN = mpimg.imread('MED_DMEM_s1_10x_50Hz_50us_away5-004-1.png')
-# I = mpimg.imread('131118-1.png')
-Z = np.arange(1, 151)
-# THRESHOLD = 0.3
-T = time.time()-T0
-print(T)
+I_MEDIAN = f.medianImage(VID, int(A[3]))
+
+N = float(A[4])
+LAMBDA = float(A[5])              # HeNe
+FS = float(A[6])                     # Sampling Frequency px/um
+SZ = float(A[7])                        # # Step size um
+NUMSTEPS = int(A[8])
+THRESHOLD = float(A[9])
+
 #%%
-I = VID[:, :, 0]
-# IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
-GS, IM = f.zGradientStack(I, I_MEDIAN, Z)  # GradientStack and RS propagator
-THRESHOLD = 0.3
+I = VID[:, :, int(A[2])-1]
+IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)
+GS = f.zGradientStack(IM)  # GradientStack and RS propagator
 GS[GS < THRESHOLD] = 0
 
 #%%

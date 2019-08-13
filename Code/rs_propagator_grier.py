@@ -59,7 +59,7 @@ for k in range(Z.shape[0]):
 print(time.time() - T0)
 
 #%%
-# plt.imshow(IZ[:, :, 149], cmap = 'gray')
+plt.imshow(IZ[:, :, 149], cmap = 'gray')
 
 #%%
 IM = 50*(IZ - 1) + 128

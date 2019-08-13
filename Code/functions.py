@@ -1,8 +1,8 @@
 #%%
-## Convert rgb image to grayscale using Y' = 0.299R'+0.587G' + 0.114B'
-# Input:     img - RBG image
-# Output: img_gs - Grayscale image
 def rgb2gray(img):
+    ## Convert rgb image to grayscale using Y' = 0.299R'+0.587G' + 0.114B'
+    # Input:     img - RBG image
+    # Output: img_gs - Grayscale image
     import numpy as np
     [ni,nj,nk] = img.shape
     img_gs = np.empty([ni, nj])
@@ -12,14 +12,13 @@ def rgb2gray(img):
             
     return img_gs
 
-## Make image square by adding rows or columns of the mean value of the image np.mean(img)
-# Input: img - grayscale image
-# Output: imgs - square image
-#         axis - axis where data is added
-#            d - number of rows/columns added
-
 #%%
 def square_image(img):
+    ## Make image square by adding rows or columns of the mean value of the image np.mean(img)
+    # Input: img - grayscale image
+    # Output: imgs - square image
+    #         axis - axis where data is added
+    #            d - number of rows/columns added
     import numpy as np
 
     [ni, nj] = img.shape
@@ -38,14 +37,13 @@ def square_image(img):
             axis = 'square'            
     return imgs, axis, d
 
-## Bandpass filter
-# Input: img - Grayscale image array (2D)
-#        xl  - Large cutoff size (Pixels)
-#        xs  - Small cutoff size (Pixels)
-# Output: img_filt - filtered image
-
 #%%
 def bandpassFilter(img,xl,xs):
+    ## Bandpass filter
+    # Input: img - Grayscale image array (2D)
+    #        xl  - Large cutoff size (Pixels)
+    #        xs  - Small cutoff size (Pixels)
+    # Output: img_filt - filtered image
     import numpy as np
     
     # FFT the grayscale image
@@ -76,13 +74,12 @@ def bandpassFilter(img,xl,xs):
     
     return  img_filt, BPP
 
-## Import video as stack of images in a 3D array
-#   Input:  video   - path to video file
-#               N   - frame number to import
-#   Output: imStack - 3D array of stacked images in 8-bit
-
 #%%
 def videoImport(video, N):
+    ## Import video as stack of images in a 3D array
+    #   Input:  video   - path to video file
+    #               N   - frame number to import
+    #   Output: imStack - 3D array of stacked images in 8-bit
     import cv2
     import numpy as np
     
@@ -105,7 +102,7 @@ def videoImport(video, N):
             SUCCESS, IMG[I] = CAP.read()
             IM_STACK[I] = IMG[I, :, :, 1]
             I += 1
-            print(('VI', I))
+            # print(('VI', I))
 
     elif N > 0:
         IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('float32'))
@@ -128,13 +125,13 @@ def videoImport(video, N):
     return IM_STACK
 
 #%%
-## Export 3D array to .AVI movie file
-#   Input:  IM - numpy 3D array
-#           NI - number of rows of array
-#           NJ - number of columns of array
-#          fps - frames per second of output file
-#   Output: .AVI file in working folder 
 def exportAVI(filename,IM, NI, NJ, fps):
+    ## Export 3D array to .AVI movie file
+    #   Input:  IM - numpy 3D array
+    #           NI - number of rows of array
+    #           NJ - number of columns of array
+    #          fps - frames per second of output file
+    #   Output: .AVI file in working folder
     import os
     from cv2 import VideoWriter, VideoWriter_fourcc
     dir = os.getcwd()
@@ -150,14 +147,13 @@ def exportAVI(filename,IM, NI, NJ, fps):
     VIDEO.release()
     return 'Video exported successfully'
 
-## Rayleigh-Sommerfeld Back Propagator
-#   Inputs:          I - hologram (grayscale)
-#             I_MEDIAN - median image
-#                    Z - numpy array defining defocusing distances
-#   Output:        IMM - 3D array representing stack of images at different Z
-
 #%%
-def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):  
+def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
+    ## Rayleigh-Sommerfeld Back Propagator
+    #   Inputs:          I - hologram (grayscale)
+    #             I_MEDIAN - median image
+    #                    Z - numpy array defining defocusing distances
+    #   Output:        IMM - 3D array representing stack of images at different Z
     import math as m
     import numpy as np
     from functions import bandpassFilter
@@ -173,13 +169,14 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
     E = np.fft.fftshift(BP)*np.fft.fftshift(np.fft.fft2(IN - 1))
     
     # Patameters     #Set as input parameters
-    N = 1.3226               # Index of refraction
-    LAMBDA = 0.642/N           # HeNe
-    FS = 0.711               # Sampling Frequency px/um
+    # N = 1.3226               # Index of refraction
+    LAMBDA = LAMBDA/N           # HeNe
+    # FS = 0.711               # Sampling Frequency px/um
     NI = np.shape(IN)[0]     # Number of rows
     NJ = np.shape(IN)[1]     # Nymber of columns
-    SZ = 10
-    Z = SZ*Z
+    # SZ = 10
+    # Z = SZ*Z
+    Z = SZ*np.arange(1,NUMSTEPS+1)
     K = 2*m.pi*N/LAMBDA      # Wavenumber
     
     # Rayleigh-Sommerfeld Arrays
@@ -204,10 +201,10 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, Z):
     return IZ
 
 #%%
-## Median Image
-#   Input:   VID - 3D numpy array of video file
-#   Output: MEAN - 2D pixel mean array
 def medianImage(VID, numFrames):
+    ## Median Image
+    #   Input:   VID - 3D numpy array of video file
+    #   Output: MEAN - 2D pixel mean array
     import numpy as np
 
     def spaced_elements(array, numElems):
@@ -223,15 +220,12 @@ def medianImage(VID, numFrames):
     return MEAN
 
 #%%
-# Z-Gradient Stack
-#   Inputs:   I - hologram (grayscale)
-#            IM - median image
-#             Z - numpy array defining defocusing distances
-#   Output: CONV - 3D array representing stack of images at different Z
-#
-
-#%%
-def zGradientStack(I, I_MEDIAN, Z):
+def zGradientStack(IM):
+    # Z-Gradient Stack
+    #   Inputs:   I - hologram (grayscale)
+    #            IM - median image
+    #             Z - numpy array defining defocusing distances
+    #   Output: CONV - 3D array representing stack of images at different Z
     import numpy as np
     from scipy import ndimage
     from functions import rayleighSommerfeldPropagator, exportAVI
@@ -239,14 +233,14 @@ def zGradientStack(I, I_MEDIAN, Z):
 #    I = mpimg.imread('131118-1.png')
 #    I_MEDIAN = mpimg.imread('AVG_131118-2.png')
 #    Z = 0.02*np.arange(1, 151)
-    IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
+#     IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
     
     #%% Sobel-type kernel
     SZ0 = np.array(([-1, -2, -1], [-2, -4, -2], [-1, -2, -1]), dtype='float')
     SZ1 = np.zeros_like(SZ0)
     SZ2 = -SZ0
     SZ = np.stack((SZ0, SZ1, SZ2), axis=2)
-    del SZ0, SZ1, SZ2, I, I_MEDIAN, Z
+    del SZ0, SZ1, SZ2
     
     #%% Convolution IM*SZ
     IM = IM**2
@@ -258,27 +252,27 @@ def zGradientStack(I, I_MEDIAN, Z):
     
 #    exportAVI('gradientStack.avi',CONV, CONV.shape[0], CONV.shape[1], 24)
 #    exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
-    return GS, IM
+    return GS
 
 #%%
-# Data Cursor in plots
 def dataCursor1D():
+    # Data Cursor in plots
     import mpldatacursor
     mpldatacursor.datacursor(hover=True, bbox=dict(alpha=1, fc='w'),
                              formatter='x = {i}\ny = {y:.06g}'.format)
     return 0
 
 #%%
-# Data Cursor in 2D plots
 def dataCursor2D():
+    # Data Cursor in 2D plots
     import mpldatacursor
     mpldatacursor.datacursor(display='multiple', hover=True, bbox=dict(alpha=1, fc='w'),
                              formatter='x, y = {i}, {j}\nz = {z:.06g}'.format)
     return 0
 
 #%%
-# Data Cursor in 3D plots
 def dataCursor3D():
+    # Data Cursor in 3D plots
     import mpldatacursor
     mpldatacursor.datacursor(hover=False, bbox=dict(alpha=1, fc='w'),
                              formatter='x, y = {i}, {j}\nz = {z:.06g}'.format)
@@ -286,9 +280,9 @@ def dataCursor3D():
 
 #%%
 def histeq(im):
+    ## Histogram equalization of a grayscale image
     import numpy as np
     from PIL import Image
-    # """  Histogram equalization of a grayscale image. """
 
     # get image histogram
     imhist,bins = np.histogram(im.flatten(), 256, normed=True)
@@ -299,3 +293,28 @@ def histeq(im):
     im2 = np.interp(im.flatten(),bins[:-1],cdf)
 
     return im2.reshape(im.shape), cdf
+
+#%%
+def guiImport():
+    # GUI for values
+    import PySimpleGUI as sg
+
+    layout = [
+        [sg.Text('Select AVi File recording', size=(35, 1)), sg.In(), sg.FileBrowse()],
+        [sg.Text('Select Median Image (optional)', size=(35, 1)), sg.In(), sg.FileBrowse()],
+        [sg.Text('Frame number to use for calculations', size=(35, 1)), sg.InputText(default_text=1)],
+        [sg.Text('Number of frames for median image', size=(35, 1)), sg.InputText(default_text=20)],
+        [sg.Text('Refraction index of media (water = 1.3226)', size=(35, 1)), sg.InputText(default_text=1.3226)],
+        [sg.Text('Wavelength in um (HeNe/0.642)', size=(35, 1)), sg.InputText(default_text=0.642)],
+        [sg.Text('Sampling Frequency px/um (0.711) ', size=(35, 1)), sg.InputText(default_text=0.711)],
+        [sg.Text('Step size (10)', size=(35, 1)), sg.InputText(default_text=10)],
+        [sg.Text('Number os steps (150)', size=(35, 1)), sg.InputText(default_text=150)],
+        [sg.Text('Gradient Stack Threshold (~0.1)', size=(35, 1)), sg.InputText(default_text=0.1)],
+        [sg.Submit(), sg.Cancel()]
+    ]
+
+    window = sg.Window('Hologramphy inputs', layout)
+    event, values = window.Read()
+    window.Close()
+
+    return values
