@@ -1,25 +1,28 @@
 # -*- coding: utf-8 -*-
+"""Calculte gradient stack using sobel-type kernel"""
 #%%
 # Import libraries and resources
+import time
 import numpy as np
 import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
-import time
 #from mpl_toolkits.mplot3d import Axes3D
 from scipy import ndimage
-from functions import *
+from functions import rayleighSommerfeldPropagator, exportAVI
 
 T0 = time.time()
 # I = mpimg.imread('131118-1.png')
 # I_MEDIAN = mpimg.imread('AVG_131118-1.png')
 
-I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
-I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
+# I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
+# I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
+
+I = mpimg.imread('10x_laser_50Hz_10us_g1036_bl1602-003.png')
+I_MEDIAN = mpimg.imread('MED_10x_laser_50Hz_10us_g1036_bl1602-003-1.png')
 
 N = 1.3226
 LAMBDA = 0.642              # HeNe
 FS = 0.711                     # Sampling Frequency px/um
-SZ = 10                        # # Step size um
+SZ = 4                        # # Step size um
 NUMSTEPS = 150
 
 Z = np.arange(1, 151)
@@ -46,14 +49,15 @@ del SZ0, SZ1, SZ2, Z
 
 #%%
 # Convolution IM*SZ
-IM = IM**2        # Intensity of E field?
-IMM = np.dstack((IM[:,:,0][:, :, np.newaxis], IM, IM[:,:,-1][:, :, np.newaxis]))
-GS = ndimage.convolve(IMM, SZ, mode='mirror')  
+# IM = IM**2        # Intensity of E field?
+IMM = np.dstack((IM[:, :, 0][:, :, np.newaxis], IM, IM[:, :, -1][:, :, np.newaxis]))
+GS = ndimage.convolve(IMM, SZ, mode='mirror')
 GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
 del IMM
 ##
-THRESHOLD = 0.3
-GS[GS<THRESHOLD] = 0
+THRESHOLD = 0.03
+GS[GS < THRESHOLD] = 0
+GS[GS > THRESHOLD] = 255
 
 #%%
 # For visualization
@@ -69,18 +73,18 @@ GS[GS<THRESHOLD] = 0
 #%%
 # Prepare to export AVI
 # IM = 50*(IZ - 1) + 128
-IMM = np.abs(IM)**2
-IMM = (IMM-np.min(IMM))/np.max((IMM-np.min(IMM)))*255
-IMMM = np.uint8(255 - IMM)
+# IMM = np.abs(IM)**2
+IMM = (IM-np.min(IM))/np.max((IM-np.min(IM)))*255
+IMMM = np.uint8(IMM)
 
-GSS = np.abs(GS)**2
-GSS = (GSS-np.min(GSS))/np.max((GSS-np.min(GSS)))*255
+# GSS = np.abs(GS)**2
+GSS = (GS-np.min(GS))/np.max((GS-np.min(GS)))*255
 GSSS = np.uint8(GSS)
 
 #%%s
 # Export results as .AVI
-exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
-exportAVI('gradientStack.avi',GS, GS.shape[0], GS.shape[1], 24)
+# exportAVI('frameStack.avi', IMMM, IM.shape[0], IM.shape[1], 30)
+exportAVI('gradientStack.avi', GSSS, GS.shape[0], GS.shape[1], 30)
 print(time.time()-T0)
 # del T0
 

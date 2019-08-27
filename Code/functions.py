@@ -64,13 +64,13 @@ def bandpassFilter(img,xl,xs):
         for jj in range(0,nj-1):
             LCO[ii, jj] = np.exp(-((ii-MIS/2)**2+(jj-MIS/2)**2)*(2*xl/MIS)**2)
             SCO[ii, jj] = np.exp(-((ii-MIS/2)**2+(jj-MIS/2)**2)*(2*xs/MIS)**2)            
-    BP = SCO - LCO  
+    BP = LCO - SCO
     BPP = np.fft.ifftshift(BP)     
     # Filter image 
     filtered = BP*img_fft
     img_filt = np.fft.ifftshift(filtered) 
-    img_filt= np.fft.fft2(img_filt)       
-    img_filt = np.rot90(np.real(img_filt),2)
+    img_filt= np.fft.ifft2(img_filt)
+    # img_filt = np.rot90(np.real(img_filt),2)
     
     return  img_filt, BPP
 
