@@ -135,9 +135,9 @@ def exportAVI(filename,IM, NI, NJ, fps):
     import os
     from cv2 import VideoWriter, VideoWriter_fourcc
     dir = os.getcwd()
-    filename = os.path.join(dir,filename)
+    filenames = os.path.join(dir,filename)
     FOURCC = VideoWriter_fourcc(*'MJPG')
-    VIDEO = VideoWriter(filename, FOURCC, float(fps), (NJ, NI),0)
+    VIDEO = VideoWriter(filenames, FOURCC, float(fps), (NJ, NI),0)
     
     for i in range(IM.shape[2]):
         frame = IM[:,:,i]
@@ -145,7 +145,9 @@ def exportAVI(filename,IM, NI, NJ, fps):
         VIDEO.write(frame)
         
     VIDEO.release()
-    return 'Video exported successfully'
+
+    print(filename, 'exported successfully')
+    return
 
 #%%
 def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
