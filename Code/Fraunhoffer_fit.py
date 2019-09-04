@@ -98,11 +98,11 @@ AX3[1].grid()
 AX3[1].legend()
 
 #%%
-xx = np.linspace(-25, 25, 50)
-yy = xx
-
-XX, YY = np.meshgrid(xx, yy)
-T = XX + YY*1j
-THETA = np.arctan(YY, XX)
-R = np.sqrt(XX**2 + YY**2)
-THETA = np.linspace(0, 2*np.pi, 50)
+# xx = np.linspace(-25, 25, 50)
+# yy = xx
+#
+# XX, YY = np.meshgrid(xx, yy)
+# T = XX + YY*1j
+# THETA = np.arctan(YY, XX)
+# R = np.sqrt(XX**2 + YY**2)
+# THETA = np.linspace(0, 2*np.pi, 50)
