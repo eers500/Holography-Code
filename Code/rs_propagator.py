@@ -26,12 +26,12 @@ IN = I/IB   #divide
 
 N = 1.3226
 LAMBDA = 0.642               # Diode
-# MPP = 2                      # Magnification: 10x, 20x, 50x, etc
-FS = 0.711*2                     # Sampling Frequency px/um
+MPP = 20                      # Magnification: 10x, 20x, 50x, etc
+FS = 0.711*(MPP/10)                     # Sampling Frequency px/um
 NI = np.shape(IN)[0]
 NJ = np.shape(IN)[1]
 SZ = 10                        # Step size in um
-Z = SZ*np.arange(0, 150)       # Number of steps
+Z = (FS*(51/31))*np.arange(0, 150)       # Number of steps
 K = 2*m.pi*N/LAMBDA            # Wavenumber
 
 IBAND, BP = bandpassFilter(IN, 2, 30)
@@ -62,11 +62,13 @@ print(time.time() - T0)
 # plt.imshow(IZ[:, :, 149], cmap = 'gray')
 
 #%%
-IM = 128 + (IZ - np.mean(IZ))*50
+# IM = 128 + (IZ - np.mean(IZ))*50
+IM = (IZ - np.min(IZ))*(255/(np.max(IZ)-np.min(IZ)))
 # IZZ = np.abs(IZ)**2
 IZZ = (IZ-np.min(IZ))/np.max((IZ-np.min(IZ)))*255
 IZZZ = np.uint8(IZZ)
-exportAVI('frame_stack.avi', IZZZ, IZZ.shape[0], IZZ.shape[1], 30)
+IMM = np.uint8(IM)
+exportAVI('frame_stack.avi', IMM, IZZ.shape[0], IZZ.shape[1], 30)
 
 #%%
 # Histogram equalizaion for visualization

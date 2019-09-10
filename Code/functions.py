@@ -38,7 +38,7 @@ def square_image(img):
     return imgs, axis, d
 
 #%%
-def bandpassFilter(img,xl,xs):
+def bandpassFilter(img,xs,xl):
     ## Bandpass filter
     # Input: img - Grayscale image array (2D)
     #        xl  - Large cutoff size (Pixels)
@@ -64,7 +64,7 @@ def bandpassFilter(img,xl,xs):
         for jj in range(0,nj-1):
             LCO[ii, jj] = np.exp(-((ii-MIS/2)**2+(jj-MIS/2)**2)*(2*xl/MIS)**2)
             SCO[ii, jj] = np.exp(-((ii-MIS/2)**2+(jj-MIS/2)**2)*(2*xs/MIS)**2)            
-    BP = LCO - SCO
+    BP = SCO - LCO
     BPP = np.fft.ifftshift(BP)     
     # Filter image 
     filtered = BP*img_fft
