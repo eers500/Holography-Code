@@ -150,7 +150,7 @@ def exportAVI(filename,IM, NI, NJ, fps):
     return
 
 #%%
-def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
+def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP,  FS, SZ, NUMSTEPS):
     ## Rayleigh-Sommerfeld Back Propagator
     #   Inputs:          I - hologram (grayscale)
     #             I_MEDIAN - median image
@@ -172,13 +172,13 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     
     # Patameters     #Set as input parameters
     # N = 1.3226               # Index of refraction
-    LAMBDA = LAMBDA/N           # HeNe
-    # FS = 0.711               # Sampling Frequency px/um
+    LAMBDA = LAMBDA            # HeNe
+    FS = FS*(MPP/10)               # Sampling Frequency px/um
     NI = np.shape(IN)[0]     # Number of rows
     NJ = np.shape(IN)[1]     # Nymber of columns
     # SZ = 10
     # Z = SZ*Z
-    Z = SZ*np.arange(1,NUMSTEPS+1)
+    Z = (FS*(51/31))*np.arange(1, NUMSTEPS+1)
     K = 2*m.pi*N/LAMBDA      # Wavenumber
     
     # Rayleigh-Sommerfeld Arrays
@@ -187,7 +187,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
         for j in range(NJ):
             P[i, j] = ((LAMBDA*FS)/(max([NI, NJ])*N))**2*((i-NI/2)**2+(j-NJ/2)**2)
 
-    P = np.conj(P)
+    # P = np.conj(P)
     Q = np.sqrt(1-P)-1
 
     if all(Z>0):
@@ -312,6 +312,7 @@ def guiImport():
         [sg.Text('Step size (10)', size=(35, 1)), sg.InputText(default_text=10)],
         [sg.Text('Number os steps (150)', size=(35, 1)), sg.InputText(default_text=150)],
         [sg.Text('Gradient Stack Threshold (~0.1)', size=(35, 1)), sg.InputText(default_text=0.1)],
+        [sg.Text('MAgnification (x10, x20, etc)', size=(35, 1)), sg.InputText(default_text=0.1)],
         [sg.Submit(), sg.Cancel()]
     ]
 

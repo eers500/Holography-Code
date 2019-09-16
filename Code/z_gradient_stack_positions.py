@@ -22,13 +22,14 @@ FS = float(A[6])                     # Sampling Frequency px/um
 SZ = float(A[7])                        # # Step size um
 NUMSTEPS = int(A[8])
 THRESHOLD = float(A[9])
+MPP = float(A[10])
 
 #%%
 I = VID[:, :, int(A[2])-1]
 #%%
 # import threading
 T0 = time.time()
-IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)
+IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP, FS, SZ, NUMSTEPS)
 print(time.time()-T0)
 #%%
 GS = f.zGradientStack(IM)  # GradientStack and RS propagator

@@ -13,20 +13,21 @@ T0 = time.time()
 # I = mpimg.imread('131118-1.png')
 # I_MEDIAN = mpimg.imread('AVG_131118-1.png')
 
-# I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
-# I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
+I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
+I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
 
-I = mpimg.imread('10x_laser_50Hz_10us_g1036_bl1602-003.png')
-I_MEDIAN = mpimg.imread('MED_10x_laser_50Hz_10us_g1036_bl1602-003-1.png')
+# I = mpimg.imread('10x_laser_50Hz_10us_g1036_bl1602-003.png')
+# I_MEDIAN = mpimg.imread('MED_10x_laser_50Hz_10us_g1036_bl1602-003-1.png')
 
 N = 1.3226
-LAMBDA = 0.642              # HeNe
-FS = 0.711                     # Sampling Frequency px/um
+LAMBDA = 0.642
+MPP = 20                      # Magnification: 10x, 20x, 50x, etc
+FS = 0.711                # Sampling Frequency px/um
 SZ = 4                        # # Step size um
 NUMSTEPS = 150
 
-Z = np.arange(1, 151)
-IM = rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)
+# Z = np.arange(1, 151)
+IM = rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP, FS, SZ, NUMSTEPS)
 
 # plt.imshow(np.uint8(IM[:,:,140]), cmap='gray')
 
@@ -35,8 +36,8 @@ IM = rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)
 SZ0 = np.array(([-1, -2, -1], [-2, -4, -2], [-1, -2, -1]), dtype='float')
 SZ1 = np.zeros_like(SZ0)
 SZ2 = -SZ0
-SZ = np.stack((SZ0, SZ1, SZ2), axis=2)
-del SZ0, SZ1, SZ2, Z
+SZ = np.stack((SZ0, SZ1, SZ2), axis=-1)
+# del SZ0, SZ1, SZ2
 
 #%%
 # Convolution IM*SZ
@@ -55,7 +56,7 @@ GS = ndimage.convolve(IMM, SZ, mode='mirror')
 GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
 del IMM
 ##
-THRESHOLD = 0.03
+THRESHOLD = 0.3
 GS[GS < THRESHOLD] = 0
 GS[GS > THRESHOLD] = 255
 
