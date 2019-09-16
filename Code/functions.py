@@ -321,3 +321,38 @@ def guiImport():
     window.Close()
 
     return values
+
+#%%
+# Particles positions in 3D
+def positions3D(GS):
+    import numpy as np
+    from skimage.feature import peak_local_max
+
+    LOCS = np.zeros((1, 3))
+    for k in range(GS.shape[2]):
+        PEAKS = peak_local_max(GS[:, :, k], indices=True)  # Check for peak radius
+        ZZ = np.ones((PEAKS.shape[0], 1)) * k
+        PEAKS = np.append(PEAKS, ZZ, axis=1)
+        LOCS = np.append(LOCS, PEAKS, axis=0)
+    LOCS = np.delete(LOCS, 0, 0)
+
+    return LOCS
+
+#%%
+def plot3D(LOCS, title, fig, ax):
+    # 3D Scatter Plot
+    # from mpl_toolkits.mplot3d import Axes3D
+    from matplotlib import pyplot
+
+    # fig = pyplot.figure()
+    # ax = Axes3D(fig)
+
+    ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2], s=25, marker='o')
+    ax.tick_params(axis='both', labelsize=10)
+    ax.set_title(title, fontsize='20')
+    ax.set_xlabel('x (pixels)', fontsize='18')
+    ax.set_ylabel('y (pixels)', fontsize='18')
+    ax.set_zlabel('z (slices)', fontsize='18')
+    pyplot.show()
+
+    return

@@ -3,11 +3,11 @@
 #%%
 import time
 import numpy as np
-import pyximport
+# import pyximport
 from skimage.feature import peak_local_max
 import functions as f
 
-pyximport.install()
+# pyximport.install()
 A = f.guiImport()
 #%%
 PATH = A[0]
@@ -55,16 +55,16 @@ print(time.time() - T0)
 
 #%%
 # 3D Scatter Plot
-#from mpl_toolkits.mplot3d import Axes3D
-#from matplotlib import pyplot
-#
-#fig = pyplot.figure()
-#ax = Axes3D(fig)
-#
-#ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2], s=25, marker='o')
-#ax.tick_params(axis='both', labelsize=10)
-#ax.set_title('Cells Positions in 3D', fontsize='20')
-#ax.set_xlabel('x (pixels)', fontsize='18')
-#ax.set_ylabel('y (pixels)', fontsize='18')
-#ax.set_zlabel('z (slices)', fontsize='18')
-#pyplot.show()
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot
+
+fig = pyplot.figure()
+ax = Axes3D(fig)
+
+ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2], s=25, marker='o')
+ax.tick_params(axis='both', labelsize=10)
+ax.set_title('Cells Positions in 3D', fontsize='20')
+ax.set_xlabel('x (pixels)', fontsize='18')
+ax.set_ylabel('y (pixels)', fontsize='18')
+ax.set_zlabel('z (slices)', fontsize='18')
+pyplot.show()
