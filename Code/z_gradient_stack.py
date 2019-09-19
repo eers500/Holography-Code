@@ -5,6 +5,7 @@
 import time
 import numpy as np
 import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 #from mpl_toolkits.mplot3d import Axes3D
 from scipy import ndimage
 from functions import rayleighSommerfeldPropagator, exportAVI
@@ -59,6 +60,18 @@ del IMM
 THRESHOLD = 0.3
 GS[GS < THRESHOLD] = 0
 GS[GS > THRESHOLD] = 255
+
+#%%
+# IS = GS[356:358, 291:293, :]
+IS = GS
+D = 4
+NI, NJ = IS.shape[0]/D, IS.shape[1]/D
+ISS = np.empty([int(NI), int(NJ), IS.shape[-1]])
+for i in range(ISS.shape[0]):
+    for j in range(ISS.shape[1]):
+        for k in range(ISS.shape[2]):
+            S = IS[D*i:D*i+D, D*i:D*i+D, :]
+            ISS[i, j, k] = np.sum(S)
 
 #%%
 # For visualization

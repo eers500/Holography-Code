@@ -177,8 +177,9 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP,  FS, SZ, NUMSTEPS)
     NI = np.shape(IN)[0]     # Number of rows
     NJ = np.shape(IN)[1]     # Nymber of columns
     # SZ = 10
-    # Z = SZ*Z
+#     Z = FS*Z
     Z = (FS*(51/31))*np.arange(1, NUMSTEPS+1)
+#    Z = SZ*np.arange(0, NUMSTEPS)
     K = 2*m.pi*N/LAMBDA      # Wavenumber
     
     # Rayleigh-Sommerfeld Arrays
@@ -312,7 +313,7 @@ def guiImport():
         [sg.Text('Step size (10)', size=(35, 1)), sg.InputText(default_text=10)],
         [sg.Text('Number os steps (150)', size=(35, 1)), sg.InputText(default_text=150)],
         [sg.Text('Gradient Stack Threshold (~0.1)', size=(35, 1)), sg.InputText(default_text=0.1)],
-        [sg.Text('MAgnification (x10, x20, etc)', size=(35, 1)), sg.InputText(default_text=0.1)],
+        [sg.Text('MAgnification (10, 20, etc)', size=(35, 1)), sg.InputText(default_text=10)],
         [sg.Submit(), sg.Cancel()]
     ]
 
@@ -324,15 +325,16 @@ def guiImport():
 
 #%%
 # Particles positions in 3D
-def positions3D(GS):
+def positions3D(GS, FRAME_NUM):
     import numpy as np
     from skimage.feature import peak_local_max
 
-    LOCS = np.zeros((1, 3))
+    LOCS = np.zeros((1, 4))
     for k in range(GS.shape[2]):
         PEAKS = peak_local_max(GS[:, :, k], indices=True)  # Check for peak radius
         ZZ = np.ones((PEAKS.shape[0], 1)) * k
-        PEAKS = np.append(PEAKS, ZZ, axis=1)
+        FRAME = np.ones((ZZ.shape[0], 1)) * FRAME_NUM
+        PEAKS = np.hstack((PEAKS, ZZ, FRAME))
         LOCS = np.append(LOCS, PEAKS, axis=0)
     LOCS = np.delete(LOCS, 0, 0)
 
