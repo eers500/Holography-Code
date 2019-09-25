@@ -68,7 +68,7 @@ IM = (IZ - np.min(IZ))*(255/(np.max(IZ)-np.min(IZ)))
 IZZ = (IZ-np.min(IZ))/np.max((IZ-np.min(IZ)))*255
 IZZZ = np.uint8(IZZ)
 IMM = np.uint8(IM)
-# exportAVI('frame_stack.avi', IMM, IZZ.shape[0], IZZ.shape[1], 30)
+exportAVI('frame_stack.avi', IMM, IZZ.shape[0], IZZ.shape[1], 30)
 
 #%%
 # Histogram equalizaion for visualization

@@ -30,8 +30,8 @@ THRESHOLD = 0.5
 # LOCS = f.positions3D(GS)
 
 #%%
-NUM_FRAMES = np.shape(VID)[-1]
-# NUM_FRAMES = 60
+# NUM_FRAMES = np.shape(VID)[-1]
+NUM_FRAMES = 60
 LOCS = np.empty(NUM_FRAMES, dtype=object)
 
 T0 = time.time()

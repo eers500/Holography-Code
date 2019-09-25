@@ -61,7 +61,7 @@ from matplotlib import pyplot
 fig = pyplot.figure()
 ax = Axes3D(fig)
 
-ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2], s=25, marker='o')
+ax.scatter(PKS[:, 0], PKS[:, 1], PKS[:, 2], s=25, marker='o')
 ax.tick_params(axis='both', labelsize=10)
 ax.set_title('Cells Positions in 3D', fontsize='20')
 ax.set_xlabel('x (pixels)', fontsize='18')

@@ -1,18 +1,19 @@
-#%%
+# %%
 def rgb2gray(img):
     ## Convert rgb image to grayscale using Y' = 0.299R'+0.587G' + 0.114B'
     # Input:     img - RBG image
     # Output: img_gs - Grayscale image
     import numpy as np
-    [ni,nj,nk] = img.shape
+    [ni, nj, nk] = img.shape
     img_gs = np.empty([ni, nj])
     for ii in range(0, ni):
         for jj in range(0, nj):
-            img_gs[ii, jj] = 0.299*img[ii, jj, 0] + 0.587*img[ii, jj, 1] + 0.114*img[ii, jj, 2]
-            
+            img_gs[ii, jj] = 0.299 * img[ii, jj, 0] + 0.587 * img[ii, jj, 1] + 0.114 * img[ii, jj, 2]
+
     return img_gs
 
-#%%
+
+# %%
 def square_image(img):
     ## Make image square by adding rows or columns of the mean value of the image np.mean(img)
     # Input: img - grayscale image
@@ -25,56 +26,58 @@ def square_image(img):
     dn = ni - nj
     d = abs(dn)
     if dn < 0:
-            M = np.flip(img[ni-abs(dn):ni,:], 0)
-            imgs = np.concatenate((img,M), axis = 0)
-            axis = 'i'
+        M = np.flip(img[ni - abs(dn):ni, :], 0)
+        imgs = np.concatenate((img, M), axis=0)
+        axis = 'i'
     elif dn > 0:
-            M = np.flip(img[:,nj-abs(dn):nj], 1)
-            imgs = np.concatenate((img,M), axis = 1)
-            axis = 'j'
+        M = np.flip(img[:, nj - abs(dn):nj], 1)
+        imgs = np.concatenate((img, M), axis=1)
+        axis = 'j'
     elif dn == 0:
-            imgs = img
-            axis = 'square'            
+        imgs = img
+        axis = 'square'
     return imgs, axis, d
 
-#%%
-def bandpassFilter(img,xs,xl):
+
+# %%
+def bandpassFilter(img, xs, xl):
     ## Bandpass filter
     # Input: img - Grayscale image array (2D)
     #        xl  - Large cutoff size (Pixels)
     #        xs  - Small cutoff size (Pixels)
     # Output: img_filt - filtered image
     import numpy as np
-    
+
     # FFT the grayscale image
     imgfft = np.fft.fft2(img)
     img_fft = np.fft.fftshift(imgfft)
     img_amp = abs(img_fft)
     del imgfft
-    
-    # Pre filter image information
-    [ni,nj] = img_amp.shape
-    MIS = ni
-         
-    # Create bandpass filter when BigAxis == 
-    LCO = np.empty([ni,nj])
-    SCO = np.empty([ni,nj])
-    
-    for ii in range(0,ni-1):
-        for jj in range(0,nj-1):
-            LCO[ii, jj] = np.exp(-((ii-MIS/2)**2+(jj-MIS/2)**2)*(2*xl/MIS)**2)
-            SCO[ii, jj] = np.exp(-((ii-MIS/2)**2+(jj-MIS/2)**2)*(2*xs/MIS)**2)            
-    BP = SCO - LCO
-    BPP = np.fft.ifftshift(BP)     
-    # Filter image 
-    filtered = BP*img_fft
-    img_filt = np.fft.ifftshift(filtered) 
-    img_filt= np.fft.ifft2(img_filt)
-    # img_filt = np.rot90(np.real(img_filt),2)
-    
-    return  img_filt, BPP
 
-#%%
+    # Pre filter image information
+    [ni, nj] = img_amp.shape
+    MIS = ni
+
+    # Create bandpass filter when BigAxis ==
+    LCO = np.empty([ni, nj])
+    SCO = np.empty([ni, nj])
+
+    for ii in range(0, ni - 1):
+        for jj in range(0, nj - 1):
+            LCO[ii, jj] = np.exp(-((ii - MIS / 2) ** 2 + (jj - MIS / 2) ** 2) * (2 * xl / MIS) ** 2)
+            SCO[ii, jj] = np.exp(-((ii - MIS / 2) ** 2 + (jj - MIS / 2) ** 2) * (2 * xs / MIS) ** 2)
+    BP = SCO - LCO
+    BPP = np.fft.ifftshift(BP)
+    # Filter image
+    filtered = BP * img_fft
+    img_filt = np.fft.ifftshift(filtered)
+    img_filt = np.fft.ifft2(img_filt)
+    # img_filt = np.rot90(np.real(img_filt),2)
+
+    return img_filt, BPP
+
+
+# %%
 def videoImport(video, N):
     ## Import video as stack of images in a 3D array
     #   Input:  video   - path to video file
@@ -82,15 +85,15 @@ def videoImport(video, N):
     #   Output: imStack - 3D array of stacked images in 8-bit
     import cv2
     import numpy as np
-    
+
     CAP = cv2.VideoCapture(video)
     NUM_FRAMES = int(CAP.get(cv2.CAP_PROP_FRAME_COUNT))
     WIDTH = int(CAP.get(cv2.CAP_PROP_FRAME_WIDTH))
     HEIGHT = int(CAP.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    
+
     # IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('uint8'))
     # IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH))
-    
+
     I = 0
     SUCCESS = True
 
@@ -98,7 +101,7 @@ def videoImport(video, N):
         IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('float32'))
         IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH))
 
-        while (I < NUM_FRAMES  and SUCCESS):
+        while (I < NUM_FRAMES and SUCCESS):
             SUCCESS, IMG[I] = CAP.read()
             IM_STACK[I] = IMG[I, :, :, 1]
             I += 1
@@ -112,7 +115,7 @@ def videoImport(video, N):
         while (I < NUM_FRAMES and SUCCESS):
             SUCCESS, IMG[I] = CAP.read()
             STACK[I] = IMG[I, :, :, 1]
-            if I==N:
+            if I == N:
                 IM_STACK = IMG[I, :, :, 1]
                 FRAMENUM = I
                 print(('VI', I))
@@ -124,8 +127,9 @@ def videoImport(video, N):
 
     return IM_STACK
 
-#%%
-def exportAVI(filename,IM, NI, NJ, fps):
+
+# %%
+def exportAVI(filename, IM, NI, NJ, fps):
     ## Export 3D array to .AVI movie file
     #   Input:  IM - numpy 3D array
     #           NI - number of rows of array
@@ -135,22 +139,23 @@ def exportAVI(filename,IM, NI, NJ, fps):
     import os
     from cv2 import VideoWriter, VideoWriter_fourcc
     dir = os.getcwd()
-    filenames = os.path.join(dir,filename)
+    filenames = os.path.join(dir, filename)
     FOURCC = VideoWriter_fourcc(*'MJPG')
-    VIDEO = VideoWriter(filenames, FOURCC, float(fps), (NJ, NI),0)
-    
+    VIDEO = VideoWriter(filenames, FOURCC, float(fps), (NJ, NI), 0)
+
     for i in range(IM.shape[2]):
-        frame = IM[:,:,i]
-    #    frame = np.random.randint(0, 255, (NI, NJ,3)).astype('uint8')
+        frame = IM[:, :, i]
+        #    frame = np.random.randint(0, 255, (NI, NJ,3)).astype('uint8')
         VIDEO.write(frame)
-        
+
     VIDEO.release()
 
     print(filename, 'exported successfully')
     return
 
-#%%
-def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP,  FS, SZ, NUMSTEPS):
+
+# %%
+def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP, FS, SZ, NUMSTEPS):
     ## Rayleigh-Sommerfeld Back Propagator
     #   Inputs:          I - hologram (grayscale)
     #             I_MEDIAN - median image
@@ -159,51 +164,52 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP,  FS, SZ, NUMSTEPS)
     import math as m
     import numpy as np
     from functions import bandpassFilter
-        
+
     # Divide by Median image
     I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
-    IN = I/I_MEDIAN
-#    IN = I - I_MEDIAN
-#     IN[IN < 0] = 0
-    
+    IN = I / I_MEDIAN
+    #    IN = I - I_MEDIAN
+    #     IN[IN < 0] = 0
+
     # Bandpass Filter
     _, BP = bandpassFilter(IN, 2, 30)
-    E = np.fft.fftshift(BP)*np.fft.fftshift(np.fft.fft2(IN - 1))
-    
+    E = np.fft.fftshift(BP) * np.fft.fftshift(np.fft.fft2(IN - 1))
+
     # Patameters     #Set as input parameters
     # N = 1.3226               # Index of refraction
-    LAMBDA = LAMBDA            # HeNe
-    FS = FS*(MPP/10)               # Sampling Frequency px/um
-    NI = np.shape(IN)[0]     # Number of rows
-    NJ = np.shape(IN)[1]     # Nymber of columns
+    LAMBDA = LAMBDA  # HeNe
+    FS = FS * (MPP / 10)  # Sampling Frequency px/um
+    NI = np.shape(IN)[0]  # Number of rows
+    NJ = np.shape(IN)[1]  # Nymber of columns
     # SZ = 10
-#     Z = FS*Z
-    Z = (FS*(51/31))*np.arange(1, NUMSTEPS+1)
-#    Z = SZ*np.arange(0, NUMSTEPS)
-    K = 2*m.pi*N/LAMBDA      # Wavenumber
-    
+    #     Z = FS*Z
+    Z = (FS * (51 / 31)) * np.arange(1, NUMSTEPS + 1)
+    #    Z = SZ*np.arange(0, NUMSTEPS)
+    K = 2 * m.pi * N / LAMBDA  # Wavenumber
+
     # Rayleigh-Sommerfeld Arrays
     P = np.empty_like(I_MEDIAN, dtype=complex)
     for i in range(NI):
         for j in range(NJ):
-            P[i, j] = ((LAMBDA*FS)/(max([NI, NJ])*N))**2*((i-NI/2)**2+(j-NJ/2)**2)
+            P[i, j] = ((LAMBDA * FS) / (max([NI, NJ]) * N)) ** 2 * ((i - NI / 2) ** 2 + (j - NJ / 2) ** 2)
 
     # P = np.conj(P)
-    Q = np.sqrt(1-P)-1
+    Q = np.sqrt(1 - P) - 1
 
-    if all(Z>0):
+    if all(Z > 0):
         Q = np.conj(Q)
 
     R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
     IZ = np.empty_like(R, dtype=float)
 
     for k in range(Z.shape[0]):
-        R[:, :, k] = np.exp((-1j*K*Z[k]*Q))
+        R[:, :, k] = np.exp((-1j * K * Z[k] * Q))
         IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R[:, :, k])))
-#        print(('RS', k))
+    #        print(('RS', k))
     return IZ
 
-#%%
+
+# %%
 def medianImage(VID, numFrames):
     ## Median Image
     #   Input:   VID - 3D numpy array of video file
@@ -222,7 +228,8 @@ def medianImage(VID, numFrames):
 
     return MEAN
 
-#%%
+
+# %%
 def zGradientStack(IM):
     # Z-Gradient Stack
     #   Inputs:   I - hologram (grayscale)
@@ -232,32 +239,32 @@ def zGradientStack(IM):
     import numpy as np
     from scipy import ndimage
     from functions import rayleighSommerfeldPropagator, exportAVI
-    
-#    I = mpimg.imread('131118-1.png')
-#    I_MEDIAN = mpimg.imread('AVG_131118-2.png')
-#    Z = 0.02*np.arange(1, 151)
-#     IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
-    
-    #%% Sobel-type kernel
+
+    #    I = mpimg.imread('131118-1.png')
+    #    I_MEDIAN = mpimg.imread('AVG_131118-2.png')
+    #    Z = 0.02*np.arange(1, 151)
+    #     IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
+
+    # %% Sobel-type kernel
     SZ0 = np.array(([-1, -2, -1], [-2, -4, -2], [-1, -2, -1]), dtype='float')
     SZ1 = np.zeros_like(SZ0)
     SZ2 = -SZ0
     SZ = np.stack((SZ0, SZ1, SZ2), axis=2)
     del SZ0, SZ1, SZ2
-    
-    #%% Convolution IM*SZ
-    IM = IM**2
-    IMM = np.dstack((IM[:,:,0][:, :, np.newaxis], IM, IM[:,:,-1][:, :, np.newaxis]))
-    GS = ndimage.convolve(IMM, SZ, mode='mirror')  
-    GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
+
+    # %% Convolution IM*SZ
+    IM = IM ** 2
+    IMM = np.dstack((IM[:, :, 0][:, :, np.newaxis], IM, IM[:, :, -1][:, :, np.newaxis]))
+    GS = ndimage.convolve(IMM, SZ, mode='mirror')
+    GS = np.delete(GS, [0, np.shape(GS)[2] - 1], axis=2)
     del IMM
-    
-    
-#    exportAVI('gradientStack.avi',CONV, CONV.shape[0], CONV.shape[1], 24)
-#    exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
+
+    #    exportAVI('gradientStack.avi',CONV, CONV.shape[0], CONV.shape[1], 24)
+    #    exportAVI('frameStack.avi', IM, IM.shape[0], IM.shape[1], 24)
     return GS
 
-#%%
+
+# %%
 def dataCursor1D():
     # Data Cursor in plots
     import mpldatacursor
@@ -265,7 +272,8 @@ def dataCursor1D():
                              formatter='x = {i}\ny = {y:.06g}'.format)
     return 0
 
-#%%
+
+# %%
 def dataCursor2D():
     # Data Cursor in 2D plots
     import mpldatacursor
@@ -273,7 +281,8 @@ def dataCursor2D():
                              formatter='x, y = {i}, {j}\nz = {z:.06g}'.format)
     return 0
 
-#%%
+
+# %%
 def dataCursor3D():
     # Data Cursor in 3D plots
     import mpldatacursor
@@ -281,23 +290,25 @@ def dataCursor3D():
                              formatter='x, y = {i}, {j}\nz = {z:.06g}'.format)
     return 0
 
-#%%
+
+# %%
 def histeq(im):
     ## Histogram equalization of a grayscale image
     import numpy as np
     from PIL import Image
 
     # get image histogram
-    imhist,bins = np.histogram(im.flatten(), 256, normed=True)
-    cdf = imhist.cumsum() # cumulative distribution function
-    cdf = 255 * cdf / cdf[-1] # normalize
+    imhist, bins = np.histogram(im.flatten(), 256, normed=True)
+    cdf = imhist.cumsum()  # cumulative distribution function
+    cdf = 255 * cdf / cdf[-1]  # normalize
 
     # use linear interpolation of cdf to find new pixel values
-    im2 = np.interp(im.flatten(),bins[:-1],cdf)
+    im2 = np.interp(im.flatten(), bins[:-1], cdf)
 
     return im2.reshape(im.shape), cdf
 
-#%%
+
+# %%
 def guiImport():
     # GUI for values
     import PySimpleGUI as sg
@@ -323,7 +334,8 @@ def guiImport():
 
     return values
 
-#%%
+
+# %%
 # Particles positions in 3D
 def positions3D(GS, FRAME_NUM):
     import numpy as np
@@ -340,7 +352,8 @@ def positions3D(GS, FRAME_NUM):
 
     return LOCS
 
-#%%
+
+# %%
 def plot3D(LOCS, title, fig, ax):
     # 3D Scatter Plot
     # from mpl_toolkits.mplot3d import Axes3D
