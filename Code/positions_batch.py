@@ -19,7 +19,7 @@ MPP = 20
 FS = 0.711                     # Sampling Frequency px/um
 SZ = 10                       # # Step size um
 NUMSTEPS = 150
-THRESHOLD = 0.5
+THRESHOLD = 0.3
 
 #%%
 # FRAME = 1
@@ -31,7 +31,7 @@ THRESHOLD = 0.5
 
 #%%
 # NUM_FRAMES = np.shape(VID)[-1]
-NUM_FRAMES = 60
+NUM_FRAMES = 20
 LOCS = np.empty(NUM_FRAMES, dtype=object)
 
 T0 = time.time()
@@ -60,8 +60,31 @@ from plotly.offline import plot
 
 A = pd.DataFrame(columns=['x', 'y', 'z', 'frame'])
 for i in range(np.shape(LOCS)[0]):
-    A = A.append(pd.DataFrame(LOCS[i], columns=['x', 'y', 'z', 'frame']))
-    
+    B = LOCS[i]
+    C = i*np.ones((len(B),1))
+    D = np.hstack((B, C))
+    A = A.append(pd.DataFrame(D, columns=['x', 'y', 'z', 'frame']))
+
+
 fig = px.scatter_3d(A, x='x', y='y', z='z', color='frame')
-fig.update_traces(marker=dict(size=3))
+fig.update_traces(marker=dict(size=4))
 plot(fig)
+
+#%%
+# 3D Scatter Plot
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot
+
+PKS = A.__array__()
+np.savetxt('locs.txt', PKS)
+fig = pyplot.figure()
+ax = Axes3D(fig)
+
+p = ax.scatter(PKS[:, 0], PKS[:, 1], PKS[:, 2], s=25, marker='o', c=PKS[:,3])
+ax.tick_params(axis='both', labelsize=10)
+ax.set_title('Cells Positions in 3D', fontsize='20')
+ax.set_xlabel('x (pixels)', fontsize='18')
+ax.set_ylabel('y (pixels)', fontsize='18')
+ax.set_zlabel('z (slices)', fontsize='18')
+fig.colorbar(p)
+pyplot.show()

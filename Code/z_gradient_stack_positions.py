@@ -42,15 +42,25 @@ GS[GS < THRESHOLD] = 0
 
 #%%
 # Find (x,y,z) of cells
-LOCS = np.zeros((1, 3))
-for k in range(GS.shape[2]):
-    PEAKS = peak_local_max(GS[:, :, k], indices=True)  # Check for peak radius
-    ZZ = np.ones((PEAKS.shape[0], 1)) * k
-    PEAKS = np.append(PEAKS, ZZ, axis=1)
-    LOCS = np.append(LOCS, PEAKS, axis=0)
-LOCS = np.delete(LOCS, 0, 0)
+# LOCS = np.zeros((1, 3))
+# for k in range(GS.shape[2]):
+#     PEAKS = peak_local_max(GS[:, :, k], indices=True)  # Check for peak radius
+#     ZZ = np.ones((PEAKS.shape[0], 1)) * k
+#     PEAKS = np.append(PEAKS, ZZ, axis=1)
+#     LOCS = np.append(LOCS, PEAKS, axis=0)
+# LOCS = np.delete(LOCS, 0, 0)
+#
+# np.savetxt('locs.txt', LOCS)
 
-np.savetxt('locs.txt', LOCS)
+ZP = np.max(GS, axis=2)
+PKS = peak_local_max(ZP, min_distance=3)
+
+MAX = np.empty((len(PKS), 1))
+for i in range(len(PKS)):
+    M = np.where(GS[PKS[i, 0], PKS[i, 1], :] == np.max(GS[PKS[i, 0], PKS[i, 1], :]))
+    MAX[i,0] = M[0][0]
+
+PKS = np.hstack((PKS, MAX))
 print(time.time() - T0)
 
 #%%

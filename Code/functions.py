@@ -253,7 +253,7 @@ def zGradientStack(IM):
     del SZ0, SZ1, SZ2
 
     # %% Convolution IM*SZ
-    IM = IM ** 2
+    # IM = IM ** 2
     IMM = np.dstack((IM[:, :, 0][:, :, np.newaxis], IM, IM[:, :, -1][:, :, np.newaxis]))
     GS = ndimage.convolve(IMM, SZ, mode='mirror')
     GS = np.delete(GS, [0, np.shape(GS)[2] - 1], axis=2)
@@ -341,16 +341,26 @@ def positions3D(GS, FRAME_NUM):
     import numpy as np
     from skimage.feature import peak_local_max
 
-    LOCS = np.zeros((1, 4))
-    for k in range(GS.shape[2]):
-        PEAKS = peak_local_max(GS[:, :, k], indices=True)  # Check for peak radius
-        ZZ = np.ones((PEAKS.shape[0], 1)) * k
-        FRAME = np.ones((ZZ.shape[0], 1)) * FRAME_NUM
-        PEAKS = np.hstack((PEAKS, ZZ, FRAME))
-        LOCS = np.append(LOCS, PEAKS, axis=0)
-    LOCS = np.delete(LOCS, 0, 0)
+    # LOCS = np.zeros((1, 4))
+    # for k in range(GS.shape[2]):
+    #     PEAKS = peak_local_max(GS[:, :, k], indices=True)  # Check for peak radius
+    #     ZZ = np.ones((PEAKS.shape[0], 1)) * k
+    #     FRAME = np.ones((ZZ.shape[0], 1)) * FRAME_NUM
+    #     PEAKS = np.hstack((PEAKS, ZZ, FRAME))
+    #     LOCS = np.append(LOCS, PEAKS, axis=0)
+    # LOCS = np.delete(LOCS, 0, 0)
 
-    return LOCS
+    ZP = np.max(GS, axis=2)
+    PKS = peak_local_max(ZP, min_distance=3)
+
+    MAX = np.empty((len(PKS), 1))
+    for i in range(len(PKS)):
+        M = np.where(GS[PKS[i, 0], PKS[i, 1], :] == np.max(GS[PKS[i, 0], PKS[i, 1], :]))
+        MAX[i, 0] = M[0][0]
+
+    PKS = np.hstack((PKS, MAX))
+
+    return PKS
 
 
 # %%
