@@ -33,9 +33,10 @@ class IndexTracker(object):
 
 fig, ax = plt.subplots(1, 1)
 
-X = GSSS
+X = IM
 
 tracker = IndexTracker(ax, X)
 
 fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
 plt.show()
+

@@ -105,13 +105,13 @@ pyplot.show()
 # IMMM = np.uint8(IMM)
 
 # GSS = np.abs(GS)**2
-GSS = (GS-np.min(GS))/np.max((GS-np.min(GS)))*255
-GSSS = np.uint8(GSS)
+# GSS = (GS-np.min(GS))/np.max((GS-np.min(GS)))*255
+# GSSS = np.uint8(GSS)
 
 #%%s
 # Export results as .AVI
 # exportAVI('frameStack.avi', IMMM, IM.shape[0], IM.shape[1], 30)
-exportAVI('gradientStack.avi', GSSS, GS.shape[0], GS.shape[1], 30)
+# exportAVI('gradientStack.avi', GSSS, GS.shape[0], GS.shape[1], 30)
 
 
 

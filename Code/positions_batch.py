@@ -19,7 +19,7 @@ MPP = 20
 FS = 0.711                     # Sampling Frequency px/um
 SZ = 10                       # # Step size um
 NUMSTEPS = 150
-THRESHOLD = 0.3
+THRESHOLD = 0.2
 
 #%%
 # FRAME = 1
@@ -31,7 +31,8 @@ THRESHOLD = 0.3
 
 #%%
 # NUM_FRAMES = np.shape(VID)[-1]
-NUM_FRAMES = 20
+# NUM_FRAMES = int(np.floor(np.shape(VID)[-1]/2))
+NUM_FRAMES = 50
 LOCS = np.empty(NUM_FRAMES, dtype=object)
 
 T0 = time.time()
@@ -88,3 +89,33 @@ ax.set_ylabel('y (pixels)', fontsize='18')
 ax.set_zlabel('z (slices)', fontsize='18')
 fig.colorbar(p)
 pyplot.show()
+
+#%%
+# import numpy as np
+# import matplotlib.pyplot as plt
+#
+# A = np.zeros((100, 100))
+# B = 255*np.ones((10, 10))
+#
+# A[0:10, 0:10] = B
+#
+# NI, NJ = np.shape(A)
+#
+# N = 20
+# C = np.zeros((NI, NJ, N+1))
+# C[:, :, 0] = A
+# for ii in range(N):
+#     x = np.random.randint(0, 9)*10
+#     y = np.random.randint(0, 9)*10
+#     C[:, :, ii+1] = np.roll(A, (x, y), axis=(0, 1))
+#     # plt.imshow(C[:, :, ii+1])
+#     # plt.pause(0.1)
+#
+# C_FT = np.fft.fftshift(np.fft.fft2(C, axes=(0, 1)))
+# for ii in range(N+1):
+#     plt.imshow(C[:, :, ii])
+#     # plt.imshow(np.real(C_FT[:, :, ii]))
+#     plt.pause(0.1)
+#
+# plt.close()
+

@@ -168,7 +168,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP, FS, SZ, NUMSTEPS):
     # Divide by Median image
     I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
     IN = I / I_MEDIAN
-    #    IN = I - I_MEDIAN
+    #    IN = I - I_MEDIAN,
     #     IN[IN < 0] = 0
 
     # Bandpass Filter
@@ -379,5 +379,22 @@ def plot3D(LOCS, title, fig, ax):
     ax.set_ylabel('y (pixels)', fontsize='18')
     ax.set_zlabel('z (slices)', fontsize='18')
     pyplot.show()
+
+    return
+
+#%%
+def imshow_sequence(im, delay, run):
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    fig, ax = plt.subplots()
+
+    while run:
+        for i in range(np.shape(im)[2]):
+            ax.cla()
+            ax.imshow(im[:, :, i], cmap='gray')
+            ax.set_title("frame {}".format(i))
+            # Note that using time.sleep does *not* work here!
+            plt.pause(delay)
 
     return
