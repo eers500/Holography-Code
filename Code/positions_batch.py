@@ -3,10 +3,12 @@
 #%%
 import time
 import numpy as np
+import easygui
 import functions as f
 
 #%%
-PATH = 'MF1_30Hz_200us_awaysection.avi'
+PATH = easygui.fileopenbox()
+# PATH = 'MF1_30Hz_200us_awaysection.avi'
 #PATH = '10x_laser_50Hz_10us_g1036_bl1602_500frames.avi'
 T0 = time.time()
 VID = f.videoImport(PATH, 0)
@@ -15,11 +17,11 @@ I_MEDIAN = f.medianImage(VID, FRAMES_MEDIAN)
 
 N = 1.3226
 LAMBDA = 0.642              # HeNe
-MPP = 20
+MPP = 10
 FS = 0.711                     # Sampling Frequency px/um
 SZ = 10                       # # Step size um
 NUMSTEPS = 150
-THRESHOLD = 0.2
+THRESHOLD = 0.3
 
 #%%
 # FRAME = 1
@@ -30,9 +32,9 @@ THRESHOLD = 0.2
 # LOCS = f.positions3D(GS)
 
 #%%
-# NUM_FRAMES = np.shape(VID)[-1]
+NUM_FRAMES = np.shape(VID)[-1]
 # NUM_FRAMES = int(np.floor(np.shape(VID)[-1]/2))
-NUM_FRAMES = 50
+# NUM_FRAMES = 50
 LOCS = np.empty(NUM_FRAMES, dtype=object)
 
 T0 = time.time()

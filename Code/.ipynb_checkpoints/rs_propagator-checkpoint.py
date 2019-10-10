@@ -1,33 +1,24 @@
 # -*- coding: utf-8 -*-
 """ Rayleigh-Sommerfeld Propagator"""
 #%%
-import os
 import math as m
 import time
 import matplotlib.image as mpimg
 import numpy as np
-import easygui
 from functions import bandpassFilter, exportAVI
 
 T0 = time.time()
-PATH = easygui.fileopenbox(multiple=True)
-# PATH_I = 'FRAMES/10um_10x_ECOLI_HCB1_100hz_40us.png'
 # I = mpimg.imread('131118-1.png')
-# I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
+I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
 # I = mpimg.imread('10x_laser_50Hz_10us_g1036_bl1602-003.png')
 # I = mpimg.imread('23-09-19_ECOLI_HCB1_100Hz_50us_10x_3-frame(0).png')
-I = mpimg.imread(PATH[0])
 
 #%%
 # Median image
-# PATH_IB = easygui.fileopenbox()
-# PATH_IB = 'FRAMES/MED_0um_10x_ECOLI_HCB1_100hz_40us-1.png'
-
 # IB = mpimg.imread('AVG_131118-1.png')
-# IB = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
+IB = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
 # IB = mpimg.imread('MED_10x_laser_50Hz_10us_g1036_bl1602-003-1.png')
 # IB = mpimg.imread('MED_23-09-19_ECOLI_HCB1_100Hz_50us_10x_3-1.png')
-IB = mpimg.imread(PATH[1])
 
 
 IB[IB == 0] = np.mean(IB)
@@ -77,8 +68,7 @@ IM = (IZ - np.min(IZ))*(255/(np.max(IZ)-np.min(IZ)))
 IZZ = (IZ-np.min(IZ))/np.max((IZ-np.min(IZ)))*255
 IZZZ = np.uint8(IZZ)
 IMM = np.uint8(IM)
-_, NAME = os.path.split(PATH[0])
-exportAVI(NAME+'_frame_stack.avi', IMM, IZZ.shape[0], IZZ.shape[1], 30)
+exportAVI('frame_stack.avi', IMM, IZZ.shape[0], IZZ.shape[1], 30)
 
 #%%
 # Histogram equalizaion for visualization

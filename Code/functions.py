@@ -324,7 +324,7 @@ def guiImport():
         [sg.Text('Step size (10)', size=(35, 1)), sg.InputText(default_text=10)],
         [sg.Text('Number os steps (150)', size=(35, 1)), sg.InputText(default_text=150)],
         [sg.Text('Gradient Stack Threshold (~0.1)', size=(35, 1)), sg.InputText(default_text=0.1)],
-        [sg.Text('MAgnification (10, 20, etc)', size=(35, 1)), sg.InputText(default_text=10)],
+        [sg.Text('Magnification (10, 20, etc)', size=(35, 1)), sg.InputText(default_text=10)],
         [sg.Submit(), sg.Cancel()]
     ]
 

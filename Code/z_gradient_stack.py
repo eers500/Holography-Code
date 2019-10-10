@@ -4,6 +4,7 @@
 # Import libraries and resources
 import time
 import numpy as np
+import easygui
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 #from mpl_toolkits.mplot3d import Axes3D
@@ -11,23 +12,25 @@ from skimage.feature import peak_local_max
 from scipy import ndimage
 from functions import rayleighSommerfeldPropagator, exportAVI
 
-T0 = time.time()
+
 # I = mpimg.imread('131118-1.png')
 # I_MEDIAN = mpimg.imread('AVG_131118-1.png')
 
-I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
-I_MEDIAN = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
+PATH = easygui.fileopenbox(multiple=True)
+I = mpimg.imread(PATH[0])
+I_MEDIAN = mpimg.imread(PATH[1])
 
 # I = mpimg.imread('10x_laser_50Hz_10us_g1036_bl1602-003.png')
 # I_MEDIAN = mpimg.imread('MED_10x_laser_50Hz_10us_g1036_bl1602-003-1.png')
 
 N = 1.3226
 LAMBDA = 0.642
-MPP = 20                      # Magnification: 10x, 20x, 50x, etc
+MPP = easygui.integerbox(msg='Enter magnification (10x, 20x, etc)', title='Magnification', default=10)                      # Magnification: 10x, 20x, 50x, etc
 FS = 0.711                # Sampling Frequency px/um
 SZ = 4                        # # Step size um
 NUMSTEPS = 150
 
+T0 = time.time()
 # Z = np.arange(1, 151)
 IM = rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP, FS, SZ, NUMSTEPS)
 
