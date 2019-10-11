@@ -54,6 +54,7 @@ del IMM
 
 #%%
 THRESHOLD = 0.2
+# THRESHOLD = np.mean(GS)
 GS[GS < THRESHOLD] = 0
 # GS[GS > THRESHOLD] = 255
 
@@ -68,9 +69,10 @@ for i in range(len(PKS)):
 
 PKS = np.hstack((PKS, MAX))
 print(time.time()-T0)
+
 # plt.plot(GS[PKS[:,0], PKS[:,1], :])
-# plt.imshow(ZP, cmap='gray')
-# plt.scatter(PKS[:,1], PKS[:,0], marker='o', facecolors='none', s=80, edgecolors='r')
+plt.imshow(ZP, cmap='gray')
+plt.scatter(PKS[:,1], PKS[:,0], marker='o', facecolors='none', s=80, edgecolors='r')
 # plt.colorbar()
 
 #%%
@@ -86,19 +88,19 @@ plot(fig)
 
 #%%
 # 3D Scatter Plot
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import pyplot
-
-fig = pyplot.figure()
-ax = Axes3D(fig)
-
-ax.scatter(PKS[:, 0], PKS[:, 1], PKS[:, 2], s=50, marker='o')
-ax.tick_params(axis='both', labelsize=10)
-ax.set_title('Cells Positions in 3D', fontsize='20')
-ax.set_xlabel('x (pixels)', fontsize='18')
-ax.set_ylabel('y (pixels)', fontsize='18')
-ax.set_zlabel('z (slices)', fontsize='18')
-pyplot.show()
+# from mpl_toolkits.mplot3d import Axes3D
+# from matplotlib import pyplot
+#
+# fig = pyplot.figure()
+# ax = Axes3D(fig)
+#
+# ax.scatter(PKS[:, 0], PKS[:, 1], PKS[:, 2], s=50, marker='o')
+# ax.tick_params(axis='both', labelsize=10)
+# ax.set_title('Cells Positions in 3D', fontsize='20')
+# ax.set_xlabel('x (pixels)', fontsize='18')
+# ax.set_ylabel('y (pixels)', fontsize='18')
+# ax.set_zlabel('z (slices)', fontsize='18')
+# pyplot.show()
 
 #%%
 # Prepare to export AVI
@@ -118,48 +120,3 @@ pyplot.show()
 
 
 
-#%%
-# Plot
-# plt.imshow(GS[:,:,12], cmap='gray')
-# plt.title('E.coli Raw Hologram', fontsize='20')
-# plt.xlabel('x (pixels)', fontsize='18')
-# plt.ylabel('y (pixels)', fontsize='18')
-
-#%%
-# 3D surace Plot
-# from mpl_toolkits.mplot3d import Axes3D
-# from matplotlib import pyplot
-#
-# fig = pyplot.figure()
-# ax = Axes3D(fig)
-#
-# X, Y = np.meshgrid(np.arange(1, 513, 1), np.arange(1, 513, 1))
-# ax.plot_surface(X, Y, GS[:, :, 12])
-# ax.tick_params(axis='both', labelsize=10)
-# ax.set_title('Cells Positions in 3D', fontsize='20')
-# ax.set_xlabel('x (pixels)', fontsize='18')
-# ax.set_ylabel('y (pixels)', fontsize='18')
-# ax.set_zlabel('z (slices)', fontsize='18')
-# pyplot.show()
-
-#%%
-# Plot bokeh
-# from bokeh.plotting import figure, show, output_file
-#
-#
-# p = figure(tooltips=[("x", "$x"), ("y", "$y"), ("value", "@image")])
-# # p.x_range.range_padding = p.y_range.range_padding = 0
-#
-# # must give a vector of image data for image parameter
-# im = GS[:,:,36]
-# p.image(image=[im[::-1]], x=0, y=0, dw=512, dh=512, palette="Spectral11")
-#
-# output_file("image.html", title="image.py example")
-#
-# show(p)  # open a browser
-#
-# ##
-# GG = mpimg.imread("Result of MF1_30Hz_200us_awaysection-1.png")
-#
-# plt.imshow(GG, cmap='gray')
-# plt.title('Normalized Hologram', fontsize='20')
