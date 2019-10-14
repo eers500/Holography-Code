@@ -67,24 +67,61 @@ for i in range(len(PKS)):
     M = np.where(GS[PKS[i, 0], PKS[i, 1], :] == np.max(GS[PKS[i, 0], PKS[i, 1], :]))
     MAX[i,0] = M[0][0]
 
-PKS = np.hstack((PKS, MAX))
+PKSS = np.hstack((PKS, MAX))
 print(time.time()-T0)
 
 # plt.plot(GS[PKS[:,0], PKS[:,1], :])
-plt.imshow(ZP, cmap='gray')
-plt.scatter(PKS[:,1], PKS[:,0], marker='o', facecolors='none', s=80, edgecolors='r')
+# plt.imshow(ZP, cmap='gray')
+# plt.scatter(PKS[:,1], PKS[:,0], marker='o', facecolors='none', s=80, edgecolors='r')
 # plt.colorbar()
 
 #%%
-import plotly.express as px
-import pandas as pd
-from plotly.offline import plot
+# Testing
+ZP = np.max(GS, axis=-1)
+PKS = peak_local_max(ZP, min_distance=3)
 
-LOCS = pd.DataFrame(data=PKS, columns=['x', 'y', 'z'])
+# idj = PKS[0, 0]
+# idi = PKS[0, 1]
+#
+# A = GS[idi-3:idi+4:, idj-3:idj+4, :]
+# # A = GS[PKS[0, 1]-3:PKS[0, 1]+3, PKS[0, 0]-3:PKS[0, 0]+3, :]
+# B = np.sum(A, axis=(0, 1))
 
-fig = px.scatter_3d(LOCS, x='x', y='y', z='z', color='z')
-fig.update_traces(marker=dict(size=3))
-plot(fig)
+B = np.empty((NUMSTEPS, len(PKS)))
+for ii in range(len(PKS)):
+    idi = PKS[ii, 0]
+    idj = PKS[ii, 1]
+    A = GS[idi-3:idi+4:, idj-3:idj+4, :]
+    B[:, ii] = np.sum(A, axis=(0, 1))
+
+C = np.empty((len(PKS), 1), dtype=object)
+for ii in range(len(PKS)):
+    C[ii, 0] = peak_local_max(B[:, ii])
+    # C.append(peak_local_max(B[:, ii]))
+
+#%%
+D = []
+for ii in range(len(C)):
+    if len(C[ii, 0]) != 1:
+        for jj in range(len(C[ii, 0])):
+            D.append([C[ii, 0][jj].item(), ii])
+    else:
+        D.append([C[ii, 0].item(), ii])
+D = np.array(D)
+
+
+
+
+#%%
+# import plotly.express as px
+# import pandas as pd
+# from plotly.offline import plot
+#
+# LOCS = pd.DataFrame(data=PKS, columns=['x', 'y', 'z'])
+#
+# fig = px.scatter_3d(LOCS, x='x', y='y', z='z', color='z')
+# fig.update_traces(marker=dict(size=3))
+# plot(fig)
 
 #%%
 # 3D Scatter Plot
