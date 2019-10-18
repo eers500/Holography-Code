@@ -33,7 +33,7 @@ class IndexTracker(object):
 
 fig, ax = plt.subplots(1, 1)
 
-X = A
+X = IZ
 
 tracker = IndexTracker(ax, X)
 

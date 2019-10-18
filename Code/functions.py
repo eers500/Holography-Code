@@ -183,7 +183,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP, FS, SZ, NUMSTEPS):
     NJ = np.shape(IN)[1]  # Nymber of columns
     # SZ = 10
     #     Z = FS*Z
-    Z = (FS * (51 / 31)) * np.arange(1, NUMSTEPS + 1)
+    Z = (FS * (51 / 31)) * np.arange(0, NUMSTEPS)
     #    Z = SZ*np.arange(0, NUMSTEPS)
     K = 2 * m.pi * N / LAMBDA  # Wavenumber
 
@@ -196,7 +196,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP, FS, SZ, NUMSTEPS):
     # P = np.conj(P)
     Q = np.sqrt(1 - P) - 1
 
-    if all(Z > 0):
+    if any(Z > 0):
         Q = np.conj(Q)
 
     R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
