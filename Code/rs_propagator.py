@@ -47,9 +47,9 @@ LAMBDA = 0.642               # Diode
 FS = 0.711                     # Sampling Frequency px/um
 NI = np.shape(IN)[0]
 NJ = np.shape(IN)[1]
-SZ = 10                       # Step size in um
+SZ = 1                       # Step size in um
 # Z = (FS*(51/31))*np.arange(0, 150)       # Number of steps
-Z = SZ*np.arange(0, 150)
+Z = SZ*np.arange(0, 1500)
 # ZZ = np.linspace(0, SZ*149, 150)
 # Z = FS*ZZ
 K = 2*m.pi*N/LAMBDA            # Wavenumber
@@ -97,8 +97,8 @@ print(time.time() - T0)
 #%%
 #IM = (IZ - np.min(IZ))*(255/(np.max(IZ)-np.min(IZ)))
 #IMM = np.uint8(IM)
-#_, NAME = os.path.split(PATH[0])
-#exportAVI(NAME[0:-4]+'_frame_stack.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
+EX_PATH, NAME = os.path.split(PATH[0])
+exportAVI(EX_PATH+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
 
 #%%
 # Histogram equalizaion for visualization
