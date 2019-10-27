@@ -38,8 +38,11 @@ I = mpimg.imread(PATH[0])
 IB = mpimg.imread(PATH[1])
 
 
-IB[IB == 0] = np.mean(IB)
-IN = I/IB   #divide
+#IB[IB == 0] = np.mean(IB)
+#IN = I/IB   #divide
+PATH = '/home/erick/Documents/PhD/23_10_19/300_L_10x_100Hz_45us.tif'
+IN = mpimg.imread(PATH)
+
 
 N = 1.3226
 LAMBDA = 0.642               # Diode
@@ -47,9 +50,9 @@ LAMBDA = 0.642               # Diode
 FS = 0.711                     # Sampling Frequency px/um
 NI = np.shape(IN)[0]
 NJ = np.shape(IN)[1]
-SZ = 1                       # Step size in um
+SZ = 10                       # Step size in um
 # Z = (FS*(51/31))*np.arange(0, 150)       # Number of steps
-Z = SZ*np.arange(0, 1500)
+Z = SZ*np.arange(0, 150)
 # ZZ = np.linspace(0, SZ*149, 150)
 # Z = FS*ZZ
 K = 2*m.pi*N/LAMBDA            # Wavenumber
@@ -58,7 +61,7 @@ _, BP = bandpassFilter(IN, 2, 30)
 E = np.fft.fftshift(BP)*np.fft.fftshift(np.fft.fft2(IN - 1))
 
 #%%
-Q = np.empty_like(IB, dtype='complex64')
+Q = np.empty_like(IN, dtype='complex64')
 for i in range(NI):
     for j in range(NJ):
         Q[i, j] = ((LAMBDA*FS)/(max([NI, NJ])*N))**2*((i-NI/2)**2+(j-NJ/2)**2)
@@ -95,10 +98,13 @@ print(time.time() - T0)
 # plt.imshow(IZ[:, :, 149], cmap = 'gray')
 
 #%%
-#IM = (IZ - np.min(IZ))*(255/(np.max(IZ)-np.min(IZ)))
-#IMM = np.uint8(IM)
-EX_PATH, NAME = os.path.split(PATH[0])
-exportAVI(EX_PATH+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
+IM = (IZ - np.min(IZ))*(255/(np.max(IZ)-np.min(IZ)))
+IMM = np.uint8(IM)
+# EX_PATH, NAME = os.path.split(PATH[0])
+# exportAVI(EX_PATH+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
+
+EX_PATH, NAME = os.path.split(PATH)
+exportAVI(EX_PATH+'/'+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
 
 #%%
 # Histogram equalizaion for visualization
