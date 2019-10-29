@@ -47,10 +47,16 @@ SZ = np.stack((SZ0, SZ1, SZ2), axis=-1)
 #%%
 # Convolution IM*SZ
 # IM = IM**2        # Intensity of E field?
+T0 = time.time()
 IMM = np.dstack((IM[:, :, 0][:, :, np.newaxis], IM, IM[:, :, -1][:, :, np.newaxis]))
 GS = ndimage.convolve(IMM, SZ, mode='mirror')
 GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
+T1 = time.time()
+print(T1-T0)
 del IMM
+
+grad = -np.gradient(IM, axis=-1)
+print(time.time()-T1)
 
 #%%
 THRESHOLD = 0.1

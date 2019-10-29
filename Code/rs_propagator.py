@@ -38,10 +38,10 @@ I = mpimg.imread(PATH[0])
 IB = mpimg.imread(PATH[1])
 
 
-#IB[IB == 0] = np.mean(IB)
-#IN = I/IB   #divide
-PATH = '/home/erick/Documents/PhD/23_10_19/300_L_10x_100Hz_45us.tif'
-IN = mpimg.imread(PATH)
+IB[IB == 0] = np.mean(IB)
+IN = I/IB   #divide
+# PATH = '/home/erick/Documents/PhD/23_10_19/300_L_10x_100Hz_45us.tif'
+# IN = mpimg.imread(PATH)
 
 
 N = 1.3226

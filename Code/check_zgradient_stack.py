@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import functions as f
 
 
-IM = f.videoImport('/home/erick/Documents/PhD/23_10_19/000_L_10x_100Hz_45us_frame_stack_10um.avi', 0)
+IM = f.videoImport('E:/PhD/23_10_19/000_L_10x_100Hz_45us_frame_stack_10um.avi', 0)
 GS = f.zGradientStack(IM)
 grad = -np.gradient(IM, axis=-1)
 
@@ -42,24 +42,36 @@ plt.show()
 
 #%%
 # 3D Scatter Plot
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import pyplot
+# from mpl_toolkits.mplot3d import Axes3D
+# from matplotlib import pyplot
+#
+#
+# fig = pyplot.figure()
+# ax = Axes3D(fig)
+#
+# #ni, nj, _ = np.shape(IM)
+# xx = np.arange(150)
+# yy = np.arange(510)
+#
+# X, Y = np.meshgrid(xx,yy)
+#
+# p = ax.plot_surface(X, Y, IM[334, :, :])
+# ax.tick_params(axis='both', labelsize=10)
+# #ax.set_title('Cells Positions in 3D', fontsize='20')
+# #ax.set_xlabel('x (pixels)', fontsize='18')
+# #ax.set_ylabel('y (pixels)', fontsize='18')
+# #ax.set_zlabel('z (slices)', fontsize='18')
+# fig.colorbar(p)
+# pyplot.show()
 
+#%%
+import plotly.express as px
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.offline import plot
 
-fig = pyplot.figure()
-ax = Axes3D(fig)
-
-#ni, nj, _ = np.shape(IM)
-xx = np.arange(150)
-yy = np.arange(510)
-
-X, Y = np.meshgrid(xx,yy)
-
-p = ax.contour(X, Y, IM[334, :, :])
-ax.tick_params(axis='both', labelsize=10)
-#ax.set_title('Cells Positions in 3D', fontsize='20')
-#ax.set_xlabel('x (pixels)', fontsize='18')
-#ax.set_ylabel('y (pixels)', fontsize='18')
-#ax.set_zlabel('z (slices)', fontsize='18')
-fig.colorbar(p)
-pyplot.show()
+fig = go.Figure(data=[go.Surface(z=IM[334, :, :])])
+fig.update_traces(contours_z=dict(show=True, usecolormap=True,
+                                  highlightcolor="limegreen", project_z=True))
+fig.show()
+plot(fig)

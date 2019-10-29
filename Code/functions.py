@@ -177,18 +177,18 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP, FS, SZ, NUMSTEPS):
 
     # Patameters     #Set as input parameters
     # N = 1.3226               # Index of refraction
-    LAMBDA = LAMBDA  # HeNe
-    FS = FS * (MPP / 10)  # Sampling Frequency px/um
+    LAMBDA = LAMBDA       # HeNe
+    FS = FS               # Sampling Frequency px/um
     NI = np.shape(IN)[0]  # Number of rows
     NJ = np.shape(IN)[1]  # Nymber of columns
     # SZ = 10
-    #     Z = FS*Z
-    Z = (FS * (51 / 31)) * np.arange(0, NUMSTEPS)
+    Z = SZ*np.arange(0, NUMSTEPS)
+    # Z = (FS * (51 / 31)) * np.arange(0, NUMSTEPS)
     #    Z = SZ*np.arange(0, NUMSTEPS)
     K = 2 * m.pi * N / LAMBDA  # Wavenumber
 
     # Rayleigh-Sommerfeld Arrays
-    P = np.empty_like(I_MEDIAN, dtype=complex)
+    P = np.empty_like(I_MEDIAN, dtype='complex64')
     for i in range(NI):
         for j in range(NJ):
             P[i, j] = ((LAMBDA * FS) / (max([NI, NJ]) * N)) ** 2 * ((i - NI / 2) ** 2 + (j - NJ / 2) ** 2)
@@ -196,15 +196,15 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, MPP, FS, SZ, NUMSTEPS):
     # P = np.conj(P)
     Q = np.sqrt(1 - P) - 1
 
-    if any(Z > 0):
+    if all(Z > 0):
         Q = np.conj(Q)
 
-    R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
-    IZ = np.empty_like(R, dtype=float)
+    # R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
+    IZ = np.empty([NI, NJ, Z.shape[0]], dtype='float32')
 
     for k in range(Z.shape[0]):
-        R[:, :, k] = np.exp((-1j * K * Z[k] * Q))
-        IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R[:, :, k])))
+        R = np.exp((-1j*K*Z[k]*Q), dtype='complex64')
+        IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R)))
     #        print(('RS', k))
     return IZ
 
