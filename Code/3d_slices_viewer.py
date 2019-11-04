@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from functions import dataCursor2D
+#from functions import dataCursor2D
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -33,9 +33,9 @@ class IndexTracker(object):
 
 fig, ax = plt.subplots(1, 1)
 
-gr =grad
-gr[gr<0.00]=0
-X = gr
+#gr =grad
+#gr[gr<1]=0
+X = images
 
 tracker = IndexTracker(ax, X)
 

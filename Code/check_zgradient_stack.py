@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 import functions as f
 
 
-IM = f.videoImport('E:/PhD/23_10_19/000_L_10x_100Hz_45us_frame_stack_10um.avi', 0)
+# IM = f.videoImport('E:/PhD/23_10_19/000_L_10x_100Hz_45us_frame_stack_10um.avi', 0)
+IM = f.videoImport('/home/erick/Documents/PhD/23_10_19//000_L_10x_100Hz_45us_frame_stack_10um.avi', 0)
 GS = f.zGradientStack(IM)
 grad = -np.gradient(IM, axis=-1)
 

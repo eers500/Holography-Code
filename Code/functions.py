@@ -398,3 +398,13 @@ def imshow_sequence(im, delay, run):
             plt.pause(delay)
 
     return
+
+#%%
+# Fraunhofer diffraction
+def fraunhofer(rho, wsize, zdist):
+    """Fraunhofer diffraction"""
+    import numpy as np
+    from scipy.special import j1
+    lam = 0.642     # lambda
+    # z = 5
+    return j1(np.pi*wsize*rho/(lam*zdist))/(wsize*rho/(lam*zdist))
