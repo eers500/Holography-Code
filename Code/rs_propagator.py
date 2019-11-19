@@ -111,3 +111,39 @@ exportAVI(EX_PATH+'/'+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shap
 # IZZ, CDF = histeq(IM)
 # IZZZ = np.uint8(IZZ)
 # exportAVI('IZZZ.avi',IZZZ, IZZ.shape[0], IZZ.shape[1], 30)
+
+#%%
+# Symbolic gradient stack
+import numpy as np
+from sympy import *
+
+x, y, z, k = symbols('x y z k')
+e = exp(1j*k*(x**2+y**2+z**2)**(1/2))/(x**2+y**2+z**2)**(1/2)
+h = (1/2*np.pi)*diff(e, z)
+H = diff(h, z)
+
+hh = lambdify((x, y, z, k), h, 'numpy')
+HH = lambdify((x, y, z, k), H, 'numpy')
+
+#%%
+X = np.arange(np.shape(IN)[0])-np.shape(IN)[0]/2
+Y = X
+
+xx, yy = np.meshgrid(X, Y)
+
+rs = hh(xx, yy, Z[149], K)
+GS = HH(xx, yy, Z[149], K)
+
+# plt.figure(1)
+# plt.imshow(np.real(gs), cmap='gray')
+# plt.show()ddd
+# plt.figure(2)
+# plt.imshow(np.real(GS), cmap='gray')
+# plt.show()
+
+IZZ = np.empty([NI, NJ, Z.shape[0]], dtype='float32')
+R = np.empty([NI, NJ, Z.shape[0]], dtype='complex64')
+for k in range(1,Z.shape[0]):
+    print(k)
+    R[:, :, k] = np.fft.fftshift(np.fft.fft2(HH(xx, yy, Z[k], K)))
+    IZZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E*R[:, :, k])))
