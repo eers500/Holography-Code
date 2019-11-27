@@ -103,7 +103,7 @@ IMM = np.uint8(IM)
 # EX_PATH, NAME = os.path.split(PATH[0])
 # exportAVI(EX_PATH+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
 
-EX_PATH, NAME = os.path.split(PATH)
+EX_PATH, NAME = os.path.split(PATH[0])
 exportAVI(EX_PATH+'/'+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
 
 #%%
@@ -115,7 +115,7 @@ exportAVI(EX_PATH+'/'+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shap
 #%%
 # Symbolic gradient stack
 import numpy as np
-from sympy import *
+from sympy import symbols, diff, lambdify, exp
 
 x, y, z, k = symbols('x y z k')
 e = exp(1j*k*(x**2+y**2+z**2)**(1/2))/(x**2+y**2+z**2)**(1/2)

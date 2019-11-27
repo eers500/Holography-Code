@@ -35,7 +35,7 @@ fig, ax = plt.subplots(1, 1)
 
 #gr =grad
 #gr[gr<1]=0
-X = np.real(R)
+X = IZZ
 
 tracker = IndexTracker(ax, X)
 
