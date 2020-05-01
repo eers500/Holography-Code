@@ -18,7 +18,7 @@ data = [1, 2, 3, 4, 5, 6, 7 ,8 , 9, 10]
 y = []
 
 #%%
-%%time
+#time
 T0 = time.time()
 for i in data:
     x = times2(i)

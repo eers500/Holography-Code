@@ -24,6 +24,7 @@ else:
 # I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
 # I = mpimg.imread('10x_laser_50Hz_10us_g1036_bl1602-003.png')
 # I = mpimg.imread('23-09-19_ECOLI_HCB1_100Hz_50us_10x_3-frame(0).png')
+
 I = mpimg.imread(PATH[0])
 
 #%%
@@ -50,7 +51,7 @@ LAMBDA = 0.642               # Diode
 FS = 0.711                     # Sampling Frequency px/um
 NI = np.shape(IN)[0]
 NJ = np.shape(IN)[1]
-SZ = 10                       # Step size in um
+SZ = 20                       # Step size in um
 # Z = (FS*(51/31))*np.arange(0, 150)       # Number of steps
 Z = SZ*np.arange(0, 150)
 # ZZ = np.linspace(0, SZ*149, 150)
