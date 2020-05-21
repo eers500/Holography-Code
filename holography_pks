@@ -1,0 +1,16 @@
+#!/bin/bash
+
+conda upgrade conda
+python -m pip install opencv-python
+conda install -c anaconda cudatoolkit
+conda install -c plotly plotly
+conda install -c bjornfjohansson mpldatacursor
+conda install -c conda-forge pysimplegui
+conda install -c anaconda pandas
+conda install -c anaconda numpy
+conda install -c anaconda scipy 
+conda install -c anaconda pandas 
+conda install -c conda-forge progress
+pip install easygui
+
+echo Finished!
