@@ -15,7 +15,7 @@ import numpy as np
 import easygui
 from matplotlib.widgets import Slider
 from skimage.feature import peak_local_max
-from functions import bandpassFilter, rayleighSommerfeldPropagator, imshow_sequence, histeq, imshow_slider, medianImage
+from functions import bandpassFilter, rayleighSommerfeldPropagator, imshow_sequence, histeq, imshow_slider, medianImage, positions3D
 
 T0 = time.time()
 FILES = easygui.fileopenbox(multiple=True)
@@ -97,13 +97,16 @@ for k in range(Z.shape[0]):
     R1[:, :, k] = np.exp((-1j*K*Z[k]*Q), dtype='complex64')           # Rayleigh Sommerfeld propagator
     IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E*R1[:, :, k])))
 
+GS = GS - 1
+_, BINS = np.histogram(GS.flatten())
+GS[GS < BINS[7]] = 0
 # Histogram equalization gradient stack
-GS, _ = histeq(GS)
+# GS, _ = histeq(GS)
 imshow_sequence(GS, 0.1, 1)
 
 # Histogram equalization image stack
-IZ, _ = histeq(IZ)
-imshow_sequence(IZ, 0.1, 1)
+# IZ, _ = histeq(IZ)
+# imshow_sequence(IZ, 0.1, 1)
 
 #%% Testing 
 # IZ_NORM = np.empty_like(IZ)
@@ -137,38 +140,7 @@ imshow_sequence(IZ, 0.1, 1)
 
 #%% Compute coordinates of particles using GS
 # Find Z coordinates for each (x, y) found by peak_local_max in Z-projection of GS
-ZP = np.max(GS, axis=-1)
-PKS = peak_local_max(ZP, min_distance=30)
-
-plt.imshow(ZP, cmap='gray')
-plt.scatter(PKS[:,1], PKS[:,0], marker='o', facecolors='none', s=80, edgecolors='r')
-plt.show()
-
-D1 = 8
-D2 = 8
-Z_SUM_XY = np.empty((GS.shape[2], len(PKS)))
-for ii in range(len(PKS)):
-    idi = PKS[ii, 0]
-    idj = PKS[ii, 1]
-    A = GS[idi-D1:idi+D2:, idj-D1:idj+D2, :]                # How to treat borders?
-    Z_SUM_XY[:, ii] = np.sum(A, axis=(0, 1))
-
-Z_SUM_XY_MAXS_FOLDED = np.empty((len(PKS), 1), dtype=object)
-for ii in range(len(PKS)):
-    Z_SUM_XY_MAXS_FOLDED[ii, 0] = peak_local_max(Z_SUM_XY[:, ii], num_peaks=1)
-
-Z_SUM_XY_MAXS = []
-for ii in range(len(Z_SUM_XY_MAXS_FOLDED)):
-    if len(Z_SUM_XY_MAXS_FOLDED[ii, 0]) != 1:
-        for jj in range(len(Z_SUM_XY_MAXS_FOLDED[ii, 0])):
-            Z_SUM_XY_MAXS.append([Z_SUM_XY_MAXS_FOLDED[ii, 0][jj].item(), ii])
-    else:
-        Z_SUM_XY_MAXS.append([Z_SUM_XY_MAXS_FOLDED[ii, 0].item(), ii])
-
-Z_SUM_XY_MAXS = np.array(Z_SUM_XY_MAXS)
-XYZ_POSITIONS = np.insert(PKS, 2, Z_SUM_XY_MAXS[:, 0], axis=-1)
-
-print(time.time()-T0)
+XYZ_POSITIONS = positions3D(GS, peak_min_distance=20)
 
 #%%
 # plot with Matplotlib.pyplot
@@ -189,14 +161,14 @@ pyplot.show()
 
 #%%
 # Plot with Plotly (shown as html)
-import plotly.express as px
-import pandas as pd
-from plotly.offline import plot
+# import plotly.express as px
+# import pandas as pd
+# from plotly.offline import plot
 
-# LOCS = pd.DataFrame(data=PKSS, columns=['x', 'y', 'z'])
-LOCS = pd.DataFrame(data=XYZ_POSITIONS, columns=['y', 'x', 'z', 'I'])
+# # LOCS = pd.DataFrame(data=PKSS, columns=['x', 'y', 'z'])
+# LOCS = pd.DataFrame(data=XYZ_POSITIONS, columns=['y', 'x', 'z'])
 
 
-fig = px.scatter_3d(LOCS, x='x', y='y', z='z', color='z')
-fig.update_traces(marker=dict(size=3))
-plot(fig)
+# fig = px.scatter_3d(LOCS, x='x', y='y', z='z', color='z')
+# fig.update_traces(marker=dict(size=3))
+# plot(fig)

@@ -5,6 +5,7 @@ import time
 import numpy as np
 import easygui
 import pandas as pd
+import matplotlib.pyplot as plt
 import functions as f
 
 # PATH = easygui.fileopenbox()
@@ -35,25 +36,30 @@ THRESHOLD = 1
 # f.plot3D(LOCS, title='pos')
 
 #%%  Calculate propagators, gradient stack and compute particle position ins 3D
-NUM_FRAMES = np.shape(VID)[-1]
+# NUM_FRAMES = np.shape(VID)[-1]
 # NUM_FRAMES = int(np.floor(np.shape(VID)[-1]/2))
-# NUM_FRAMES = 10
+NUM_FRAMES = 500
 LOCS = np.empty((NUM_FRAMES, 3), dtype=object)
 # INTENSITY = np.empty(NUM_FRAMES, dtype=object)
 
+T = []
 T0 = time.time()
 for i in range(NUM_FRAMES):
-    print(str(i)+' of '+ str(NUM_FRAMES), (time.time()-T0)/60)
     I = VID[:, :, i]
     # IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS).astype('float32')
     # GS = f.zGradientStack(IM).astype('float32')  
     GS, IM = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)  # Modified propagator
-    GS[GS < THRESHOLD] = 0.003
+    # GS[GS < THRESHOLD] = 0.003
     LOCS[i, 0] = f.positions3D(GS, peak_min_distance=20)
     A = LOCS[i, 0].astype('int')
     LOCS[i, 1] = IM[A[:, 0], A[:, 1], A[:, 2]]
     LOCS[i, 2] = GS[A[:, 0], A[:, 1], A[:, 2]]
+    T.append(time.time()-T0)
+    print(str(i+1)+' of '+ str(NUM_FRAMES), (time.time()-T0)/60)
 print((time.time()-T0)/60)
+
+plt.plot(np.arange(len(T)), np.array(T)/60, '.-'); plt.grid()
+plt.title('Computation time per frame'); plt.xlabel('Number of frames'); plt.ylabel('Time (min)')
 
 POSITIONS = pd.DataFrame(columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME'])
 for i in range(np.shape(LOCS)[0]):

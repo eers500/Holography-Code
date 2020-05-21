@@ -545,10 +545,14 @@ def modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
         GS[:, :, k] = np.abs(1 + np.fft.ifft2(np.fft.ifftshift(E*R)))
         IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R1)))
         
-    GS, _ = histeq(GS)
-    TH = 254.9
-    GS[GS < TH] = 0
-    GS = 255*((GS - TH) / np.max(GS - TH))
-    GS[GS < 250] = 0
+    # GS, _ = histeq(GS)
+    # TH = 254.9
+    # GS[GS < TH] = 0
+    # GS = 255*((GS - TH) / np.max(GS - TH))
+    # GS[GS < 250] = 0
+    
+    GS = GS - 1
+    _, BINS = np.histogram(GS.flatten())
+    GS[GS < BINS[6]] = 0
 
     return GS, IZ
