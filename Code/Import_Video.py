@@ -1,29 +1,32 @@
 # -*- coding: utf-8 -*-
 #import matplotlib.pyplot as plt
-import numpy as np
 import cv2
+import numpy as np
 import time
 
-vid = "frameStack.avi"
-vidcap = cv2.VideoCapture(vid)
-success,image = vidcap.read()
-num_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
-imStack = image[:,:,0]
-#i = 1
-#imStack.reshape(())
-#while success:    
-#    success,fr = vidcap.read()
-#    frame = fr[:,:,0]
-#    imStack = np.dstack((imStack,frame))
-#    i = i+1
+T0 = time.time()
+CAP = cv2.VideoCapture('131118-1.avi')
+NUM_FRAMES = int(CAP.get(cv2.CAP_PROP_FRAME_COUNT))
+WIDTH = int(CAP.get(cv2.CAP_PROP_FRAME_WIDTH))
+HEIGHT = int(CAP.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-t0 = time.time()
-for ii in range(1,num_frames):
-        success,fr = vidcap.read()
-        frame = fr[:,:,0]
-        imStack = np.dstack((imStack,frame))
-t1 = time.time()
-time = t1-t0        
+IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('uint8'))
+IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH))
+
+I = 0
+SUCCESS = True
+
+while (I < NUM_FRAMES  and SUCCESS):
+    SUCCESS, IMG[I] = CAP.read()
+    IM_STACK[I] = IMG[I, :, :, 1]
+#    STACK[FC] = 
+    I += 1
+    print(I)
+
+CAP.release()
+IM_STACK = np.swapaxes(np.swapaxes(IM_STACK, 0, 2), 0, 1)
+T = time.time()-T0
+print(T)      
 #%%
 #for i in range(imStack.shape[2]):
 #    plt.imshow(imStack[:,:,i])
