@@ -102,7 +102,7 @@ _, BINS = np.histogram(GS.flatten())
 GS[GS < BINS[7]] = 0
 # Histogram equalization gradient stack
 # GS, _ = histeq(GS)
-imshow_sequence(GS, 0.1, 1)
+# imshow_sequence(GS, 0.1, 1)
 
 # Histogram equalization image stack
 # IZ, _ = histeq(IZ)

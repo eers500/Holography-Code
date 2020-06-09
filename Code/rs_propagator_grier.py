@@ -17,7 +17,7 @@ I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
 #%%
 # Median image
 # IB = mpimg.imread('AVG_131118-1.png')
-IB = mpimg.imread('AVG_MF1_30Hz_200us_awaysection.png')
+IB = mpimg.imread('MED_MF1_30Hz_200us_awaysection.png')
 # IB = mpimg.imread('MED_10x_laser_50Hz_10us_g1036_bl1602-003-1.png')
 
 IB[IB == 0] = np.mean(IB)

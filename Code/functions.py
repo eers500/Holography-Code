@@ -536,14 +536,14 @@ def modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
 
     R = np.empty([NI, NJ, Z.shape[0]], dtype='complex64')
     GS = np.empty([NI, NJ, Z.shape[0]], dtype='float32')
-    R1 = np.empty([NI, NJ, Z.shape[0]], dtype='complex64')
-    IZ = np.empty([NI, NJ, Z.shape[0]], dtype='float32')
+    # R1 = np.empty([NI, NJ, Z.shape[0]], dtype='complex64')
+    # IZ = np.empty([NI, NJ, Z.shape[0]], dtype='float32')
 
     for k in range(Z.shape[0]):
         R = 1j*K*Q*np.exp((1j*K*Z[k]*Q), dtype='complex64')
-        R1 = np.exp((-1j*K*Z[k]*Q), dtype='complex64')
+        # R1 = np.exp((-1j*K*Z[k]*Q), dtype='complex64')
         GS[:, :, k] = np.abs(1 + np.fft.ifft2(np.fft.ifftshift(E*R)))
-        IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R1)))
+        # IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R1)))
         
     # GS, _ = histeq(GS)
     # TH = 254.9
@@ -553,6 +553,6 @@ def modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     
     GS = GS - 1
     _, BINS = np.histogram(GS.flatten())
-    GS[GS < BINS[6]] = 0
+    GS[GS < BINS[7]] = 0
 
-    return GS, IZ
+    return GS
