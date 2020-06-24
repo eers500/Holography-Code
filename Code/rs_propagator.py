@@ -7,7 +7,7 @@ import time
 import matplotlib.image as mpimg
 import numpy as np
 import easygui
-from functions import bandpassFilter, exportAVI, histeq, imshow_sequence
+from functions import bandpassFilter, exportAVI, histeq, imshow_sequence, zGradientStack
 
 T0 = time.time()
 FILES = easygui.fileopenbox(multiple=True)
@@ -51,7 +51,7 @@ LAMBDA = 0.642               # Diode
 FS = 0.711                     # Sampling Frequency px/um
 NI = np.shape(IN)[0]
 NJ = np.shape(IN)[1]
-SZ = 10                       # Step size in um
+SZ = 20                       # Step size in um
 # Z = (FS*(51/31))*np.arange(0, 150)       # Number of steps
 Z = SZ*np.arange(0, 150)
 # ZZ = np.linspace(0, SZ*149, 150)
@@ -100,14 +100,21 @@ print(time.time() - T0)
 # plt.imshow(IZ[:, :, 149], cmap = 'gray')
 
 #%%
-IM = (IZ - np.min(IZ))*(255/(np.max(IZ)-np.min(IZ)))
-IMM = np.uint8(IM)
+# IM = (IZ - np.min(IZ))*(255/(np.max(IZ)-np.min(IZ)))
+# IMM = np.uint8(IM)
+# # EX_PATH, NAME = os.path.split(PATH[0])
+# # exportAVI(EX_PATH+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
+
 # EX_PATH, NAME = os.path.split(PATH[0])
-# exportAVI(EX_PATH+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
+# exportAVI(EX_PATH+'/'+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
 
+#%% Export gradient stack
+GS = zGradientStack(IZ)
+IM = (GS - np.min(GS))*(255/(np.max(GS)-np.min(GS)))
+IM = 255 - IM
+IMM = np.uint8(IM)
 EX_PATH, NAME = os.path.split(PATH[0])
-exportAVI(EX_PATH+'/'+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
-
+exportAVI(EX_PATH+'/'+NAME[0:-4]+'_GS_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
 #%%
 # Histogram equalizaion for visualization
 # IZZ, CDF = histeq(IM)

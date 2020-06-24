@@ -14,12 +14,18 @@ mpl.rc('figure',  figsize=(10, 6))
 import functions as f
 import sklearn.cluster as cl
 import time
+import easygui as gui
 from scipy.optimize import linear_sum_assignment
 from hungarian_algorithm import algorithm
 
+PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
+DF = pd.read_csv(PATH, index_col=0)
+
 # DF = pd.read_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_rayleighSommerfeld_Results.csv', index_col=0)
 # DF= pd.read_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_modified_propagator_Results.csv', index_col=0)
-DF = pd.read_csv('/media/erick/NuevoVol/LINUX_LAP/PhD/Pseudomonas/2017-10-23/red_laser_100fps_200x_0_135msec_1_500_FRAMES_MODIFIED.csv', index_col=0)
+# DF = pd.read_csv('/media/erick/NuevoVol/LINUX_LAP/PhD/Pseudomonas/2017-10-23/red_laser_100fps_200x_0_135msec_1_500_FRAMES_MODIFIED.csv', index_col=0)
+# DF = pd.read_csv('/media/erick/NuevoVol/LINUX_LAP/PhD/Pseudomonas/2017-10-23/red_laser_100fps_200x_0_135msec_1/red_laser_100fps_200x_0_135msec_1_2001_FRAMES_MODIFIED.csv', index_col=0)
+# DF = pd.read_csv('/media/erick/NuevoVol/LINUX_LAP/PhD/Pseudomonas/2017-10-23/red_laser_100fps_200x_0_135msec_1/red_laser_100fps_200x_0_135msec_1_2001_FRAMES_RS_TH019.csv', index_col=0)
 
 DF.index = np.arange(len(DF))
 # D = DF[['X', 'Y', 'Z', 'FRAME']].values
@@ -31,10 +37,19 @@ kmeans = cl.KMeans(n_clusters=D[D[:, 5] == 0].shape[0], init='k-means++').fit(DF
 DF['PARTICLE'] = kmeans.labels_
 LINKED = DF
 
-#%% Density Based Spatial Clustering (DBSCAN)
-DBSCAN = cl.DBSCAN(eps=20, min_samples=100).fit(DF[['X', 'Y', 'Z']])
+#%% Delete small clusters
+CLUSTER_SIZES = LINKED.PARTICLE.value_counts()
+    
+CLUSTER_NUM = CLUSTER_SIZES.index[CLUSTER_SIZES.values < 1000]
+
+L = LINKED.drop(np.where(LINKED.PARTICLE.isin(CLUSTER_NUM).values == True)[0])
+                
+
+#%% Density Based Spatial Clustering (DBSC)
+DBSCAN = cl.DBSCAN(eps=5, min_samples=4).fit(DF[['X', 'Y', 'Z']])
 DF['PARTICLE'] = DBSCAN.labels_
 LINKED = DF
+L = LINKED.drop(np.where(LINKED.PARTICLE.values == -1)[0])
 
 #%% Mean Shift Clustering
 T0 = time.time()
@@ -102,7 +117,7 @@ for i in range(pd.unique(TR['PARTICLE']).shape[0]):
     ZEROS.append(np.where(TR[TR['PARTICLE'] == i].X == 0)[0])
     SHAPES[i] = ZEROS[i].shape[0]
 
-ID = np.where(SHAPES >= 50)[0]
+ID = np.where(SHAPES >= 1000)[0]
 IND  = np.in1d(TR.PARTICLE.values,  ID, invert=True)
 LINKED = TR.loc[IND, :]
     
@@ -114,8 +129,9 @@ from matplotlib import pyplot
 fig = pyplot.figure()
 ax = Axes3D(fig)
 
-# A = LINKED.__array__()
 A = LINKED.__array__()
+# A = L.__array__()
+
 p = ax.scatter(A[:, 0], A[:, 1], A[:, 2], s=1, marker='o', c=A[:, 6])
 # p = ax.plot(A[:, 0], A[:, 1], A[:, 2], '.-')
 
@@ -138,3 +154,5 @@ fig = px.scatter_3d(LINKED, x='X', y='Y', z='Z', color='PARTICLE')
 fig.update_traces(marker=dict(size=1))
 plot(fig)
 
+fig.write_html(PATH[:-3]+'html')
+# fig.write_html(PATH[:-4]+'_HA.html')

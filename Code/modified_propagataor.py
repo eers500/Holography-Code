@@ -15,7 +15,7 @@ import numpy as np
 import easygui
 from matplotlib.widgets import Slider
 from skimage.feature import peak_local_max
-from functions import bandpassFilter, rayleighSommerfeldPropagator, imshow_sequence, histeq, imshow_slider, medianImage, positions3D
+from functions import bandpassFilter, rayleighSommerfeldPropagator, imshow_sequence, histeq, imshow_slider, medianImage, positions3D, exportAVI
 
 T0 = time.time()
 FILES = easygui.fileopenbox(multiple=True)
@@ -46,7 +46,6 @@ I = mpimg.imread(PATH[0])
 # IB = mpimg.imread('MED_23-09-19_ECOLI_HCB1_100Hz_50us_10x_3-1.png')
 IB = mpimg.imread(PATH[1])
 
-
 IB[IB == 0] = np.mean(IB)
 IN = I/IB   #divide
 # PATH = '/home/erick/Documents/PhD/23_10_19/300_L_10x_100Hz_45us.tif'
@@ -59,7 +58,7 @@ LAMBDA = 0.642               # Diode
 FS = 0.711                     # Sampling Frequency px/um
 NI = np.shape(IN)[0]
 NJ = np.shape(IN)[1]
-SZ = 5                       # Step size in um
+SZ = 20                       # Step size in um
 # Z = (FS*(51/31))*np.arange(0, 150)       # Number of steps
 Z = SZ*np.arange(0, 150)
 # ZZ = np.linspace(0, SZ*149, 150)
@@ -98,8 +97,9 @@ for k in range(Z.shape[0]):
     IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E*R1[:, :, k])))
 
 GS = GS - 1
-_, BINS = np.histogram(GS.flatten())
-GS[GS < BINS[7]] = 0
+# _, BINS = np.histogram(GS.flatten())
+# GS[GS < BINS[7]] = 0
+
 # Histogram equalization gradient stack
 # GS, _ = histeq(GS)
 # imshow_sequence(GS, 0.1, 1)
@@ -108,56 +108,35 @@ GS[GS < BINS[7]] = 0
 # IZ, _ = histeq(IZ)
 # imshow_sequence(IZ, 0.1, 1)
 
-#%% Testing 
-# IZ_NORM = np.empty_like(IZ)
-# IZ_MED = medianImage(IZ, 150)
-# for i in range(IZ.shape[2]):
-#     IZ_NORM[:, :, i] = IZ[:, :, i] / IZ_MED
+#%% Export as AVI
+IM = (GS - np.min(GS))*(255/(np.max(GS)-np.min(GS)))
+IMM = np.uint8(IM)
+# EX_PATH, NAME = os.path.split(PATH[0])
+# exportAVI(EX_PATH+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
 
-# imshow_sequence(IZ_NORM, 0.1, 1)
-
-#%%
-
-# Set thresold for GS for particle tracking
-# THRESHOLD = 1
-# GS[GS < THRESHOLD] = 0
-
-#%% Testing
-# GSS, _ = histeq(GS)
-# GSSS = GSS
-# TH = 254.9
-# GSSS[GSSS < TH] = 0
-# GSSS = 255*((GSSS - TH)/np.max(GSSS - TH))
-# GSSS[GSSS < 250] = 0
-# imshow_sequence(GS, 0.1, 1)
-
-# GRAD = np.gradient(IZ, axis=-1)
-# GRADS, _ = histeq(GRAD)
-
-# print(time.time() - T0)
-
-# GS = GSSS
+EX_PATH, NAME = os.path.split(PATH[0])
+exportAVI(EX_PATH+'/'+NAME[0:-4]+'_GS_Modified_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
 
 #%% Compute coordinates of particles using GS
 # Find Z coordinates for each (x, y) found by peak_local_max in Z-projection of GS
-XYZ_POSITIONS = positions3D(GS, peak_min_distance=20)
+# XYZ_POSITIONS = positions3D(GS, peak_min_distance=20)
 
 #%%
 # plot with Matplotlib.pyplot
 # 3D Scatter Plot
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import pyplot
+# from mpl_toolkits.mplot3d import Axes3D
+# from matplotlib import pyplot
 
-fig = pyplot.figure()
-ax = Axes3D(fig)
+# fig = pyplot.figure()
+# ax = Axes3D(fig)
 
-ax.scatter(XYZ_POSITIONS[:, 1], XYZ_POSITIONS[:, 0], XYZ_POSITIONS[:, 2], s=50, marker='o')
-ax.tick_params(axis='both', labelsize=10)
-ax.set_title('Cells Positions in 3D', fontsize='20')
-ax.set_xlabel('x (pixels)', fontsize='18')
-ax.set_ylabel('y (pixels)', fontsize='18')
-ax.set_zlabel('z (slices)', fontsize='18')
-pyplot.show()
+# ax.scatter(XYZ_POSITIONS[:, 1], XYZ_POSITIONS[:, 0], XYZ_POSITIONS[:, 2], s=50, marker='o')
+# ax.tick_params(axis='both', labelsize=10)
+# ax.set_title('Cells Positions in 3D', fontsize='20')
+# ax.set_xlabel('x (pixels)', fontsize='18')
+# ax.set_ylabel('y (pixels)', fontsize='18')
+# ax.set_zlabel('z (slices)', fontsize='18')
+# pyplot.show()
 
 #%%
 # Plot with Plotly (shown as html)

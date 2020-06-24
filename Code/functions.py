@@ -98,17 +98,19 @@ def videoImport(video, N):
     SUCCESS = True
 
     if N == 0:
-        IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('float32'))
-        IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH))
+        # IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), dtype='float16')
+        IMG = np.empty((HEIGHT, WIDTH, 3))
+        IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH), dtype='float32')
 
         while (I < NUM_FRAMES and SUCCESS):
-            SUCCESS, IMG[I] = CAP.read()
-            IM_STACK[I] = IMG[I, :, :, 1]
+            SUCCESS, IMG = CAP.read()
+            # IM_STACK[I] = IMG[I, :, :, 1]
+            IM_STACK[I] = IMG[:, :, 0]
             I += 1
             # print(('VI', I))
 
     elif N > 0:
-        IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), np.dtype('float32'))
+        IMG = np.empty((NUM_FRAMES, HEIGHT, WIDTH, 3), dtype='float32')
         IM_STACK = np.empty((NUM_FRAMES, HEIGHT, WIDTH))
         STACK = IM_STACK
 

@@ -3,18 +3,25 @@
 #%% Import vido and set paramaters
 import time
 import numpy as np
-import easygui
+import easygui as gui
 import pandas as pd
 import matplotlib.pyplot as plt
 import functions as f
 from progress.bar import Bar
 
 
-# PATH = easygui.fileopenbox()
+# PATH = gui.easygui.fileopenbox()
 # PATH = 'MF1_30Hz_200us_awaysection.avi'
 #PATH = '10x_laser_50Hz_10us_g1036_bl1602_500frames.avi'
 # PATH = '/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames.avi'
-PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/Pseudomonas/2017-10-23/red_laser_100fps_200x_0_135msec_1.avi'
+PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/Pseudomonas/2017-10-23/red_laser_100fps_200x_0_135msec_1/red_laser_100fps_200x_0_135msec_1.avi'
+# THRESHOLD = gui.enterbox(msg='Threshold for Gradient Stack', title='Threshold', default='0.1')
+
+OPTIONS = gui.multenterbox(msg='Threshold and file export', title='Thresold and export',
+                           fields=['THRESHOLD for GS:',
+                                   'Number of frames for calculations:',
+                                   'Export CSV file? (y/n):'])
+
 T0 = time.time()
 VID = f.videoImport(PATH, 0)
 FRAMES_MEDIAN = 20
@@ -24,9 +31,9 @@ N = 1.3226
 LAMBDA = 0.642              # HeNe
 MPP = 10
 FS = 0.711                     # Sampling Frequency px/um
-SZ = 5                       # # Step size um
+SZ = 10                       # # Step size um
 NUMSTEPS = 150
-THRESHOLD = 0.1
+THRESHOLD = np.float(OPTIONS[0])
 
 #%% Test positions3D
 # FRAME = 20
@@ -39,9 +46,12 @@ THRESHOLD = 0.1
 # f.plot3D(LOCS, title='pos')
 
 #%%  Calculate propagators, gradient stack and compute particle position ins 3D
-# NUM_FRAMES = np.shape(VID)[-1]
-# NUM_FRAMES = int(np.floor(np.shape(VID)[-1]/2))
-NUM_FRAMES = 500
+if np.float(OPTIONS[1]) == -1:
+    NUM_FRAMES = np.shape(VID)[-1]
+else:
+    NUM_FRAMES = int(OPTIONS[1])
+
+# NUM_FRAMES = 5
 VID = VID[:, :, :NUM_FRAMES]
 LOCS = np.empty((NUM_FRAMES, 3), dtype=object)
 # INTENSITY = np.empty(NUM_FRAMES, dtype=object)
@@ -50,14 +60,15 @@ LOCS = np.empty((NUM_FRAMES, 3), dtype=object)
 # GSS = np.empty((512, 512, 150, NUM_FRAMES), dtype='float16')
 T = []
 T0 = time.time()
-bar = Bar('Processing', max=NUM_FRAMES)
+bar = Bar('Processing', max=NUM_FRAMES, suffix='%(percent).1f%% - %(eta)ds')
+
 for i in range(NUM_FRAMES):
     I = VID[:, :, i]
     IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS).astype('float32')
     # IMM[:, :, :, i] = IM
-    # GS = f.zGradientStack(IM).astype('float32')  
-    # GS[GS < THRESHOLD] = 0
-    GS = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)  # Modified propagator
+    GS = f.zGradientStack(IM).astype('float32')  
+    GS[GS < THRESHOLD] = 0
+    # GS = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)  # Modified propagator
     # GSS[:, :, :, i] = GS
         
     # Turn to zero 99.99% of values
@@ -71,7 +82,7 @@ for i in range(NUM_FRAMES):
     LOCS[i, 1] = IM[A[:, 0], A[:, 1], A[:, 2]]
     LOCS[i, 2] = GS[A[:, 0], A[:, 1], A[:, 2]]
     T.append(time.time()-T0)
-    print(str(i+1)+' of '+ str(NUM_FRAMES), (time.time()-T0))
+    # print(str(i+1)+' of '+ str(NUM_FRAMES), (time.time()-T0))
     bar.next()
 bar.finish()
 print((time.time()-T0)/60)
@@ -89,9 +100,13 @@ for i in range(np.shape(LOCS)[0]):
     XYZ, I_FS, I_GS, FRAME = LOCS[i, 0], LOCS[i, 1], LOCS[i, 2], i*np.ones_like(LOCS[i, 2])
     DATA = np.concatenate((XYZ, np.expand_dims(I_FS, axis=1), np.expand_dims(I_GS, axis=1), np.expand_dims(FRAME, axis=1)), axis=1)
     POSITIONS = POSITIONS.append(pd.DataFrame(DATA, columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME']))
-    
-# POSITIONS.to_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_modified_propagator_Results.csv', header=True)
-POSITIONS.to_csv(PATH[:-4]+'_'+np.str(NUM_FRAMES)+'_FRAMES_MODIFIED.csv')  # For leptospira data
+
+#%% Save to file    
+
+if OPTIONS[2] == 'y':
+    # POSITIONS.to_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_modified_propagator_Results.csv', header=True)
+    POSITIONS.to_csv(PATH[:-4]+'_'+np.str(NUM_FRAMES)+'_FRAMES_RS_TH'+np.str(THRESHOLD).replace('.','')+'.csv')  # For leptospira data
+    print('Results exported to: \n', PATH[:-4]+'_'+np.str(NUM_FRAMES)+'_FRAMES_RS_TH'+np.str(THRESHOLD).replace('.','')+'.csv')
 
 #%% Plot with f.plot3D
 # from mpl_toolkits.mplot3d import Axes3D
@@ -116,6 +131,9 @@ POSITIONS.to_csv(PATH[:-4]+'_'+np.str(NUM_FRAMES)+'_FRAMES_MODIFIED.csv')  # For
 import plotly.graph_objects as go
 from plotly.offline import plot
 
+PATH = gui.fileopenbox(default='/home/erick/Documents/PhD/Colloids/')
+POSITIONS = pd.read_csv(PATH, index_col=0)
+
 fig = go.Figure(data=[go.Scatter3d(
     x=POSITIONS['X'], 
     y=POSITIONS['Y'], 
@@ -132,13 +150,16 @@ fig = go.Figure(data=[go.Scatter3d(
 fig.show()
 plot(fig)
 
+fig.write_html(PATH[:-3]+'html')
+               
 #%% Matplotlib scatter plot
 # 3D Scatter Plot
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
 
-PKS = A.__array__()
-np.savetxt('locs.txt', PKS)
+# PKS = A.__array__()
+PKS = POSITIONS.__array__()
+# np.savetxt('locs.txt', PKS)
 fig = pyplot.figure()
 ax = Axes3D(fig)
 
