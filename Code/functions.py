@@ -558,3 +558,48 @@ def modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     GS[GS < BINS[7]] = 0
 
     return GS
+
+#%% Smooth trajectories piecewise cubic spline
+def smooth_curve(L):
+    import numpy as np
+    from scipy import interpolate
+    # from mpl_toolkits.mplot3d import Axes3D
+    from scipy import ndimage
+    
+    # L = LINKED[LINKED.PARTICLE == 3].values
+        
+    num_sample_pts = len(L)
+    x_sample = L[:, 0]
+    y_sample = L[:, 1]
+    z_sample = L[:, 2]
+    
+    jump = np.sqrt(np.diff(x_sample)**2 + np.diff(y_sample)**2 + np.diff(z_sample)**2) 
+    smooth_jump = ndimage.gaussian_filter1d(jump, 1, mode='wrap')  # window of size 5 is arbitrary
+    limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
+    xn, yn, zn = x_sample[:-1], y_sample[:-1], z_sample[:-1]
+    # xn = xn[(jump > 0) & (smooth_jump < limit)]
+    # yn = yn[(jump > 0) & (smooth_jump < limit)]
+    # zn = zn[(jump > 0) & (smooth_jump < limit)]
+    
+    xn = xn[(jump > 0)]
+    yn = yn[(jump > 0)]
+    zn = zn[(jump > 0)]
+    
+    m = len(xn)
+    smoothing_condition = (m-np.sqrt(m), m+np.sqrt(m))
+    smoothing_condition = np.mean(smoothing_condition)
+    
+    if len(xn) > 3:
+        tck, u = interpolate.splprep([xn,yn,zn], s=smoothing_condition, k=1)
+        x_knots, y_knots, z_knots = interpolate.splev(tck[0], tck)
+        u_fine = np.linspace(0,1,num_sample_pts)
+        x_fine, y_fine, z_fine = interpolate.splev(u_fine, tck)
+        X = [x_fine, y_fine, z_fine]
+    else:
+        X = -1
+        
+        
+    return X
+
+
+
