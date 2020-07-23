@@ -247,14 +247,14 @@ def zGradientStack(IM):
     #    Z = 0.02*np.arange(1, 151)
     #     IM = rayleighSommerfeldPropagator(I, I_MEDIAN, Z)
 
-    # %% Sobel-type kernel
+    #% Sobel-type kernel
     SZ0 = np.array(([-1, -2, -1], [-2, -4, -2], [-1, -2, -1]), dtype='float')
     SZ1 = np.zeros_like(SZ0)
     SZ2 = -SZ0
     SZ = np.stack((SZ0, SZ1, SZ2), axis=2)
     del SZ0, SZ1, SZ2
 
-    # %% Convolution IM*SZ
+    # Convolution IM*SZ
     # IM = IM ** 2
     IMM = np.dstack((IM[:, :, 0][:, :, np.newaxis], IM, IM[:, :, -1][:, :, np.newaxis]))
     GS = ndimage.convolve(IMM, SZ, mode='mirror')

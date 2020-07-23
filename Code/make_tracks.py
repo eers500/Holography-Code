@@ -84,49 +84,66 @@ SIZE = np.empty(FRAME_DATA.shape[0])
 for i in range(FRAME_DATA.shape[0]):
     FRAME_DATA[i] = D[D[:, 5] == i]
     SIZE[i] = FRAME_DATA[i].shape[0]
-
-SIZES = np.empty(FRAME_DATA.shape[0])
-for i in range(FRAME_DATA.shape[0]):
-    if SIZE.max() != FRAME_DATA[i].shape[0]:
-        DIFF = int(SIZE.max() - FRAME_DATA[i].shape[0])
-        FRAME_DATA[i] = np.pad(FRAME_DATA[i], ((0, DIFF), (0, 0)), 'constant', constant_values=0)
-    SIZES[i] = FRAME_DATA[i].shape[0]
+    
+# To make a square cost matrix
+# SIZES = np.empty(FRAME_DATA.shape[0])
+# for i in range(FRAME_DATA.shape[0]):
+#     if SIZE.max() != FRAME_DATA[i].shape[0]:
+#         DIFF = int(SIZE.max() - FRAME_DATA[i].shape[0])
+#         FRAME_DATA[i] = np.pad(FRAME_DATA[i], ((0, DIFF), (0, 0)), 'constant', constant_values=0)
+#     SIZES[i] = FRAME_DATA[i].shape[0]
         
 
-particle_index = np.empty((int(SIZES[0]), len(FRAME_DATA)), dtype='int')
-TRACKS = []
-for k in range(len(FRAME_DATA)-1):
-    if k == 0:
-        TRACKS.append(FRAME_DATA[k])      
+# particle_index = np.empty((int(SIZES[0]), len(FRAME_DATA)), dtype='int')
+TRACKS = [FRAME_DATA[0]]
+sizes = np.empty(len(FRAME_DATA), dtype='int')
+sizes[0] = len(FRAME_DATA[0])
+for k in range(len(FRAME_DATA)-1):  
     print(k)
-    R1 = FRAME_DATA[k]
-    R2 = FRAME_DATA[k+1]
     
-    COST = np.empty((int(SIZE.max()), int(SIZE.max())))
-    for i in range(int(SIZE.max())):
-        for j in range(int(SIZE.max())):                
+    if k==0:    
+        R1 = FRAME_DATA[k]
+        R2 = FRAME_DATA[k+1]
+    else:
+        R1 = TRACKS[k]
+        R2 = FRAME_DATA[k+1]
+    
+    # COST = np.empty((int(SIZE.max()), int(SIZE.max())))
+    COST = np.empty((len(R1), len(R2)))
+    # for i in range(int(SIZE.max())):
+    #     for j in range(int(SIZE.max())):        
+            
+    for i in range(len(R1)):
+        for j in range(len(R2)):
+            
             COST[i, j] = np.sqrt(sum((R1[i, :3]- R2[j, :3])**2))      
-    row_ind, particle_index[:, k] = linear_sum_assignment(COST)
-    TRACKS.append(R2[particle_index[:, k], :])
+    # row_ind, particle_index[:, k] = linear_sum_assignment(COST)
+    row_ind, particle_index = linear_sum_assignment(COST)
+    sizes[k+1] = len(particle_index)
+    # print(len(particle_index))
+    # TRACKS.append(R2[particle_index[:, k], :])
+    TRACKS.append(R2[particle_index, :])
 
 # print(time.time() - T0)
 
 #%
 TRACK = np.vstack(TRACKS)
 TR = pd.DataFrame(TRACK, columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME'])
-TR['PARTICLE'] = np.tile(np.arange(SIZES[0]), len(TRACKS))
+# TR['PARTICLE'] = np.tile(np.arange(SIZES[0]), len(TRACKS))
 
+particle_column = []
+for i in range(len(sizes)):
+    particle_column.append(np.arange(sizes[i]))    
+
+particle_column = np.concatenate(particle_column, axis=0)
+TR['PARTICLE'] = particle_column
+LINKED = TR
 print(time.time() - T0)
 
-ZEROS = []
-SHAPES = np.empty(pd.unique(TR['PARTICLE']).shape[0])
-for i in range(pd.unique(TR['PARTICLE']).shape[0]):
-    ZEROS.append(np.where(TR[TR['PARTICLE'] == i].X == 0)[0])
-    SHAPES[i] = ZEROS[i].shape[0]
 
-ID = np.where(SHAPES >= 1000)[0]
-IND  = np.in1d(TR.PARTICLE.values,  ID, invert=True)
-LINKED = TR.loc[IND, :]
+# ID = np.where(SHAPES >= 1000)[0]
+# IND  = np.in1d(TR.PARTICLE.values,  ID, invert=True)
+# LINKED = TR.loc[IND, :]
     
 
 #%% Smooth trajectories
@@ -187,7 +204,7 @@ LINKED = TR.loc[IND, :]
 # fig.show()
 
 #%% Smoothed trajectories
-LINKED = LINKED[LINKED.PARTICLE != -1]
+# LINKED = LINKED[LINKED.PARTICLE != -1]
 particle_num = LINKED.PARTICLE.unique()
 
 smoothed_curves = -np.ones((1, 4))
@@ -202,7 +219,7 @@ smoothed_curves = smoothed_curves[1:, :]
 smoothed_curves_df = pd.DataFrame(smoothed_curves, columns=['X', 'Y' ,'Z', 'PARTICLE'])
 
 
-smoothed_curves_df.to_csv(PATH[:-4]+'_smooth.csv', index=False)
+smoothed_curves_df.to_csv(PATH[:-4]+'_DBSCAN_smooth.csv', index=False)
 
 #%% Matplotlib scatter plot
 # 3D Scatter Plot
@@ -213,12 +230,12 @@ fig = pyplot.figure()
 ax = Axes3D(fig)
 
 A = LINKED.__array__()
-# A = LINKED[LINKED.PARTICLE != -1].values
+A = LINKED[LINKED.PARTICLE != -1].values
 
 # A = L.__array__()
 # L = LINKED[LINKED.PARTICLE == 3].values
 
-# p = ax.scatter(A[:, 0], A[:, 1], A[:, 2], s=1, marker='o', c=A[:, 6])
+p = ax.scatter(A[:, 0], A[:, 1], A[:, 2], s=1, marker='o', c=A[:, 6])
 # p = ax.scatter(L[:, 0], L[:, 1], L[:, 2], s=1, marker='o', c=L[:, 5])
 # p = ax.scatter(xn, yn, zn, s=1, marker='o')
 
@@ -242,8 +259,10 @@ import plotly.express as px
 import pandas as pd
 from plotly.offline import plot
 
-# CURVE= = LINKED[LINKED.PARTICLE != -1]
+# CURVE = LINKED
+# CURVE = LINKED[LINKED.PARTICLE != -1]
 CURVE = pd.DataFrame(smoothed_curves, columns=['X', 'Y', 'Z', 'PARTICLE'])
+CURVE = CURVE[CURVE.PARTICLE != -1]
 
 # fig = px.scatter_3d(CURVE, x='X', y='Y', z='Z', color='PARTICLE')
 fig = px.line_3d(CURVE, x='X', y='Y', z='Z', color='PARTICLE')
@@ -251,4 +270,4 @@ fig.update_traces(marker=dict(size=1))
 plot(fig)
 
 # fig.write_html(PATH[:-3]+'html')
-# fig.write_html(PATH[:-4]+'_HA.html')
+fig.write_html(PATH[:-4]+'_HA_smooth.html')

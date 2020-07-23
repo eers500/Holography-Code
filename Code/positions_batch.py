@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Calculate position of particles for several frames"""
-#%% Import vido and set paramaters
+#%% Import video and set paramaters
 import time
 import numpy as np
 import easygui as gui
@@ -10,11 +10,11 @@ import functions as f
 from progress.bar import Bar
 
 
-# PATH = gui.easygui.fileopenbox()
+PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
 # PATH = 'MF1_30Hz_200us_awaysection.avi'
 #PATH = '10x_laser_50Hz_10us_g1036_bl1602_500frames.avi'
 # PATH = '/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames.avi'
-PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/Pseudomonas/2017-10-23/red_laser_100fps_200x_0_135msec_1/red_laser_100fps_200x_0_135msec_1.avi'
+# PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/Pseudomonas/2017-10-23/red_laser_100fps_200x_0_135msec_1/red_laser_100fps_200x_0_135msec_1.avi'
 # THRESHOLD = gui.enterbox(msg='Threshold for Gradient Stack', title='Threshold', default='0.1')
 
 OPTIONS = gui.multenterbox(msg='Threshold and file export', title='Thresold and export',
@@ -82,7 +82,7 @@ for i in range(NUM_FRAMES):
     LOCS[i, 1] = IM[A[:, 0], A[:, 1], A[:, 2]]
     LOCS[i, 2] = GS[A[:, 0], A[:, 1], A[:, 2]]
     T.append(time.time()-T0)
-    # print(str(i+1)+' of '+ str(NUM_FRAMES), (time.time()-T0))
+#    print(str(i+1)+' of '+ str(NUM_FRAMES), (time.time()-T0))
     bar.next()
 bar.finish()
 print((time.time()-T0)/60)
@@ -128,11 +128,14 @@ if OPTIONS[2] == 'y':
 # plot(fig)
 
 #%% Plot with plotly.graph_objects
+import pandas as pd
+import easygui as gui
 import plotly.graph_objects as go
 from plotly.offline import plot
 
-PATH = gui.fileopenbox(default='/home/erick/Documents/PhD/Colloids/')
-POSITIONS = pd.read_csv(PATH, index_col=0)
+# To plot csv files
+# PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
+# POSITIONS = pd.read_csv(PATH, index_col=0)
 
 fig = go.Figure(data=[go.Scatter3d(
     x=POSITIONS['X'], 
@@ -150,7 +153,7 @@ fig = go.Figure(data=[go.Scatter3d(
 fig.show()
 plot(fig)
 
-fig.write_html(PATH[:-3]+'html')
+# fig.write_html(PATH[:-3]+'html')
                
 #%% Matplotlib scatter plot
 # 3D Scatter Plot
