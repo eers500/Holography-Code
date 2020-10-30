@@ -43,7 +43,7 @@ IB[IB == 0] = np.mean(IB)
 IN = I/IB   #divide
 # PATH = '/home/erick/Documents/PhD/23_10_19/300_L_10x_100Hz_45us.tif'
 # IN = mpimg.imread(PATH)
-
+# IN = -im.gaussian_laplace(IN, sigma=0.5)    # Use LoG filter for contrast
 
 N = 1.3226
 LAMBDA = 0.642               # Diode
@@ -51,7 +51,7 @@ LAMBDA = 0.642               # Diode
 FS = 0.711                     # Sampling Frequency px/um
 NI = np.shape(IN)[0]
 NJ = np.shape(IN)[1]
-SZ = 20                       # Step size in um
+SZ = 10                       # Step size in um
 # Z = (FS*(51/31))*np.arange(0, 150)       # Number of steps
 Z = SZ*np.arange(0, 150)
 # ZZ = np.linspace(0, SZ*149, 150)

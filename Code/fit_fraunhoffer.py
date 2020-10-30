@@ -10,33 +10,35 @@ def fraunhoffer(xy_mesh, W):
     (x, y) = xy_mesh
     LAMBDA = 642
     z = 0.004
-    return (1-np.pi*sp.j1((np.pi*W*np.sqrt((x-len(x)/2)**2+(y-len(y)/2)**2)/LAMBDA)/z)/((np.pi*W*np.sqrt(x**2+y**2)/LAMBDA)/z))**2
+    return (1-np.pi*sp.j1((np.pi*W*np.sqrt((x-len(x)/2)**2+(y-len(y)/2)**2)/LAMBDA)/z)/((np.pi*W*np.sqrt((x-len(x)/2)**2+(y-len(y)/2)**2)/LAMBDA)/z))**2
 
-x = np.arange(1, 51, 1)
+x = np.arange(1, 50, 1)
 y = x
 xy_mesh = np.meshgrid(x, y)
 W = 1
 
-IM = mpimg.imread('Ring_10x_laser_50Hz_10us_g1036_bl1602-12.png')
+# IM = mpimg.imread('Ring_10x_laser_50Hz_10us_g1036_bl1602-12.png')
 
 #%%
-lmfit_model = Model(fraunhoffer)
-lmfit_result = lmfit_model.fit(IM, xy_mesh=xy_mesh, W=1)
+# lmfit_model = Model(fraunhoffer)
+# lmfit_result = lmfit_model.fit(IM, xy_mesh=xy_mesh, W=1)
 
-lmfit_Rsquared = 1 - lmfit_result.residual.var()/np.var(IM)
+# lmfit_Rsquared = 1 - lmfit_result.residual.var()/np.var(IM)
 
-# print('Fit R-squared:', lmfit_Rsquared, '\n')
-# print(lmfit_result.fit_report())
+# # print('Fit R-squared:', lmfit_Rsquared, '\n')
+# # print(lmfit_result.fit_report())
 
-W_FIT = lmfit_result.best_values['W']
-# Z_FIT = lmfit_result.best_values['z']
+# W_FIT = lmfit_result.best_values['W']
+# # Z_FIT = lmfit_result.best_values['z']
 
 #%%
 # Ring fit with W from fit
+W_FIT = 1
 I = fraunhoffer(xy_mesh, W_FIT)
 
-plt.subplot(1,2,1); plt.imshow(IM, cmap='gray'); plt.title('Reference Ring')
-plt.subplot(1,2,2); plt.imshow(I, cmap='gray'); plt.title('Fitted Ring')
+# plt.subplot(1,2,1); plt.imshow(IM, cmap='gray'); plt.title('Reference Ring')
+# plt.subplot(1,2,2); 
+plt.imshow(I, cmap='gray'); plt.title('Fitted Ring')
 plt.show()
 
 

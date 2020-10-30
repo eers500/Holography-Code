@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 from functions import bandpassFilter, exportAVI, histeq
 
 
-I = mpimg.imread('MF1_30Hz_200us_awaysection.png')
-IB = mpimg.imread('MED_MF1_30Hz_200us_awaysection.png')
+I = mpimg.imread('/media/erick/NuevoVol/LINUX_LAP/PhD/Holography_Videos/0um_10x_ECOLI_HCB1_100hz_40us.png')
+IB = mpimg.imread('/media/erick/NuevoVol/LINUX_LAP/PhD/Holography_Videos/MED_0um_10x_ECOLI_HCB1_100hz_40us.png')
 IB[IB == 0] = np.mean(IB)
 IN = I/IB   #divide
 

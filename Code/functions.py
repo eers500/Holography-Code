@@ -560,13 +560,17 @@ def modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     return GS
 
 #%% Smooth trajectories piecewise cubic spline
-def smooth_curve(L):
+def smooth_curve(L, spline_degree, lim, sc):
     import numpy as np
     from scipy import interpolate
     # from mpl_toolkits.mplot3d import Axes3D
     from scipy import ndimage
     
-    # L = LINKED[LINKED.PARTICLE == 3].values
+    #%
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    
+    # L = LINKED[LINKED.PARTICLE == 6].values
         
     num_sample_pts = len(L)
     x_sample = L[:, 0]
@@ -588,18 +592,111 @@ def smooth_curve(L):
     m = len(xn)
     smoothing_condition = (m-np.sqrt(m), m+np.sqrt(m))
     smoothing_condition = np.mean(smoothing_condition)
+    # smoothing_condition = sc
+    spline_degree = 3
     
     if len(xn) > 3:
-        tck, u = interpolate.splprep([xn,yn,zn], s=smoothing_condition, k=1)
+        tck, u = interpolate.splprep([xn,yn,zn], s=smoothing_condition, k=spline_degree)
         x_knots, y_knots, z_knots = interpolate.splev(tck[0], tck)
-        u_fine = np.linspace(0,1,num_sample_pts)
+        u_fine = np.linspace(0, 1, num_sample_pts)
         x_fine, y_fine, z_fine = interpolate.splev(u_fine, tck)
         X = [x_fine, y_fine, z_fine]
     else:
         X = -1
         
-        
+    # fig = plt.figure(figsize=(7, 4.5))
+    # ax1 = fig.add_subplot(111, projection='3d')
+    # ax1.set_facecolor('none')
+    # ax1.plot(x_sample, y_sample, z_sample, 'o')
+    # ax1.plot(x_fine, y_fine, z_fine, '-')
+    # plt.show()
+    
+    #%        
     return X
 
-
-
+#%% smoothing with CSAPS
+def csaps_smoothing(L, smoothing_condition, smooth_data):
+    import numpy as np
+    # import matplotlib.pyplot as plt
+    # from mpl_toolkits.mplot3d import Axes3D
+    from scipy import ndimage
+    from csaps import csaps, CubicSmoothingSpline
+    
+    # L = LINKED[LINKED.PARTICLE == 2]
+    t_sample = np.linspace(0, 1, len(L))
+    x_sample = L.X.values
+    y_sample = L.Y.values
+    z_sample = L.Z.values
+    data = [x_sample, y_sample, z_sample]
+    t_interp = np.linspace(0, 1, 1*len(L))
+    
+    # smoothing_condition = 0.999999
+    
+    if smooth_data == False:
+        # Smooth sample data
+        smooth_data = csaps(t_sample, data, t_interp, smooth=smoothing_condition)
+        x_smooth = smooth_data[0, :]
+        y_smooth = smooth_data[1, :]
+        z_smooth = smooth_data[2, :]
+        
+        # # Smooth sample data with variable smoothing condition
+        # xi, smooth_x = csaps(t_sample, x_sample, t_interp)
+        # yi, smooth_y = csaps(t_sample, y_sample, t_interp)
+        # zi, smooth_z = csaps(t_sample, z_sample, t_interp)
+    elif smooth_data == True:
+        # Filter sample data
+        jump = np.sqrt(np.diff(x_sample)**2 + np.diff(y_sample)**2 + np.diff(z_sample)**2) 
+        smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
+        limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
+        xn, yn, zn = x_sample[:-1], y_sample[:-1], z_sample[:-1]
+        xn = xn[(jump > 0) & (smooth_jump < limit)]
+        yn = yn[(jump > 0) & (smooth_jump < limit)]
+        zn = zn[(jump > 0) & (smooth_jump < limit)]
+        tn = np.linspace(0, 1, len(zn))
+        
+        # Smooth filtered data
+        datani_smooth = csaps(tn, [xn, yn, zn], tn, smooth=smoothing_condition)
+        x_smooth = datani_smooth[0, :]
+        y_smooth = datani_smooth[1, :]
+        z_smooth = datani_smooth[2, :]
+        
+        # xni_smooth = datani_smooth[0, :]
+        # yni_smooth = datani_smooth[1, :]
+        # zni_smooth = datani_smooth[2, :]
+        
+        # # Smooth filtered sample data with variable smoothing condition
+        # xni, smooth_xni = csaps(tn, xn, tn)
+        # yni, smooth_yni = csaps(tn, yn, tn)
+        # zni, smooth_zni = csaps(tn, zn, tn)
+    
+    # Plot data
+    # fig = plt.figure(figsize=(7, 4.5))
+    
+    # ax1 = fig.add_subplot(221, projection='3d')
+    # # ax11.set_facecolor('none')
+    # ax1.plot(x_sample, y_sample, z_sample, 'ro', label='Sample Data')
+    # ax1.plot(x_smooth, y_smooth, z_smooth, 'b-', label='Smoothed Sample Data')
+    # ax1.legend(loc='upper left')
+    
+    # ax2 = fig.add_subplot(222, projection='3d')
+    # ax2.plot(x_sample, y_sample, z_sample, 'ro', label='Sample Data')
+    # ax2.plot(xi, yi, zi, 'b-', label='Smoothed (variable) Sample Data')
+    # ax2.legend(loc='upper left')
+    
+    # # fig1 = plt.figure(figsize=(7, 4.5))
+    # ax3 = fig.add_subplot(223, projection='3d')
+    # # ax21.set_facecolor('none')
+    # ax3.plot(xn, yn, zn, 'ro', label='Sample Data (Filtered)')
+    # ax3.plot(xni_smooth, yni_smooth, zni_smooth, 'b-', label='Smoothed Sample Data (Filtered)')
+    # ax3.legend(loc='upper left')
+    
+    # ax4 = fig.add_subplot(224, projection='3d')
+    # ax4.plot(xn, yn, zn, 'ro', label='Sample Data (Filtered)')
+    # ax4.plot(xni, yni, zni, 'b-', label='Smoothed (variable) Sample Data (Filtered)')
+    # ax4.legend(loc='upper left') 
+    # plt.show()
+    
+    return [x_smooth, y_smooth, z_smooth]
+    
+    
+    

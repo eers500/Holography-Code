@@ -12,7 +12,7 @@ class IndexTracker(object):
 
         self.X = X
         rows, cols, self.slices = X.shape
-        self.ind = self.slices//2
+        self.ind = 0
 
         self.im = ax.imshow(self.X[:, :, self.ind], cmap='gray')
         self.update()
@@ -35,7 +35,7 @@ fig, ax = plt.subplots(1, 1)
 
 #gr =grad
 #gr[gr<1]=0
-X = GS
+X = RS
 
 tracker = IndexTracker(ax, X)
 

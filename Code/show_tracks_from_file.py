@@ -145,4 +145,7 @@ fig.update_layout(height=900, width=1800, title_text="Hungrarian Algorithm")
 fig.show()
 plot(fig)
 
-fig.write_html('/home/erick/HA_Res.html')
+# fig.write_html('/home/erick/HA_Res.html')
+
+
+# %%
