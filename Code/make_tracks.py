@@ -55,7 +55,11 @@ elif method == 'DBSCAN':
 
     #% Density Based Spatial Clustering (DBSC)
     T0_DBSCAN = time.time()
-    DBSCAN = cl.DBSCAN(eps=5, min_samples=8).fit(DF[['X', 'Y', 'Z']])
+    eps, min_samples = gui.multenterbox(msg='DBSCAN parameters',
+                            title='DBSCAN parameters',
+                            fields=['EPSILON (e.g. 5):',
+                                    'MIN SAMPLES (e.g. 8):']) 
+    DBSCAN = cl.DBSCAN(eps=int(eps), min_samples=int(min_samples), n_jobs=4).fit(DF[['X', 'Y', 'Z']])
     DF['PARTICLE'] = DBSCAN.labels_
     LINKED = DF
     L = LINKED.drop(np.where(LINKED.PARTICLE.values == -1)[0])
@@ -223,105 +227,120 @@ T_smooth = time.time() - T0_smooth
 # smoothed_curves_df.to_csv(PATH[:-4]+'_DBSCAN_smooth_200.csv', index=False)
 
 #%% Ramer-Douglas-Peucker Algorithm to detect turns
-from rdp import rdp
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
+# from rdp import rdp
+# from mpl_toolkits.mplot3d import Axes3D
+# import matplotlib.pyplot as plt
 
-# L = LINKED[LINKED.PARTICLE == 6]
-L = smoothed_curves_df[smoothed_curves_df.PARTICLE == 9]
-xx, yy, zz = L.X.values, L.Y.values, L.Z.values
-xx = xx.reshape(len(xx), 1)
-yy = yy.reshape(len(yy), 1)
-zz = zz.reshape(len(zz), 1)
+# # L = LINKED[LINKED.PARTICLE == 6]
+# L = smoothed_curves_df[smoothed_curves_df.PARTICLE == 9]
+# xx, yy, zz = L.X.values, L.Y.values, L.Z.values
+# xx = xx.reshape(len(xx), 1)
+# yy = yy.reshape(len(yy), 1)
+# zz = zz.reshape(len(zz), 1)
 
-t = np.linspace(0, 1, len(xx))
-t = t.reshape(len(t), 1)
+# t = np.linspace(0, 1, len(xx))
+# t = t.reshape(len(t), 1)
 
-stack =  np.hstack((xx, yy, zz))
+# stack =  np.hstack((xx, yy, zz))
 
-eps = 0.03
-eps3d = 2
-xyz = rdp(stack, epsilon=eps3d)
-x = rdp(np.hstack((t, xx)), epsilon=eps)
-y = rdp(np.hstack((t, yy)), epsilon=eps)
-z = rdp(np.hstack((t, zz)), epsilon=eps)
+# eps = 0.03
+# eps3d = 2
+# xyz = rdp(stack, epsilon=eps3d)
+# x = rdp(np.hstack((t, xx)), epsilon=eps)
+# y = rdp(np.hstack((t, yy)), epsilon=eps)
+# z = rdp(np.hstack((t, zz)), epsilon=eps)
 
-fig = plt.figure(figsize=(7, 4.5))
-ax0 = plt.subplot2grid((6,6), (0, 0), 2, 3)
-ax0.plot(t, xx, 'b-')
-ax0.plot(x[:, 0], x[:, 1], 'r.')
-ax0.set_ylabel('x')
-ax0.set_title('eps = '+np.str(eps))
+# fig = plt.figure(figsize=(7, 4.5))
+# ax0 = plt.subplot2grid((6,6), (0, 0), 2, 3)
+# ax0.plot(t, xx, 'b-')
+# ax0.plot(x[:, 0], x[:, 1], 'r.')
+# ax0.set_ylabel('x')
+# ax0.set_title('eps = '+np.str(eps))
 
-ax1 = plt.subplot2grid((6, 6), (2, 0), 2, 3)
-ax1.plot(t, yy, 'b-')
-ax1.plot(y[:, 0], y[:, 1], 'r.')
-ax1.set_ylabel('y')
+# ax1 = plt.subplot2grid((6, 6), (2, 0), 2, 3)
+# ax1.plot(t, yy, 'b-')
+# ax1.plot(y[:, 0], y[:, 1], 'r.')
+# ax1.set_ylabel('y')
 
-ax2 = plt.subplot2grid((6, 6), (4, 0), 2, 3)
-ax2.plot(t, zz, 'b-')
-ax2.plot(z[:, 0], z[:, 1], 'r.')
-ax2.set_ylabel('z')
+# ax2 = plt.subplot2grid((6, 6), (4, 0), 2, 3)
+# ax2.plot(t, zz, 'b-')
+# ax2.plot(z[:, 0], z[:, 1], 'r.')
+# ax2.set_ylabel('z')
 
-ax3 = plt.subplot2grid((6, 6), (0, 3), 3, 4, projection='3d')
-ax3.set_facecolor('none')
-ax3.plot(L.X, L.Y, L.Z, 'b-', label='original data')
-ax3.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], 'r.', label='Turns')
-ax3.set_title('Smoothed track')
+# ax3 = plt.subplot2grid((6, 6), (0, 3), 3, 4, projection='3d')
+# ax3.set_facecolor('none')
+# ax3.plot(L.X, L.Y, L.Z, 'b-', label='original data')
+# ax3.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], 'r.', label='Turns')
+# ax3.set_title('Smoothed track')
 
-ax4 = plt.subplot2grid((6, 6), (3, 3), 3, 4, projection='3d')
-ax4.set_facecolor('none')
-ax4.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], 'b-', label='RDP reconstructed eps = '+np.str(eps3d))
-ax4.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], 'r.', label='Turns')
-ax4.set_title('RDP reconstruction')
-ax4.legend(loc='best')
+# ax4 = plt.subplot2grid((6, 6), (3, 3), 3, 4, projection='3d')
+# ax4.set_facecolor('none')
+# ax4.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], 'b-', label='RDP reconstructed eps = '+np.str(eps3d))
+# ax4.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], 'r.', label='Turns')
+# ax4.set_title('RDP reconstruction')
+# ax4.legend(loc='best')
 
-# Use derivatives of r (distance to origin) to sense changes in direction
-from scipy.signal import find_peaks
-r = np.sqrt(L.X.values**2 + L.Y.values**2 + L.Z.values**2)
-fig = plt.figure()
-ax = fig.add_subplot(311)
-ax.plot(r)
+# # Use derivatives of r (distance to origin) to sense changes in direction
+# from scipy.signal import find_peaks
+# r = np.sqrt(L.X.values**2 + L.Y.values**2 + L.Z.values**2)
+# fig = plt.figure()
+# ax = fig.add_subplot(311)
+# ax.plot(r)
 
-diff = np.diff(r)
-diff2 = np.diff(diff)
-peaks, _ = find_peaks(diff, height=0.04)
-peaks2, _ = find_peaks(diff2, height=np.min(diff2)-1)   # to get all local maxima
+# diff = np.diff(r)
+# diff2 = np.diff(diff)
+# peaks, _ = find_peaks(diff, height=0.04)
+# peaks2, _ = find_peaks(diff2, height=np.min(diff2)-1)   # to get all local maxima
 
-axx = fig.add_subplot(312)
-axx.plot(np.arange(len(diff)), diff)
-axx.plot(peaks, diff[peaks], '.')
+# axx = fig.add_subplot(312)
+# axx.plot(np.arange(len(diff)), diff)
+# axx.plot(peaks, diff[peaks], '.')
 
-axx = fig.add_subplot(313)
-axx.plot(np.arange(len(diff2)), diff2)
-axx.plot(peaks2, diff2[peaks2], '.')
+# axx = fig.add_subplot(313)
+# axx.plot(np.arange(len(diff2)), diff2)
+# axx.plot(peaks2, diff2[peaks2], '.')
 
-fig = plt.figure()
-axxx = fig.add_subplot(121, projection='3d')
-axxx.plot(L.X, L.Y, L.Z, 'b-', label='original data')
-axxx.plot(L.X.values[peaks], L.Y.values[peaks], L.Z.values[peaks], 'r.')
+# fig = plt.figure()
+# axxx = fig.add_subplot(121, projection='3d')
+# axxx.plot(L.X, L.Y, L.Z, 'b-', label='original data')
+# axxx.plot(L.X.values[peaks], L.Y.values[peaks], L.Z.values[peaks], 'r.')
 
-axxx = fig.add_subplot(122, projection='3d')
-axxx.plot(L.X, L.Y, L.Z, 'b-', label='original data')
-axxx.plot(L.X.values[peaks2], L.Y.values[peaks2], L.Z.values[peaks2], 'r.')
+# axxx = fig.add_subplot(122, projection='3d')
+# axxx.plot(L.X, L.Y, L.Z, 'b-', label='original data')
+# axxx.plot(L.X.values[peaks2], L.Y.values[peaks2], L.Z.values[peaks2], 'r.')
 
-plt.show()
+# plt.show()
 
 #%% Matplotlib scatter plot to compare detected points with smoothed curve
 # 3D Scatter Plot
-# from mpl_toolkits.mplot3d import Axes3D
-# from matplotlib import pyplot
-# #%matplotlib qt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot
+#%matplotlib qt
 
-# p_number = 106
-# CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
-# CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
+p_number = 2
+CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
+CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
+# CURVE_2 = smoothed_curves_df
 
-# fig = plt.figure(1)
-# ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)))
-# ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
-# pyplot.show()
+fig = plt.figure(1)
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)))
+# ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=0.5, marker='.')
+ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
+pyplot.show()
+
+#%%
+from scipy import interpolate
+from mpl_toolkits.mplot3d import Axes3D
+from scipy import ndimage
+
+vals = CURVE_1.values
+x, y, z, t = vals[:, 0], vals[:, 1], vals[:, 2], vals[:, 5]
+x0, y0, z0, t0 = x[0], y[0], z[0], t[0]
+
+for i in range(len(x)-1):
+    dr = np.sqrt((x[i] - x[i+1])**2 + (y[i] - y[i+1])**2 + (z[i] - z[i+1])**2)
+    
 
 
 #%% Plotly scatter plot

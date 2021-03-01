@@ -205,7 +205,8 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     IZ = np.empty([NI, NJ, Z.shape[0]], dtype='float32')
 
     for k in range(Z.shape[0]):
-        R = np.exp((-1j*K*Z[k]*Q), dtype='complex64')
+        # R = np.exp((-1j*K*Z[k]*Q), dtype='complex64')
+        R = 1j*Z[k]*np.exp((-1j*K*Z[k]*Q), dtype='complex64')
         IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R)))
     #        print(('RS', k))
     return IZ
