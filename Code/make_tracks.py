@@ -215,7 +215,7 @@ for pn in particle_num:
     L = LINKED[LINKED.PARTICLE == pn]
     if len(L) < 100:
         continue
-    X = f.csaps_smoothing(L, smoothing_condition=0.999999, smooth_data=True)
+    X = f.csaps_smoothing(L, smoothing_condition=0.999, smooth_data=True)
     
     if X != -1:
         smoothed_curves = np.vstack((smoothed_curves, np.stack((X[0], X[1], X[2], pn*np.ones_like(X[1])), axis=1))) 
@@ -317,29 +317,36 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
 #%matplotlib qt
 
-p_number = 2
+p_number = 4
 CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
 CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
-# CURVE_2 = smoothed_curves_df
+# # CURVE_2 = smoothed_curves_df
+
+
 
 fig = plt.figure(1)
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)))
+# ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)))
 # ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=0.5, marker='.')
 ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
+# # ax.plot(CURVE_2.X[CURVE_2.X>350], CURVE_2.Y[CURVE_2.X>350], CURVE_2.Z[CURVE_2.X>350], 'r-', label='Smoothed Curve')
+ax.set_xlabel('Y')
+ax.set_ylabel('X')
+ax.set_zlabel('Z')
+ax.set_title('Holography')
 pyplot.show()
 
 #%%
-from scipy import interpolate
-from mpl_toolkits.mplot3d import Axes3D
-from scipy import ndimage
+# from scipy import interpolate
+# from mpl_toolkits.mplot3d import Axes3D
+# from scipy import ndimage
 
-vals = CURVE_1.values
-x, y, z, t = vals[:, 0], vals[:, 1], vals[:, 2], vals[:, 5]
-x0, y0, z0, t0 = x[0], y[0], z[0], t[0]
+# vals = CURVE_1.values
+# x, y, z, t = vals[:, 0], vals[:, 1], vals[:, 2], vals[:, 5]
+# x0, y0, z0, t0 = x[0], y[0], z[0], t[0]
 
-for i in range(len(x)-1):
-    dr = np.sqrt((x[i] - x[i+1])**2 + (y[i] - y[i+1])**2 + (z[i] - z[i+1])**2)
+# for i in range(len(x)-1):
+#     dr = np.sqrt((x[i] - x[i+1])**2 + (y[i] - y[i+1])**2 + (z[i] - z[i+1])**2)
     
 
 

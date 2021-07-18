@@ -27,21 +27,37 @@ PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
 #                                    'Peak min distance for GS Z-Projection: (~20, ~35)', # 35 for colloid data, 20 for everything else
 #                                    'Number of steps (150, 40, etc)']) 
 
-THRESHOLD, NUM_FRAMES, EXPORT, PEAK_MIN_DISTANCE, NUMSTEPS = gui.multenterbox(msg='Threshold and file export',
+# THRESHOLD, NUM_FRAMES, EXPORT, PEAK_MIN_DISTANCE, NUMSTEPS, CALC_MEDIAN = gui.multenterbox(msg='Threshold and file export',
+OPTIONS = gui.multenterbox(msg='Threshold and file export',
                             title='Thresold and export',
                             fields=['THRESHOLD for GS:',
                                    'Number of frames for calculations:',
                                    'Export CSV file? (y/n):',
                                    'Peak min distance for GS Z-Projection: (~20, ~35)', # 35 for colloid data, 20 for everything else
-                                   'Number of steps (150, 40, etc)']) 
+                                   'Number of steps (150, 40, etc)',
+                                   'Calculate Median Image? (y/n)']) 
 
+THRESHOLD = OPTIONS[0]
+NUM_FRAMES = OPTIONS[1]
+EXPORT = OPTIONS[2]
+PEAK_MIN_DISTANCE = OPTIONS[3]
+NUMSTEPS = OPTIONS[4]
+CALC_MEDIAN = OPTIONS[5]
+
+# Import time
 T0 = time.time()
 vid = f.videoImport(PATH, 0)
 T_video_import = time.time() - T0
 
+# Median Image
 T0_median_image = time.time()
-FRAMES_MEDIAN = 20
-I_MEDIAN = f.medianImage(vid, FRAMES_MEDIAN)
+if CALC_MEDIAN == 'y':
+    FRAMES_MEDIAN = 20
+    I_MEDIAN = f.medianImage(vid, FRAMES_MEDIAN)
+    
+elif CALC_MEDIAN == 'n':
+    I_MEDIAN = np.ones((np.shape(vid)[0], np.shape(vid)[1]))
+    
 T_median_image = time.time() - T0_median_image
 
 N = 1.3226
@@ -122,7 +138,7 @@ for j in range(len(THRESHOLD)):
         LOCS[i, 1] = IM[A[:, 0], A[:, 1], A[:, 2]]
         LOCS[i, 2] = GS[A[:, 0], A[:, 1], A[:, 2]]
         T.append(time.time()-T0_loop)
-#        print(str(i+1)+' of '+ str(NUM_FRAMES[j]), j+1, str(len(THRESHOLD)), (time.time()-T0_loop))
+        print(str(i+1)+' of '+ str(NUM_FRAMES[j]), j+1, str(len(THRESHOLD)), (time.time()-T0_loop))
         bar.next()
     bar.finish()
     T_total = time.time() - T0
@@ -258,9 +274,10 @@ fig = go.Figure(data=[go.Scatter3d(
 fig.show()
 plot(fig)
 
-# iplot(fig)
+iplot(fig)
 # fig.write_html(PATH[:-3]+'html')
-               
+
+
 #%% Matplotlib scatter plot
 # 3D Scatter Plot
 # from mpl_toolkits.mplot3d import Axes3D

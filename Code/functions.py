@@ -147,6 +147,7 @@ def exportAVI(filename, IM, NI, NJ, fps):
 
     for i in range(IM.shape[2]):
         frame = IM[:, :, i]
+        frame = np.uint8(255*frame/frame.max())
         #    frame = np.random.randint(0, 255, (NI, NJ,3)).astype('uint8')
         VIDEO.write(frame)
 
@@ -170,6 +171,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     # Divide by Median image
     I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
     IN = I / I_MEDIAN
+    
     #    IN = I - I_MEDIAN,
     #     IN[IN < 0] = 0
 
@@ -184,7 +186,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     NI = np.shape(IN)[0]  # Number of rows
     NJ = np.shape(IN)[1]  # Nymber of columns
     # SZ = 10
-    Z = SZ*np.arange(0, NUMSTEPS)
+    Z = SZ*np.arange(1, NUMSTEPS)
     # Z = (FS * (51 / 31)) * np.arange(0, NUMSTEPS)
     #    Z = SZ*np.arange(0, NUMSTEPS)
     K = 2 * m.pi * N / LAMBDA  # Wavenumber
@@ -205,8 +207,8 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     IZ = np.empty([NI, NJ, Z.shape[0]], dtype='float32')
 
     for k in range(Z.shape[0]):
-        # R = np.exp((-1j*K*Z[k]*Q), dtype='complex64')
-        R = 1j*Z[k]*np.exp((-1j*K*Z[k]*Q), dtype='complex64')
+        R = np.exp((-1j*K*Z[k]*Q), dtype='complex64')
+        # R = 1j*Z[k]*np.exp((-1j*K*Z[k]*Q), dtype='complex64')
         IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R)))
     #        print(('RS', k))
     return IZ

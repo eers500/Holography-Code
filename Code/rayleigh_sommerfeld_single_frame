@@ -9,29 +9,50 @@ Created on Tue Jan 19 20:27:07 2021
 import numpy as np
 import matplotlib.pyplot as plt
 import functions as f
+import easygui as gui
 
-I = plt.imread('/media/erick/NuevoVol/LINUX_LAP/PhD/GT_200821/Cell_1/10um_150steps/1500 _Ecoli_HCB1_10x_50Hz_0.050ms_642nm_frame_stack_150steps_10um/1500 _Ecoli_HCB1_10x_50Hz_0.050ms_642nm_frame_stack_150steps_10um_z0_frame97.png')
-I = plt.imread('/media/erick/NuevoVol/LINUX_LAP/PhD/Archea_LW/20x_ArchFM1_30Hz_150us_1_2000frames_BS.png')
+path = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/may2021/5/')
+VID = f.videoImport(path, 0)
+# VID, cdf = f.histeq(VID)
+I = VID[:, :, 386]
+# I, cdf = f.histeq(IN)
 
-I_MEDIAN = np.ones_like(I)
+# I_MEDIAN = f.medianImage(VID, 1000)
+# I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
+
+# IN = I / I_MEDIAN
+# IN, cdf = f.histeq(IN)
+
+path_med = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/may2021/5/')
+# I_MEDIAN = np.ones_like(I)
+I_MEDIAN = plt.imread(path_med)
 N = 1.3226
 LAMBDA = 0.642              # HeNe
-MPP = 10 
 FS = 0.711                     # Sampling Frequency px/um
-SZ = 5    
+SZ = 40   
 
-rs = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 100)
-_, BINS = np.histogram(rs.flatten())
-rs[rs < BINS[8]] = 0
+rs = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 150)
+# _, BINS = np.histogram(rs.flatten())
+# rs[rs < BINS[8]] = 0
 
 
-gs = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 100)
+# gs = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 100)
 
 #%% Export LUT
-path = '/media/erick/NuevoVol/LINUX_LAP/PhD/Archea_LW/LUT/'
+# path = '/media/erick/NuevoVol/LINUX_LAP/PhD/Archea_LW/LUT/'
+# path = '/media/erick/NuevoVol/LINUX_LAP/PhD/Archea_LW/LUT_CES_70/'
+# path = '/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/may2021/5/20x_100Hz_05us_EcoliHCB1-07/LUT/'
+# path = '/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/June2021/14/sample_1/40x_HCB1_60Hz_1.259us_03/LUT/'
+path = '/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/June2021/14/sample_1/40x_HCB1_60Hz_09us_06/LUT/'
+# path = '/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/June2021/14/sample_2/LUT/'
 
-ci, cj = 71, 399
-D = 22
+ci, cj = 300, 267
+D = 85
 
-for i in range(40):
+# for i in range(rs.shape[-1]):
+for i in range(0, 19, 1):
+    # print(i)
     plt.imsave(path+np.str(i)+'.png', rs[ci-D:ci+D, cj-D:cj+D , i], cmap='gray')   
+    
+    
+    

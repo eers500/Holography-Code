@@ -45,41 +45,52 @@ plot(fig1)
 
 
 #%% Plot with plotly.graph_objects
-# import plotly.graph_objects as go
-# from plotly.offline import plot
-# from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+from plotly.offline import plot
+from plotly.subplots import make_subplots
 
 
-# # PATH = '/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_rayleighSommerfeld_Results_smooth.csv'
+# PATH = '/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_rayleighSommerfeld_Results_smooth.csv'
+PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_rayleighSommerfeld_Results_smooth.csv'
 
 # P_RS = particle_positions_df
-# P_MOD = pd.read_csv(PATH)
+P_MOD = pd.read_csv(PATH)
 
 
-# fig = make_subplots(
-#     rows=1, cols=2,
-#     specs=[[{"type": "scatter3d"}, {"type": "scatter3d"}]],
-#     subplot_titles=(path.split('/')[-2], PATH.split('/')[-1])
-# )
+fig = make_subplots(
+    rows=1, cols=2,
+    specs=[[{"type": "scatter3d"}, {"type": "scatter3d"}]])
 
-# fig.add_trace(go.Scatter3d(x=P_RS['X'], y=P_RS['Y'], 
-#                            z=P_RS['Z'], mode="markers", 
-#                            marker=dict(
-#                                size=1,
-#                                color=P_RS['PARTICLE'].values,
-#                                colorscale='Viridis'
-#                                )),
-#               row=1, col=1)
 
-# fig.add_trace(go.Scatter3d(x=P_MOD['X'], y=P_MOD['Y'], 
-#                            z=P_MOD['Z'], mode="markers",
-#                            marker=dict(
-#                                size=1,
-#                                color=P_MOD['PARTICLE'].values,
-#                                colorscale='Viridis'
-#                                )),
-#               row=1, col=2)
+fig.add_trace(go.Scatter3d(x=P_MOD['X'], y=P_MOD['Y'], 
+                            z=P_MOD['Z'], mode="markers", 
+                            marker=dict(
+                                size=1,
+                                color=P_MOD['PARTICLE'].values,
+                                colorscale='Viridis'
+                                )),
+              row=1, col=1)
 
-# fig.update_layout(height=900, width=1800, title_text="Propagator Comparison")
-# fig.show()
-# plot(fig)
+fig.add_trace(go.Scatter3d(x=P_MOD['X'], y=P_MOD['Y'], 
+                            z=P_MOD['Z'], mode="markers",
+                            marker=dict(
+                                size=1,
+                                color=P_MOD['PARTICLE'].values,
+                                colorscale='Viridis'
+                                )),
+              row=1, col=2)
+
+fig.update_layout(height=900, width=1800, title_text="Propagator Comparison")
+fig.show()
+plot(fig)
+
+#%%
+import plotly.graph_objects as go
+from plotly.offline import plot
+from plotly.subplots import make_subplots
+
+PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_rayleighSommerfeld_Results_smooth.csv'
+
+
+
+

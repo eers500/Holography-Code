@@ -26,7 +26,8 @@ else:
 
 
 I =mpimg.imread(path[0]) 
-I_MEDIAN = mpimg.imread(path[1])
+#I_MEDIAN = mpimg.imread(path[1])
+I_MEDIAN = np.ones((np.shape(I)[0], np.shape(I)[1]))
 
 N = 1.3226
 LAMBDA = 0.642               # Diode
@@ -36,13 +37,15 @@ NI = np.shape(I)[0]
 NJ = np.shape(I)[1]
 SZ = 10                       # Step size in um
 # Z = (FS*(51/31))*np.arange(0, 150)       # Number of steps
-Z = SZ*np.arange(0, 150)
+
+# %%
+# Z = SZ*np.arange(0, 150)
 # ZZ = np.linspace(0, SZ*149, 150)
 # Z = FS*ZZ
-K = 2*np.pi*N/LAMBDA            # Wavenumber
+# K = 2*np.pi*N/LAMBDA            # Wavenumber
 NUMSTEPS = 150
 
-RS = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS).astype('float32')
+RS = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)
 
 
 # %%
