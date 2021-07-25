@@ -21,8 +21,10 @@ from scipy.optimize import linear_sum_assignment
 from hungarian_algorithm import algorithm
 
 PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
-DF = pd.read_csv(PATH, index_col=0)
-
+# DF = pd.read_csv(PATH, index_col=1)
+DF = pd.read_csv(PATH)
+DF = DF[['X','Y','Z','I_FS','I_GS','FRAME']]
+DF = DF.head(1000000)
 # DF = pd.read_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_rayleighSommerfeld_Results.csv', index_col=0)
 # DF= pd.read_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_modified_propagator_Results.csv', index_col=0)
 # DF = pd.read_csv('/media/erick/NuevoVol/LINUX_LAP/PhD/Pseudomonas/2017-10-23/red_laser_100fps_200x_0_135msec_1_500_FRAMES_MODIFIED.csv', index_col=0)
@@ -59,7 +61,7 @@ elif method == 'DBSCAN':
                             title='DBSCAN parameters',
                             fields=['EPSILON (e.g. 5):',
                                     'MIN SAMPLES (e.g. 8):']) 
-    DBSCAN = cl.DBSCAN(eps=int(eps), min_samples=int(min_samples), n_jobs=4).fit(DF[['X', 'Y', 'Z']])
+    DBSCAN = cl.DBSCAN(eps=int(eps), min_samples=int(min_samples), n_jobs=3).fit(DF[['X', 'Y', 'Z']])
     DF['PARTICLE'] = DBSCAN.labels_
     LINKED = DF
     L = LINKED.drop(np.where(LINKED.PARTICLE.values == -1)[0])
@@ -215,7 +217,7 @@ for pn in particle_num:
     L = LINKED[LINKED.PARTICLE == pn]
     if len(L) < 100:
         continue
-    X = f.csaps_smoothing(L, smoothing_condition=0.999, smooth_data=True)
+    X = f.csaps_smoothing(L, smoothing_condition=0.999999, smooth_data=True)
     
     if X != -1:
         smoothed_curves = np.vstack((smoothed_curves, np.stack((X[0], X[1], X[2], pn*np.ones_like(X[1])), axis=1))) 
@@ -313,28 +315,28 @@ T_smooth = time.time() - T0_smooth
 
 #%% Matplotlib scatter plot to compare detected points with smoothed curve
 # 3D Scatter Plot
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import pyplot
-#%matplotlib qt
+# from mpl_toolkits.mplot3d import Axes3D
+# from matplotlib import pyplot
+# #%matplotlib qt
 
-p_number = 4
-CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
-CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
-# # CURVE_2 = smoothed_curves_df
+# p_number = 4
+# CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
+# CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
+# # # CURVE_2 = smoothed_curves_df
 
 
 
-fig = plt.figure(1)
-ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)))
-# ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=0.5, marker='.')
-ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
-# # ax.plot(CURVE_2.X[CURVE_2.X>350], CURVE_2.Y[CURVE_2.X>350], CURVE_2.Z[CURVE_2.X>350], 'r-', label='Smoothed Curve')
-ax.set_xlabel('Y')
-ax.set_ylabel('X')
-ax.set_zlabel('Z')
-ax.set_title('Holography')
-pyplot.show()
+# fig = plt.figure(1)
+# ax = fig.add_subplot(111, projection='3d')
+# # ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)))
+# # ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=0.5, marker='.')
+# ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
+# # # ax.plot(CURVE_2.X[CURVE_2.X>350], CURVE_2.Y[CURVE_2.X>350], CURVE_2.Z[CURVE_2.X>350], 'r-', label='Smoothed Curve')
+# ax.set_xlabel('Y')
+# ax.set_ylabel('X')
+# ax.set_zlabel('Z')
+# ax.set_title('Holography')
+# pyplot.show()
 
 #%%
 # from scipy import interpolate
@@ -354,6 +356,9 @@ pyplot.show()
 import plotly.express as px
 import pandas as pd
 from plotly.offline import plot
+
+# PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
+# smoothed_curves_df = pd.read_csv(PATH)
 
 # For Archea data that looks messy
 # value_counts = LINKED.PARTICLE.value_counts()
@@ -375,6 +380,6 @@ fig.update_traces(marker=dict(size=1))
 plot(fig)
 
 # fig.write_html(PATH[:-3]+'html')
-# fig.write_html(PATH[:-4]+'_HA.html')
+# fig.write_html(PATH[:-4]+'_DBSCAN_eps5_minsamp30_smooth0999999.html')
 
 

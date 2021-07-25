@@ -235,14 +235,14 @@ with open(r'/media/erick/NuevoVol/LINUX_LAP/PhD/Runtime.csv', 'a') as f:
 #     pyplot.pause(0.1)
     
 #%% Plot with plotly.express
-import plotly.express as px
-import pandas as pd
-import easygui as gui
-from plotly.offline import plot
+# import plotly.express as px
+# import pandas as pd
+# import easygui as gui
+# from plotly.offline import plot
 
-# #To plot csv files
-# PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
-# POSITIONS = pd.read_csv(PATH, index_col=0)
+# # #To plot csv files
+# # PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
+# # POSITIONS = pd.read_csv(PATH, index_col=0)
 # fig = px.scatter_3d(POSITIONS, x='X', y='Y', z='Z', color='FRAME')
 # fig.update_traces(mode='markers', marker=dict(size=1))
 # plot(fig)
@@ -254,12 +254,13 @@ import plotly.graph_objects as go
 from plotly.offline import plot, iplot
 
 # # To plot csv files
-PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
-POSITIONS = pd.read_csv(PATH, index_col=0)
+PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
+# POSITIONS = pd.read_csv(PATH, index_col=0)
+POSITIONS = pd.read_csv(PATH)
 
 fig = go.Figure(data=[go.Scatter3d(
-    x=POSITIONS['X'], 
-    y=POSITIONS['Y'], 
+    x=POSITIONS['Y'], 
+    y=POSITIONS['X'], 
     z=POSITIONS['Z'],
     mode='markers', 
     marker=dict(

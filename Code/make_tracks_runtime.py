@@ -22,7 +22,9 @@ from scipy.optimize import linear_sum_assignment
 from hungarian_algorithm import algorithm
 
 PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
-DF = pd.read_csv(PATH, index_col=0)
+# DF = pd.read_csv(PATH, index_col=0)
+DF = pd.read_csv(PATH)
+DF = DF.head(1000000)
 
 # DF = pd.read_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_rayleighSommerfeld_Results.csv', index_col=0)
 # DF= pd.read_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_modified_propagator_Results.csv', index_col=0)
