@@ -6,8 +6,9 @@ Created on Wed May 27 14:27:33 2020
 @author: erick
 """
 #%% Import
+import os
 import matplotlib as mpl
-import mpld3
+# import mpld3
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt 
@@ -18,13 +19,13 @@ import time
 import easygui as gui
 import hdbscan
 from scipy.optimize import linear_sum_assignment
-from hungarian_algorithm import algorithm
+# from hungarian_algorithm import algorithm
 
 PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
 # DF = pd.read_csv(PATH, index_col=1)
 DF = pd.read_csv(PATH)
 DF = DF[['X','Y','Z','I_FS','I_GS','FRAME']]
-DF = DF.head(1000000)
+# DF = DF.head(1000000)
 # DF = pd.read_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_rayleighSommerfeld_Results.csv', index_col=0)
 # DF= pd.read_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_modified_propagator_Results.csv', index_col=0)
 # DF = pd.read_csv('/media/erick/NuevoVol/LINUX_LAP/PhD/Pseudomonas/2017-10-23/red_laser_100fps_200x_0_135msec_1_500_FRAMES_MODIFIED.csv', index_col=0)
@@ -41,7 +42,7 @@ D = DF.values
 #%% Run track detection
 # KMeans, DBSCAN or HA
 # method = 'DBSCAN'
-method = gui.choicebox(msg='Choose a tracking Algorithm', title='Choose', choices=['KMeans', 'DBSCAN', 'HA'])
+method = gui.choicebox(msg='Choose a tracking Algorithm', title='Choose', choices=['KMeans', 'DBSCAN', 'HA', 'HDBSCAN'])
 
 
 if method == 'KMeans':
@@ -52,20 +53,42 @@ if method == 'KMeans':
     DF['PARTICLE'] = kmeans.labels_
     LINKED = DF
     T_kmeans = time.time() -  T0_kmeans
+    print('T_kmeans', T_kmeans)
 
 elif method == 'DBSCAN':
-
+    
+    cores = os.cpu_count()
     #% Density Based Spatial Clustering (DBSC)
-    T0_DBSCAN = time.time()
     eps, min_samples = gui.multenterbox(msg='DBSCAN parameters',
                             title='DBSCAN parameters',
                             fields=['EPSILON (e.g. 5):',
                                     'MIN SAMPLES (e.g. 8):']) 
-    DBSCAN = cl.DBSCAN(eps=int(eps), min_samples=int(min_samples), n_jobs=3).fit(DF[['X', 'Y', 'Z']])
+    # time.sleep(10)
+    T0_DBSCAN = time.time()
+    DBSCAN = cl.DBSCAN(eps=int(eps), min_samples=int(min_samples), n_jobs=cores).fit(DF[['X', 'Y', 'Z']])
     DF['PARTICLE'] = DBSCAN.labels_
     LINKED = DF
     L = LINKED.drop(np.where(LINKED.PARTICLE.values == -1)[0])
     T_DBSCAN = time.time() - T0_DBSCAN
+    print('T_DBSCAN', T_DBSCAN)
+    
+elif method == 'HDBSCAN':
+    
+    cores = os.cpu_count()
+    #% Density Based Spatial Clustering (DBSC)
+    # eps, min_samples = gui.multenterbox(msg='DBSCAN parameters',
+    #                         title='DBSCAN parameters',
+    #                         fields=['EPSILON (e.g. 5):',
+                                    # 'MIN SAMPLES (e.g. 8):']) 
+    # time.sleep(10)
+    T0_HDBSCAN = time.time()
+    clusterer = hdbscan.HDBSCAN(min_cluster_size=30, cluster_selection_epsilon=5, core_dist_n_jobs=cores,  algorithm='boruvka_kdtree')
+    DF['PARTICLE'] = clusterer.fit_predict(DF[['X','Y','Z']])
+    LINKED = DF.copy()
+    L = LINKED.drop(np.where(LINKED.PARTICLE.values == -1)[0])
+    T_HDBSCAN = time.time() - T0_HDBSCAN
+    print('T_HDBSCAN', T_HDBSCAN)
+    
 
 elif method == 'HA':
 
@@ -93,22 +116,30 @@ elif method == 'HA':
     for k in range(len(FRAME_DATA)-1):  
         print(k)
         
-        if k==0:    
-            R1 = FRAME_DATA[k]
-            R2 = FRAME_DATA[k+1]
-        else:
-            R1 = TRACKS[k]
-            R2 = FRAME_DATA[k+1]
+        # if k==0:    
+        #     R1 = FRAME_DATA[k]
+        #     R2 = FRAME_DATA[k+1]
+        # else:
+        #     R1 = TRACKS[k]
+        #     R2 = FRAME_DATA[k+1]
+        
+        R1 = FRAME_DATA[k]
+        R2 = FRAME_DATA[k+1]
         
         # COST = np.empty((int(SIZE.max()), int(SIZE.max())))
-        COST = np.empty((len(R1), len(R2)))
+        # COST = np.empty((len(R1), len(R2)))
         # for i in range(int(SIZE.max())):
-        #     for j in range(int(SIZE.max())):        
+        #     for j in range(int(SIZE.max())):     
+      #%
+        x2, x1 = np.meshgrid(R2[:, 0], R1[:, 0])
+        y2, y1 = np.meshgrid(R2[:, 1], R1[:, 1])
+        z2, z1 = np.meshgrid(R2[:, 2], R1[:, 2])        
+        COST = np.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
+                     
+        # for i in range(len(R1)):
+        #     for j in range(len(R2)):
                 
-        for i in range(len(R1)):
-            for j in range(len(R2)):
-                
-                COST[i, j] = np.sqrt(sum((R1[i, :3]- R2[j, :3])**2))      
+        #         COST[i, j] = np.sqrt(sum((R1[i, :3]- R2[j, :3])**2))      
         # row_ind, particle_index[:, k] = linear_sum_assignment(COST)
         row_ind, particle_index = linear_sum_assignment(COST)
         sizes[k+1] = len(particle_index)
@@ -137,64 +168,6 @@ LINKED = LINKED[LINKED.PARTICLE != -1]
 # ID = np.where(SHAPES >= 1000)[0]
 # IND  = np.in1d(TR.PARTICLE.values,  ID, invert=True)
 # LINKED = TR.loc[IND, :]
-    
-
-#%% Smooth trajectories
-# from scipy import interpolate
-# from mpl_toolkits.mplot3d import Axes3D
-# from scipy import ndimage
-
-# L = LINKED[LINKED.PARTICLE == 4].values
-
-# num_true_pts = len(L)
-
-
-# num_sample_pts = len(L)
-# x_sample = L[:, 0]
-# y_sample = L[:, 1]
-# z_sample = L[:, 2]
-
-# jump = np.sqrt(np.diff(x_sample)**2 + np.diff(y_sample)**2 + np.diff(z_sample)**2) 
-# smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-# limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-# xn, yn, zn = x_sample[:-1], y_sample[:-1], z_sample[:-1]
-# xn = xn[(jump > 0) & (smooth_jump < limit)]
-# yn = yn[(jump > 0) & (smooth_jump < limit)]
-# zn = zn[(jump > 0) & (smooth_jump < limit)]
-
-# # xn = xn[(jump > 0)]
-# # yn = yn[(jump > 0)]
-# # zn = zn[(jump > 0)]
-
-# # plt.subplot(3, 1, 1)
-# # plt.plot(x_sample)
-# # plt.subplot(3, 1, 2)
-# # plt.plot(y_sample)
-# # plt.subplot(3, 1, 3)
-# # plt.plot(z_sample)
-
-# m = len(xn)
-# smoothing_condition = (m-np.sqrt(m), m+np.sqrt(m))
-# smoothing_condition = np.mean(smoothing_condition)
-
-
-# tck, u = interpolate.splprep([xn,yn,zn], s=smoothing_condition, k=3)
-# x_knots, y_knots, z_knots = interpolate.splev(tck[0], tck)
-# u_fine = np.linspace(0,1,num_true_pts)
-# x_fine, y_fine, z_fine = interpolate.splev(u_fine, tck)
-
-# fig = plt.figure(1)
-# ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(x_sample, y_sample, z_sample, c=plt.cm.jet(L[:, 5]), marker='.', label='True Poinrts')
-# ax.plot(x_knots, y_knots, z_knots, 'g.', markersize=20, label='Knots')
-# ax.plot(x_fine, y_fine, z_fine, 'b.-', label='Smoothed Curve')
-
-# # ax.plot(xn, yn, zn, 'b.-', label='Smoothed Curve')
-
-
-# ax.legend()
-
-# fig.show()
 
 #%% Smooth trajectories
 # LINKED = LINKED[LINKED.PARTICLE != -1]
@@ -217,7 +190,7 @@ for pn in particle_num:
     L = LINKED[LINKED.PARTICLE == pn]
     if len(L) < 100:
         continue
-    X = f.csaps_smoothing(L, smoothing_condition=0.999999, smooth_data=True)
+    X = f.csaps_smoothing(L, smoothing_condition=0.99999, filter_data=True)
     
     if X != -1:
         smoothed_curves = np.vstack((smoothed_curves, np.stack((X[0], X[1], X[2], pn*np.ones_like(X[1])), axis=1))) 
@@ -319,24 +292,53 @@ T_smooth = time.time() - T0_smooth
 # from matplotlib import pyplot
 # #%matplotlib qt
 
-# p_number = 4
+# p_number = 0
 # CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
 # CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
-# # # CURVE_2 = smoothed_curves_df
+# # CURVE_2 = smoothed_curves_df
 
 
 
 # fig = plt.figure(1)
 # ax = fig.add_subplot(111, projection='3d')
 # # ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)))
-# # ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=0.5, marker='.')
+# ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=0.5, marker='.')
+# # ax.plot(CURVE_1.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
 # ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
-# # # ax.plot(CURVE_2.X[CURVE_2.X>350], CURVE_2.Y[CURVE_2.X>350], CURVE_2.Z[CURVE_2.X>350], 'r-', label='Smoothed Curve')
+# # ax.plot(CURVE_2.X[CURVE_2.X>350], CURVE_2.Y[CURVE_2.X>350], CURVE_2.Z[CURVE_2.X>350], 'r-', label='Smoothed Curve')
 # ax.set_xlabel('Y')
 # ax.set_ylabel('X')
 # ax.set_zlabel('Z')
 # ax.set_title('Holography')
 # pyplot.show()
+
+#%% Matplotlib scatter plot
+# 3D Scatter Plot
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot
+
+# PKS = A.__array__()
+# np.savetxt('locs.txt', PKS)
+fig = pyplot.figure()
+ax = Axes3D(fig)
+
+X = LINKED.Y
+Y = LINKED.X
+Z = LINKED.Z
+T = LINKED.FRAME
+P = LINKED.PARTICLE
+
+
+ax.scatter(X, Y, Z, s=25, marker='o', c=P)
+ax.plot(smoothed_curves_df.Y, smoothed_curves_df.X, smoothed_curves_df.Z, 'r-')
+ax.tick_params(axis='both', labelsize=10)
+ax.set_title('Cells Positions in 3D', fontsize='20')
+ax.set_xlabel('x (pixels)', fontsize='18')
+ax.set_ylabel('y (pixels)', fontsize='18')
+ax.set_zlabel('z (slices)', fontsize='18')
+# fig.colorbar(p)
+pyplot.show()
+    
 
 #%%
 # from scipy import interpolate
@@ -355,6 +357,7 @@ T_smooth = time.time() - T0_smooth
 #%% Plotly scatter plot
 import plotly.express as px
 import pandas as pd
+import easygui as gui
 from plotly.offline import plot
 
 # PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
@@ -366,20 +369,62 @@ from plotly.offline import plot
 # idx = LINKED.PARTICLE.isin(values.index)
 # CURVE = LINKED.iloc[idx.values]
 
+# CURVE = DF
 # CURVE = LINKED[LINKED.PARTICLE == 4]
 # CURVE = LINKED[(LINKED.PARTICLE != -1)]
 # CURVE = pd.DataFrame(smoothed_curves, columns=['X', 'Y', 'Z', 'PARTICLE'])
 # CURVE = CURVE[CURVE.PARTICLE != -1]
 # CURVE = LINKED[LINKED.PARTICLE == 28]
-CURVE = smoothed_curves_df[smoothed_curves_df.PARTICLE != -1]
+# CURVE = smoothed_curves_df[smoothed_curves_df.PARTICLE != -1]
 # CURVE = smoothed_curves_df[smoothed_curves_df.PARTICLE == 28]
 
-# fig = px.scatter_3d(CURVE, x='X', y='Y', z='Z', color='PARTICLE')
-fig = px.line_3d(CURVE, x='X', y='Y', z='Z', color='PARTICLE')
+# LINKED2 = LINKED
+# LINKED2['ZZ'] = LINKED['Z']*5
+
+# fig = px.scatter_3d(LINKED, x='X', y='Y', z='Z', color='PARTICLE', size='I_GS')
+# fig = px.line_3d(LINKED2, x='X', y='Y', z='ZZ', color='PARTICLE')
+fig = px.line_3d(smoothed_curves_df, x='X', y='Y', z='Z', color='PARTICLE')
 fig.update_traces(marker=dict(size=1))
+
+#fig.add_trace(fig2)
 plot(fig)
 
 # fig.write_html(PATH[:-3]+'html')
 # fig.write_html(PATH[:-4]+'_DBSCAN_eps5_minsamp30_smooth0999999.html')
 
 
+# %%
+# from plotly.subplots import make_subplots
+# import plotly.graph_objects as go
+
+# fig = make_subplots(rows=1, cols=2,
+#                     specs=[[{'is_3d': True}, {'is_3d': True}],
+#                            ])
+
+# fig.add_trace(go.Scatter3d(
+#     x=CURVE.X, 
+#     y=CURVE.Y, 
+#     z=CURVE.Z,
+#     mode='markers', 
+#     marker=dict(
+#         size=1,
+#         color=CURVE['FRAME'].values,
+#         colorscale='Viridis'
+#         ),
+#     hovertext=['X+Y+Z+FRAME'],
+#     hoverinfo='all'
+    
+# ),row=1, col=1)
+
+# fig.add_trace(go.Scatter3d(x=LINKED.X, y=LINKED.Y, z=LINKED.Z,
+#                     mode='markers',
+#                     marker=dict(
+#                         size=1,
+#                         color=CURVE.PARTICLE.values,
+#                         colorscale='Viridis',
+#                         )
+# ), row=1, col=2)
+
+# fig.show()
+# plot(fig)
+# %%

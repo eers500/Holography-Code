@@ -59,15 +59,22 @@ def bandpassFilter(img, xs, xl):
     MIS = ni
 
     # Create bandpass filter when BigAxis ==
-    LCO = np.empty([ni, nj])
-    SCO = np.empty([ni, nj])
+    # LCO = np.empty([ni, nj])
+    # SCO = np.empty([ni, nj])
 
-    for ii in range(ni):
-        for jj in range(nj):
-            LCO[ii, jj] = np.exp(-((ii - MIS / 2) ** 2 + (jj - MIS / 2) ** 2) * (2 * xl / MIS) ** 2)
-            SCO[ii, jj] = np.exp(-((ii - MIS / 2) ** 2 + (jj - MIS / 2) ** 2) * (2 * xs / MIS) ** 2)
-    BP = SCO - LCO
+    # for ii in range(ni):
+    #     for jj in range(nj):
+    #         LCO[ii, jj] = np.exp(-((ii - MIS / 2) ** 2 + (jj - MIS / 2) ** 2) * (2 * xl / MIS) ** 2)
+    #         SCO[ii, jj] = np.exp(-((ii - MIS / 2) ** 2 + (jj - MIS / 2) ** 2) * (2 * xs / MIS) ** 2)
+    # BP = SCO - LCO
+
+    jj, ii = np.meshgrid(np.arange(nj), np.arange(ni))
+    
+    LCO = np.exp(-((ii-MIS/2)**2 + (jj-MIS/2)**2) * (2*xl/MIS)**2)
+    SCO = np.exp(-((ii-MIS/2)**2 + (jj-MIS/2)**2) * (2*xs/MIS)**2)
+    BP =  SCO - LCO
     BPP = np.fft.ifftshift(BP)
+    
     # Filter image
     filtered = BP * img_fft
     img_filt = np.fft.ifftshift(filtered)
@@ -164,7 +171,6 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     #             I_MEDIAN - median image
     #                    Z - numpy array defining defocusing distances
     #   Output:        IMM - 3D array representing stack of images at different Z
-    import math as m
     import numpy as np
     from functions import bandpassFilter
 
@@ -189,13 +195,18 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     Z = SZ*np.arange(1, NUMSTEPS)
     # Z = (FS * (51 / 31)) * np.arange(0, NUMSTEPS)
     #    Z = SZ*np.arange(0, NUMSTEPS)
-    K = 2 * m.pi * N / LAMBDA  # Wavenumber
+    K = 2 * np.pi * N / LAMBDA  # Wavenumber
 
     # Rayleigh-Sommerfeld Arrays
-    P = np.empty_like(I_MEDIAN, dtype='complex64')
-    for i in range(NI):
-        for j in range(NJ):
-            P[i, j] = ((LAMBDA * FS) / (max([NI, NJ]) * N)) ** 2 * ((i - NI / 2) ** 2 + (j - NJ / 2) ** 2)
+    #P = np.empty_like(I_MEDIAN, dtype='complex64')
+
+    #for i in range(NI):
+    #    for j in range(NJ):
+    #        P[i, j] = ((LAMBDA * FS) / (max([NI, NJ]) * N)) ** 2 * ((i - NI / 2) ** 2 + (j - NJ / 2) ** 2)
+
+    jj, ii = np.meshgrid(np.arange(NJ), np.arange(NI))
+    const = ((LAMBDA*FS)/(max([NI, NJ])*N))**2
+    P = const*((ii-NI/2)**2 + (jj-NJ/2)**2)
 
     # P = np.conj(P)
     Q = np.sqrt(1 - P) - 1
@@ -208,7 +219,6 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
 
     for k in range(Z.shape[0]):
         R = np.exp((-1j*K*Z[k]*Q), dtype='complex64')
-        # R = 1j*Z[k]*np.exp((-1j*K*Z[k]*Q), dtype='complex64')
         IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R)))
     #        print(('RS', k))
     return IZ
@@ -218,6 +228,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
 def medianImage(VID, numFrames):
     ## Median Image
     #   Input:   VID - 3D numpy array of video file
+    #            numFrames - Number of frames to calculat median image
     #   Output: MEAN - 2D pixel mean array
     import numpy as np
 
@@ -393,9 +404,9 @@ def positions3D(GS, peak_min_distance):
         
     
     # XYZ_POSITIONS = np.hstack((XYZ_POSITIONS, Z_SUM_XY_MAXS[:, 0]))
-    XYZ_POSITIONS = np.insert(PKS, 2, Z_SUM_XY_MAXS[:, 0], axis=-1)
+    XYZ_POSITIONS = np.insert(PKS, 2, Z_SUM_XY_MAXS[:, 0], axis=-1)         # Actually [Y, X, Z]
 
-    return XYZ_POSITIONS
+    return XYZ_POSITIONS   
 
 
 #%% plot3D
@@ -501,7 +512,6 @@ def modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     #             I_MEDIAN - median image
     #                    Z - numpy array defining defocusing distances
     #   Output:        IMM - 3D array representing stack of images at different Z
-    import math as m
     import numpy as np
     from functions import bandpassFilter, histeq
 
@@ -525,13 +535,17 @@ def modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     Z = SZ*np.arange(0, NUMSTEPS)
     # Z = (FS * (51 / 31)) * np.arange(0, NUMSTEPS)
     #    Z = SZ*np.arange(0, NUMSTEPS)
-    K = 2 * m.pi * N / LAMBDA  # Wavenumber
+    K = 2 * np.pi * N / LAMBDA  # Wavenumber
 
     # Rayleigh-Sommerfeld Arrays
-    Q = np.empty_like(I_MEDIAN, dtype='complex64')
-    for i in range(NI):
-        for j in range(NJ):
-            Q[i, j] = ((LAMBDA * FS) / (max([NI, NJ]) * N)) ** 2 * ((i - NI / 2) ** 2 + (j - NJ / 2) ** 2)
+    # Q = np.empty_like(I_MEDIAN, dtype='complex64')
+    # for i in range(NI):
+    #     for j in range(NJ):
+    #         Q[i, j] = ((LAMBDA * FS) / (max([NI, NJ]) * N)) ** 2 * ((i - NI / 2) ** 2 + (j - NJ / 2) ** 2)
+
+    jj, ii = np.meshgrid(np.arange(NJ), np.arange(NI))
+    const = ((LAMBDA*FS)/(max([NI, NJ])*N))**2
+    Q = const*((ii-NI/2)**2 + (jj-NJ/2)**2)
 
     # P = np.conj(P)
     Q = np.sqrt(1 - Q) - 1
@@ -558,7 +572,7 @@ def modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     
     GS = GS - 1
     _, BINS = np.histogram(GS.flatten())
-    GS[GS < BINS[7]] = 0
+    GS[GS < BINS[9]] = 0
 
     return GS
 
@@ -618,7 +632,7 @@ def smooth_curve(L, spline_degree, lim, sc):
     return X
 
 #%% smoothing with CSAPS
-def csaps_smoothing(L, smoothing_condition, smooth_data):
+def csaps_smoothing(L, smoothing_condition, filter_data):
     import numpy as np
     # import matplotlib.pyplot as plt
     # from mpl_toolkits.mplot3d import Axes3D
@@ -635,7 +649,7 @@ def csaps_smoothing(L, smoothing_condition, smooth_data):
     
     # smoothing_condition = 0.999999
     
-    if smooth_data == False:
+    if filter_data == False:
         # Smooth sample data
         smooth_data = csaps(t_sample, data, t_interp, smooth=smoothing_condition)
         x_smooth = smooth_data[0, :]
@@ -646,7 +660,7 @@ def csaps_smoothing(L, smoothing_condition, smooth_data):
         # xi, smooth_x = csaps(t_sample, x_sample, t_interp)
         # yi, smooth_y = csaps(t_sample, y_sample, t_interp)
         # zi, smooth_z = csaps(t_sample, z_sample, t_interp)
-    elif smooth_data == True:
+    elif filter_data == True:
         # Filter sample data
         jump = np.sqrt(np.diff(x_sample)**2 + np.diff(y_sample)**2 + np.diff(z_sample)**2) 
         smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
@@ -702,4 +716,22 @@ def csaps_smoothing(L, smoothing_condition, smooth_data):
     return [x_smooth, y_smooth, z_smooth]
     
     
+#%% Surface plot
+
+def surf(array):
+    from mpl_toolkits.mplot3d import axes3d
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    x = np.arange(array.shape[1])
+    y = np.arange(array.shape[0])
+    X, Y = np.meshgrid(x, y)
+    
+    fig = plt.figure(figsize=(6,6))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(X, Y, array, cmap='jet')
+    plt.show()
+
+
+    return
     

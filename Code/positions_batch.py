@@ -41,6 +41,7 @@ THRESHOLD = OPTIONS[0]
 NUM_FRAMES = OPTIONS[1]
 EXPORT = OPTIONS[2]
 PEAK_MIN_DISTANCE = OPTIONS[3]
+
 NUMSTEPS = OPTIONS[4]
 CALC_MEDIAN = OPTIONS[5]
 
@@ -178,11 +179,11 @@ for j in range(len(THRESHOLD)):
     PARAMETER_LIST.append(TIME_LIST)
     
         
-    POSITIONS = pd.DataFrame(columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME'])
+    POSITIONS = pd.DataFrame(columns=['Y', 'X', 'Z', 'I_FS', 'I_GS', 'FRAME'])
     for i in range(np.shape(LOCS)[0]):
         XYZ, I_FS, I_GS, FRAME = LOCS[i, 0], LOCS[i, 1], LOCS[i, 2], i*np.ones_like(LOCS[i, 2])
         DATA = np.concatenate((XYZ, np.expand_dims(I_FS, axis=1), np.expand_dims(I_GS, axis=1), np.expand_dims(FRAME, axis=1)), axis=1)
-        POSITIONS = POSITIONS.append(pd.DataFrame(DATA, columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME']))
+        POSITIONS = POSITIONS.append(pd.DataFrame(DATA, columns=['Y', 'X', 'Z', 'I_FS', 'I_GS', 'FRAME']))
         
     if EXPORT == 'y':
         # POSITIONS.to_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_modified_propagator_Results.csv', header=True)
@@ -218,11 +219,11 @@ with open(r'/media/erick/NuevoVol/LINUX_LAP/PhD/Runtime.csv', 'a') as f:
 
 #%% Save to file    
 
-# if OPTIONS[2] == 'y':
-#     # POSITIONS.to_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_modified_propagator_Results.csv', header=True)
-#     # EXPORT_PATH = PATH[:-4]+'_'+np.str(NUM_FRAMES)+'_FRAMES_RS_TH'+np.str(THRESHOLD).replace('.','')+'_MPD'+np.str(PEAK_MIN_DISTANCE)+'.csv'
-#     POSITIONS.to_csv(EXPORT_PATH)  # For leptospira data
-#     print('Results exported to: \n', EXPORT_PATH)
+if OPTIONS[2] == 'y':
+    # POSITIONS.to_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_modified_propagator_Results.csv', header=True)
+    EXPORT_PATH = PATH[:-4]+'_'+np.str(NUM_FRAMES)+'_FRAMES_RS_TH'+np.str(THRESHOLD).replace('.','')+'_MPD'+np.str(PEAK_MIN_DISTANCE)+'.csv'
+    POSITIONS.to_csv(EXPORT_PATH)  # For leptospira data
+    print('Results exported to: \n', EXPORT_PATH)
 
 #%% Plot with f.plot3D
 # from mpl_toolkits.mplot3d import Axes3D
@@ -254,13 +255,13 @@ import plotly.graph_objects as go
 from plotly.offline import plot, iplot
 
 # # To plot csv files
-PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
+# PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
 # POSITIONS = pd.read_csv(PATH, index_col=0)
-POSITIONS = pd.read_csv(PATH)
+# POSITIONS = pd.read_csv(PATH)
 
 fig = go.Figure(data=[go.Scatter3d(
-    x=POSITIONS['Y'], 
-    y=POSITIONS['X'], 
+    x=POSITIONS['X'], 
+    y=POSITIONS['Y'], 
     z=POSITIONS['Z'],
     mode='markers', 
     marker=dict(
@@ -275,26 +276,28 @@ fig = go.Figure(data=[go.Scatter3d(
 fig.show()
 plot(fig)
 
-iplot(fig)
-# fig.write_html(PATH[:-3]+'html')
+#iplot(fig)
+fig.write_html(PATH[:-3]+'html')
 
 
 #%% Matplotlib scatter plot
 # 3D Scatter Plot
-# from mpl_toolkits.mplot3d import Axes3D
-# from matplotlib import pyplot
-# # %matplotlib auto
+""" from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot
+# %matplotlib auto
 
-# # PKS = A.__array__()
-# PKS = POSITIONS.__array__()
-# # np.savetxt('locs.txt', PKS)
-# fig = pyplot.figure()
-# ax = Axes3D(fig)
+# PKS = A.__array__()
+PKS = POSITIONS.__array__()
+# np.savetxt('locs.txt', PKS)
+fig = pyplot.figure()
+ax = Axes3D(fig)
 
-# # p = ax.scatter(PKS[:, 0], PKS[:, 1], PKS[:, 2], s=25, marker='o')
-# p = ax.scatter(POSITIONS['X'], POSITIONS['Y'], POSITIONS['Z'], s=2, marker='o', c=POSITIONS['FRAME'])
+# p = ax.scatter(PKS[:, 0], PKS[:, 1], PKS[:, 2], s=25, marker='o')
+p = ax.scatter(POSITIONS['X'], POSITIONS['Y'], POSITIONS['Z'], s=2, marker='o', c=POSITIONS['FRAME'])
 
-# ax.tick_params(axis='both', labelsize=10)
-# ax.set_title('bort6')
-# fig.colorbar(p)
-# pyplot.show()
+ax.tick_params(axis='both', labelsize=10)
+ax.set_title('bort6')
+fig.colorbar(p)
+pyplot.show() """
+
+# %%

@@ -7,7 +7,7 @@ import time
 import matplotlib.image as mpimg
 import numpy as np
 import easygui
-from functions import bandpassFilter, exportAVI, histeq, imshow_sequence
+from functions import bandpassFilter, exportAVI, histeq, imshow_sequence, zGradientStack
 
 T0 = time.time()
 FILES = easygui.fileopenbox(multiple=True)
@@ -43,7 +43,7 @@ IB[IB == 0] = np.mean(IB)
 IN = I/IB   #divide
 # PATH = '/home/erick/Documents/PhD/23_10_19/300_L_10x_100Hz_45us.tif'
 # IN = mpimg.imread(PATH)
-
+# IN = -im.gaussian_laplace(IN, sigma=0.5)    # Use LoG filter for contrast
 
 N = 1.3226
 LAMBDA = 0.642               # Diode
@@ -100,14 +100,21 @@ print(time.time() - T0)
 # plt.imshow(IZ[:, :, 149], cmap = 'gray')
 
 #%%
-IM = (IZ - np.min(IZ))*(255/(np.max(IZ)-np.min(IZ)))
-IMM = np.uint8(IM)
+# IM = (IZ - np.min(IZ))*(255/(np.max(IZ)-np.min(IZ)))
+# IMM = np.uint8(IM)
+# # EX_PATH, NAME = os.path.split(PATH[0])
+# # exportAVI(EX_PATH+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
+
 # EX_PATH, NAME = os.path.split(PATH[0])
-# exportAVI(EX_PATH+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
+# exportAVI(EX_PATH+'/'+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
 
+#%% Export gradient stack
+GS = zGradientStack(IZ)
+IM = (GS - np.min(GS))*(255/(np.max(GS)-np.min(GS)))
+IM = 255 - IM
+IMM = np.uint8(IM)
 EX_PATH, NAME = os.path.split(PATH[0])
-exportAVI(EX_PATH+'/'+NAME[0:-4]+'_frame_stack_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
-
+exportAVI(EX_PATH+'/'+NAME[0:-4]+'_GS_'+str(SZ)+'um.avi', IMM, IMM.shape[0], IMM.shape[1], 30)
 #%%
 # Histogram equalizaion for visualization
 # IZZ, CDF = histeq(IM)

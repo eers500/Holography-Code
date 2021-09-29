@@ -27,6 +27,8 @@ for k in range(len(fn)):
     frame_data = data[data['FRAME'] == fn[k]]
     frame_data = frame_data[['I_GS', 'X', 'Y', 'Z']]
     frame_data = frame_data.append(ending, ignore_index=True)
-    frame_data.to_csv(export_path+'/frame{0}.txt'.format(k), sep=' ', header=False, index=False)
+    # frame_data.to_csv(export_path+'/frame{0}.txt'.format(k), sep=' ', header=False, index=False)
+    np.savetxt(export_path+'/frame{0}.txt'.format(k), frame_data.values, fmt='%d', delimiter="\t")  
+
     print(k)
     
