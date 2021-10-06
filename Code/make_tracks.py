@@ -288,56 +288,56 @@ T_smooth = time.time() - T0_smooth
 
 #%% Matplotlib scatter plot to compare detected points with smoothed curve
 # 3D Scatter Plot
-# from mpl_toolkits.mplot3d import Axes3D
-# from matplotlib import pyplot
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot
 # #%matplotlib qt
 
-# p_number = 0
-# CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
-# CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
+p_number = 5
+CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
+CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
 # # CURVE_2 = smoothed_curves_df
 
 
 
-# fig = plt.figure(1)
-# ax = fig.add_subplot(111, projection='3d')
-# # ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)))
-# ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=0.5, marker='.')
+fig = plt.figure(1)
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(CURVE_1.Y, CURVE_1.X, -CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)), alpha=0.3)
+# ax.scatter(CURVE_2.Y, CURVE_2.X, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=30, marker='o', alpha=0.1)
 # # ax.plot(CURVE_1.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
-# ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
+ax.plot(CURVE_2.Y, CURVE_2.X, -CURVE_2.Z, 'r-', label='Smoothed Curve')
 # # ax.plot(CURVE_2.X[CURVE_2.X>350], CURVE_2.Y[CURVE_2.X>350], CURVE_2.Z[CURVE_2.X>350], 'r-', label='Smoothed Curve')
 # ax.set_xlabel('Y')
 # ax.set_ylabel('X')
 # ax.set_zlabel('Z')
-# ax.set_title('Holography')
-# pyplot.show()
+ax.set_title('Holography')
+pyplot.show()
 
 #%% Matplotlib scatter plot
 # 3D Scatter Plot
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import pyplot
+# from mpl_toolkits.mplot3d import Axes3D
+# from matplotlib import pyplot
 
-# PKS = A.__array__()
-# np.savetxt('locs.txt', PKS)
-fig = pyplot.figure()
-ax = Axes3D(fig)
+# # PKS = A.__array__()
+# # np.savetxt('locs.txt', PKS)
+# fig = pyplot.figure()
+# ax = Axes3D(fig)
 
-X = LINKED.Y
-Y = LINKED.X
-Z = LINKED.Z
-T = LINKED.FRAME
-P = LINKED.PARTICLE
+# X = LINKED.Y
+# Y = LINKED.X
+# Z = LINKED.Z
+# T = LINKED.FRAME
+# P = LINKED.PARTICLE
 
 
-ax.scatter(X, Y, Z, s=25, marker='o', c=P)
-ax.plot(smoothed_curves_df.Y, smoothed_curves_df.X, smoothed_curves_df.Z, 'r-')
-ax.tick_params(axis='both', labelsize=10)
-ax.set_title('Cells Positions in 3D', fontsize='20')
-ax.set_xlabel('x (pixels)', fontsize='18')
-ax.set_ylabel('y (pixels)', fontsize='18')
-ax.set_zlabel('z (slices)', fontsize='18')
-# fig.colorbar(p)
-pyplot.show()
+# ax.scatter(X, Y, Z, s=25, marker='o', c=P)
+# ax.plot(smoothed_curves_df.Y, smoothed_curves_df.X, smoothed_curves_df.Z, 'r-')
+# ax.tick_params(axis='both', labelsize=10)
+# ax.set_title('Cells Positions in 3D', fontsize='20')
+# ax.set_xlabel('x (pixels)', fontsize='18')
+# ax.set_ylabel('y (pixels)', fontsize='18')
+# ax.set_zlabel('z (slices)', fontsize='18')
+# # fig.colorbar(p)
+# pyplot.show()
     
 
 #%%
@@ -383,7 +383,7 @@ from plotly.offline import plot
 
 # fig = px.scatter_3d(LINKED, x='X', y='Y', z='Z', color='PARTICLE', size='I_GS')
 # fig = px.line_3d(LINKED2, x='X', y='Y', z='ZZ', color='PARTICLE')
-fig = px.line_3d(smoothed_curves_df, x='X', y='Y', z='Z', color='PARTICLE')
+fig = px.line_3d(smoothed_curves_df, x='Y', y='X', z='Z', color='PARTICLE')
 fig.update_traces(marker=dict(size=1))
 
 #fig.add_trace(fig2)

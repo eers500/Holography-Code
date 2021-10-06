@@ -19,20 +19,19 @@ from multiprocessing import cpu_count
 from tqdm import tqdm
 
 # PATH = easygui.fileopenbox(default='F:\\PhD')
-# PATH = 'MF1_30Hz_200us_awaysection.avi'
-# PATH = '10x_laser_50Hz_10us_g1036_bl1602_500frames.avi'
-# PATH = 'F:\\PhD\\Colloids\\20x_50Hz_100us_642nm_colloids_2000frames.avi'
-# PATH = 'F:\\PhD\\PythonVsLabVIEW\\Pseudomonas\\red_laser_100fps_200x_0_135msec_1.avi'
-# PATH = 'F:\\PhD\\E_coli\\June2021\\14\\sample_2\\40x_HCB1_60Hz_1.7us_10_700frames-1.avi'
 # PATH = 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\may2021\\5\\20x_100Hz_05us_EcoliHCB1-07\\20x_100Hz_05us_EcoliHCB1-07.avi'
-PATH = 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\may2021\\5\\20x_100Hz_05us_EcoliHCB1-07\\20x_100Hz_05us_EcoliHCB1-07-1_BS_550frames.avi'
-
+# PATH = 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\may2021\\5\\20x_100Hz_05us_EcoliHCB1-07\\20x_100Hz_05us_EcoliHCB1-07-1_BS_550frames.avi'
+# PATH = 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\June2021\\14\\sample_2\\40x_HCB1_60Hz_1.7us_10.avi'
+# PATH = 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\June2021\\14\\sample_2\\40x_HCB1_60Hz_1.7us_10_700frames-1.avi'   
+# PATH = 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\June2021\\14\\sample_1\\40x_HCB1_60Hz_1.259us_03\\40x_HCB1_60Hz_1.259us_03_430frames.avi'
+# PATH = 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\June2021\\14\\sample_1\\40x_HCB1_60Hz_09us_06\\40x_HCB1_60Hz_09us_06_430frames.avi'
+PATH = 'C:\\Users\\eers500\\Documents\\PhD\\Archea_LW\\20x_ArchFM1_30Hz_150us_1_2000frames_BS_cropped_every5.avi'
 
 T0 = time.time()
 VID = f.videoImport(PATH, 0)
 FRAMES_MEDIAN = 20
-# I_MEDIAN = f.medianImage(VID, FRAMES_MEDIAN)
-I_MEDIAN = np.ones((VID.shape[0], VID.shape[1]))
+I_MEDIAN = f.medianImage(VID, FRAMES_MEDIAN)
+# I_MEDIAN = np.ones((VID.shape[0], VID.shape[1]))
 
 THRESHOLD = 0.1
 NUM_FRAMES = np.shape(VID)[-1]
@@ -49,14 +48,14 @@ def positions_batch(TUPLE):
     # MPP = 10
     FS = 0.711                     # Sampling Frequency px/um
     SZ = 5                       # # Step size um
-    NUMSTEPS = 150
+    NUMSTEPS = 75
     LOCS = np.empty((1, 3), dtype=object)
     X, Y, Z, I_FS, I_GS = [], [] ,[], [], []
     IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS).astype('float32')
     GS = f.zGradientStack(IM).astype('float32')  
     # GS = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)  # Modified propagator
     GS[GS < THRESHOLD] = 0
-    LOCS[0, 0] = f.positions3D(GS, peak_min_distance=15)
+    LOCS[0, 0] = f.positions3D(GS, peak_min_distance=10)
     A = LOCS[0, 0].astype('int')
     LOCS[0, 1] = IM[A[:, 0], A[:, 1], A[:, 2]]
     LOCS[0, 2] = GS[A[:, 0], A[:, 1], A[:, 2]]
@@ -116,27 +115,27 @@ if __name__ == "__main__":
 
 #%% Matplotlib scatter plot
 # 3D Scatter Plot
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import pyplot
+# from mpl_toolkits.mplot3d import Axes3D
+# from matplotlib import pyplot
 
-# PKS = A.__array__()
-# np.savetxt('locs.txt', PKS)
-fig = pyplot.figure()
-ax = Axes3D(fig)
+# # PKS = A.__array__()
+# # np.savetxt('locs.txt', PKS)
+# fig = pyplot.figure()
+# ax = Axes3D(fig)
 
-X = POSITIONS.Y
-Y = POSITIONS.X
-Z = POSITIONS.Z
-T = POSITIONS.FRAME
+# X = POSITIONS.Y
+# Y = POSITIONS.X
+# Z = POSITIONS.Z
+# T = POSITIONS.FRAME
 
 
-p = ax.scatter(X, Y, Z, s=25, marker='o', c=T)
-ax.tick_params(axis='both', labelsize=10)
-ax.set_title('Cells Positions in 3D', fontsize='20')
-ax.set_xlabel('x (pixels)', fontsize='18')
-ax.set_ylabel('y (pixels)', fontsize='18')
-ax.set_zlabel('z (slices)', fontsize='18')
-fig.colorbar(p)
-pyplot.show()
+# p = ax.scatter(X, Y, Z, s=5, marker='o', c=T)
+# ax.tick_params(axis='both', labelsize=10)
+# ax.set_title('Cells Positions in 3D', fontsize='20')
+# ax.set_xlabel('x (pixels)', fontsize='18')
+# ax.set_ylabel('y (pixels)', fontsize='18')
+# ax.set_zlabel('z (slices)', fontsize='18')
+# fig.colorbar(p)
+# pyplot.show()
     
     

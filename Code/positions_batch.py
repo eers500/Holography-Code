@@ -255,9 +255,9 @@ import plotly.graph_objects as go
 from plotly.offline import plot, iplot
 
 # # To plot csv files
-# PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
+PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
 # POSITIONS = pd.read_csv(PATH, index_col=0)
-# POSITIONS = pd.read_csv(PATH)
+POSITIONS = pd.read_csv(PATH)
 
 fig = go.Figure(data=[go.Scatter3d(
     x=POSITIONS['X'], 
@@ -282,9 +282,12 @@ fig.write_html(PATH[:-3]+'html')
 
 #%% Matplotlib scatter plot
 # 3D Scatter Plot
-""" from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
 # %matplotlib auto
+
+# PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
+# POSITIONS = pd.read_csv(PATH)
 
 # PKS = A.__array__()
 PKS = POSITIONS.__array__()
@@ -298,6 +301,6 @@ p = ax.scatter(POSITIONS['X'], POSITIONS['Y'], POSITIONS['Z'], s=2, marker='o', 
 ax.tick_params(axis='both', labelsize=10)
 ax.set_title('bort6')
 fig.colorbar(p)
-pyplot.show() """
+pyplot.show()
 
 # %%
