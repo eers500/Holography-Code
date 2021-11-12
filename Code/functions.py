@@ -192,7 +192,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     NI = np.shape(IN)[0]  # Number of rows
     NJ = np.shape(IN)[1]  # Nymber of columns
     # SZ = 10
-    Z = SZ*np.arange(1, NUMSTEPS)
+    Z = -SZ*np.arange(1, NUMSTEPS)
     # Z = (FS * (51 / 31)) * np.arange(0, NUMSTEPS)
     #    Z = SZ*np.arange(0, NUMSTEPS)
     K = 2 * np.pi * N / LAMBDA  # Wavenumber
@@ -380,33 +380,53 @@ def positions3D(GS, peak_min_distance):
         if Z_SUM_XY_MAXS_FOLDED[ii, 0].size == 0:
             Z_SUM_XY_MAXS_FOLDED[ii, 0] = np.array([[0]])
     
+    
 
     Z_SUM_XY_MAXS = []
     for ii in range(len(Z_SUM_XY_MAXS_FOLDED)):
         if len(Z_SUM_XY_MAXS_FOLDED[ii, 0]) != 1:
             for jj in range(len(Z_SUM_XY_MAXS_FOLDED[ii, 0])):
-                Z_SUM_XY_MAXS.append([Z_SUM_XY_MAXS_FOLDED[ii, 0][jj].item(), ii])
+                Z_SUM_XY_MAXS.append([Z_SUM_XY_MAXS_FOLDED[ii, 0][jj].item()])
         else:
-            Z_SUM_XY_MAXS.append([Z_SUM_XY_MAXS_FOLDED[ii, 0].item(), ii])
+            Z_SUM_XY_MAXS.append([Z_SUM_XY_MAXS_FOLDED[ii, 0].item()])
     
     Z_SUM_XY_MAXS = np.array(Z_SUM_XY_MAXS)
 
-    # XYZ_POSITIONS = np.empty((len(Z_SUM_XY_MAXS), 2))
-    # POSPOS = np.empty((len(Z_SUM_XY_MAXS), 2))
+    # Use Z_SUM_XY and Z_SUM_XY_MAXS
+    w = 2
+    pol = lambda a, x: a[0]*x**2 + a[1]*x + a[2]
+    z_max = []
     
-    # for ii in range(len(Z_SUM_XY_MAXS)):
-    #     XYZ_POSITIONS[ii, 0] = PKS[Z_SUM_XY_MAXS[ii, 1], 0]
-    #     XYZ_POSITIONS[ii, 1] = PKS[Z_SUM_XY_MAXS[ii, 1], 1]
+    for j in range(len(Z_SUM_XY_MAXS)):
         
-    # for ii in range(len(PKS)):
-    #     POSPOS[ii, 0] = PKS[ii, 0]
-    #     POSPOS[ii, 1] = PKS[ii, 1]
+        i = Z_SUM_XY_MAXS[j][0]
+        idi = np.arange(i-w,i+w+1)
+        temp = np.pad(Z_SUM_XY, ((w, w), (0, 0)))
+        val = temp[idi+w, j]
         
+        # val = Z_SUM_XY[idi, j]
+                
+        coefs = np.polyfit(idi+w, val, 2)
+        
+        interp_idi = np.linspace(idi[0]+w, idi[-1]+w, 20)
+        interp_val = pol(coefs, interp_idi)
+        
+        idi_max = np.where(interp_val == interp_val.max())[0][0]
+        z_max.append(interp_idi[idi_max]-w)
+        
+        # plt.plot(idi, val, '.-', label='Raw')
+        # plt.plot(idi, pol(coefs, idi), '.-', label='Fit with idi')
+        # plt.plot(interp_idi, interp_val, '.-', label='Fit with interp idi')
+        # plt.scatter(interp_idi[idi_max], interp_val[idi_max], c='r', marker='o', s=90)
+        # plt.axvline(interp_idi[idi_max], color='red')
+        # plt.grid()
+        # plt.legend()
     
     # XYZ_POSITIONS = np.hstack((XYZ_POSITIONS, Z_SUM_XY_MAXS[:, 0]))
-    XYZ_POSITIONS = np.insert(PKS, 2, Z_SUM_XY_MAXS[:, 0], axis=-1)         # Actually [Y, X, Z]
+    YXZ_POSITIONS = np.insert(PKS, 2, Z_SUM_XY_MAXS[:, 0], axis=-1)         # Actually [Y, X, Z]
+    # YXZ_POSITIONS = np.insert(np.float16(PKS), 2, z_max, axis=-1) 
 
-    return XYZ_POSITIONS   
+    return YXZ_POSITIONS   
 
 
 #%% plot3D
@@ -640,14 +660,16 @@ def csaps_smoothing(L, smoothing_condition, filter_data):
     from csaps import csaps, CubicSmoothingSpline
     
     # L = LINKED[LINKED.PARTICLE == 2]
-    t_sample = np.linspace(0, 1, len(L))
+    # t_sample = np.linspace(0, 1, len(L))
+    t_sample = L.TIME.values
     x_sample = L.X.values
     y_sample = L.Y.values
     z_sample = L.Z.values
     data = [x_sample, y_sample, z_sample]
-    t_interp = np.linspace(0, 1, 1*len(L))
+    # t_interp = np.linspace(0, 1, 1*len(L))
+    t_interp = t_sample
     
-    # smoothing_condition = 0.999999
+    # smoothing_condition = 0.1
     
     if filter_data == False:
         # Smooth sample data
@@ -665,11 +687,12 @@ def csaps_smoothing(L, smoothing_condition, filter_data):
         jump = np.sqrt(np.diff(x_sample)**2 + np.diff(y_sample)**2 + np.diff(z_sample)**2) 
         smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
         limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-        xn, yn, zn = x_sample[:-1], y_sample[:-1], z_sample[:-1]
+        xn, yn, zn, tn = x_sample[:-1], y_sample[:-1], z_sample[:-1], t_sample[:-1]
         xn = xn[(jump > 0) & (smooth_jump < limit)]
         yn = yn[(jump > 0) & (smooth_jump < limit)]
         zn = zn[(jump > 0) & (smooth_jump < limit)]
-        tn = np.linspace(0, 1, len(zn))
+        # tn = np.linspace(0, 1, len(zn))
+        tn = tn[(jump > 0) & (smooth_jump < limit)]
         
         # Smooth filtered data
         datani_smooth = csaps(tn, [xn, yn, zn], tn, smooth=smoothing_condition)
@@ -687,9 +710,10 @@ def csaps_smoothing(L, smoothing_condition, filter_data):
         # zni, smooth_zni = csaps(tn, zn, tn)
     
     # Plot data
+    # import matplotlib.pyplot as plt
     # fig = plt.figure(figsize=(7, 4.5))
     
-    # ax1 = fig.add_subplot(221, projection='3d')
+    # ax1 = fig.add_subplot(111, projection='3d')
     # # ax11.set_facecolor('none')
     # ax1.plot(x_sample, y_sample, z_sample, 'ro', label='Sample Data')
     # ax1.plot(x_smooth, y_smooth, z_smooth, 'b-', label='Smoothed Sample Data')
@@ -697,23 +721,23 @@ def csaps_smoothing(L, smoothing_condition, filter_data):
     
     # ax2 = fig.add_subplot(222, projection='3d')
     # ax2.plot(x_sample, y_sample, z_sample, 'ro', label='Sample Data')
-    # ax2.plot(xi, yi, zi, 'b-', label='Smoothed (variable) Sample Data')
+    # # ax2.plot(xi, yi, zi, 'b-', label='Smoothed (variable) Sample Data')
     # ax2.legend(loc='upper left')
     
     # # fig1 = plt.figure(figsize=(7, 4.5))
     # ax3 = fig.add_subplot(223, projection='3d')
     # # ax21.set_facecolor('none')
     # ax3.plot(xn, yn, zn, 'ro', label='Sample Data (Filtered)')
-    # ax3.plot(xni_smooth, yni_smooth, zni_smooth, 'b-', label='Smoothed Sample Data (Filtered)')
+    # # ax3.plot(xni_smooth, yni_smooth, zni_smooth, 'b-', label='Smoothed Sample Data (Filtered)')
     # ax3.legend(loc='upper left')
     
     # ax4 = fig.add_subplot(224, projection='3d')
     # ax4.plot(xn, yn, zn, 'ro', label='Sample Data (Filtered)')
-    # ax4.plot(xni, yni, zni, 'b-', label='Smoothed (variable) Sample Data (Filtered)')
+    # # ax4.plot(xni, yni, zni, 'b-', label='Smoothed (variable) Sample Data (Filtered)')
     # ax4.legend(loc='upper left') 
     # plt.show()
     
-    return [x_smooth, y_smooth, z_smooth]
+    return [x_smooth, y_smooth, z_smooth, tn]
     
     
 #%% Surface plot

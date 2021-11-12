@@ -24,7 +24,7 @@ from scipy.optimize import linear_sum_assignment
 PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
 # DF = pd.read_csv(PATH, index_col=1)
 DF = pd.read_csv(PATH)
-DF = DF[['X','Y','Z','I_FS','I_GS','FRAME']]
+DF = DF[['X','Y','Z','I_FS','I_GS','FRAME', 'TIME']]
 # DF = DF.head(1000000)
 # DF = pd.read_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_rayleighSommerfeld_Results.csv', index_col=0)
 # DF= pd.read_csv('/home/erick/Documents/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames_2000frames_modified_propagator_Results.csv', index_col=0)
@@ -65,7 +65,7 @@ elif method == 'DBSCAN':
                                     'MIN SAMPLES (e.g. 8):']) 
     # time.sleep(10)
     T0_DBSCAN = time.time()
-    DBSCAN = cl.DBSCAN(eps=int(eps), min_samples=int(min_samples), n_jobs=cores).fit(DF[['X', 'Y', 'Z']])
+    DBSCAN = cl.DBSCAN(eps=float(eps), min_samples=int(min_samples), n_jobs=cores).fit(DF[['X', 'Y', 'Z']])
     DF['PARTICLE'] = DBSCAN.labels_
     LINKED = DF
     L = LINKED.drop(np.where(LINKED.PARTICLE.values == -1)[0])
@@ -151,7 +151,7 @@ elif method == 'HA':
     
     #%
     TRACK = np.vstack(TRACKS)
-    TR = pd.DataFrame(TRACK, columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME'])
+    TR = pd.DataFrame(TRACK, columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME', 'TIME'])
     # TR['PARTICLE'] = np.tile(np.arange(SIZES[0]), len(TRACKS))
     
     particle_column = []
@@ -181,7 +181,7 @@ LINKED = LINKED[LINKED.PARTICLE != -1]
 spline_degree = 3  # 3 for cubic spline
 particle_num = np.sort(LINKED.PARTICLE.unique())
 T0_smooth = time.time()
-smoothed_curves = -np.ones((1, 4))
+smoothed_curves = -np.ones((1, 5))
 for pn in particle_num:
     # Do not use this
     # L = LINKED[LINKED.PARTICLE == pn].values
@@ -190,13 +190,13 @@ for pn in particle_num:
     L = LINKED[LINKED.PARTICLE == pn]
     if len(L) < 100:
         continue
-    X = f.csaps_smoothing(L, smoothing_condition=0.99999, filter_data=True)
+    X = f.csaps_smoothing(L, smoothing_condition=0.999, filter_data=True)
     
     if X != -1:
-        smoothed_curves = np.vstack((smoothed_curves, np.stack((X[0], X[1], X[2], pn*np.ones_like(X[1])), axis=1))) 
+        smoothed_curves = np.vstack((smoothed_curves, np.stack((X[0], X[1], X[2], X[3], pn*np.ones_like(X[1])), axis=1))) 
 
 smoothed_curves = smoothed_curves[1:, :]
-smoothed_curves_df = pd.DataFrame(smoothed_curves, columns=['X', 'Y' ,'Z', 'PARTICLE'])
+smoothed_curves_df = pd.DataFrame(smoothed_curves, columns=['X', 'Y' ,'Z', 'TIME', 'PARTICLE'])
 T_smooth = time.time() - T0_smooth
 
 # smoothed_curves_df.to_csv(PATH[:-4]+'_DBSCAN_smooth_200.csv', index=False)
@@ -292,7 +292,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
 # #%matplotlib qt
 
-p_number = 5
+p_number = 121
 CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
 CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
 # # CURVE_2 = smoothed_curves_df
@@ -301,43 +301,46 @@ CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
 
 fig = plt.figure(1)
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(CURVE_1.Y, CURVE_1.X, -CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)), alpha=0.3)
-# ax.scatter(CURVE_2.Y, CURVE_2.X, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=30, marker='o', alpha=0.1)
+# ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)), alpha=0.3)
+# p = ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=CURVE_1.TIME, alpha=0.3)
+
+ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=30, marker='.', alpha=0.3)
 # # ax.plot(CURVE_1.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
-ax.plot(CURVE_2.Y, CURVE_2.X, -CURVE_2.Z, 'r-', label='Smoothed Curve')
+ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
 # # ax.plot(CURVE_2.X[CURVE_2.X>350], CURVE_2.Y[CURVE_2.X>350], CURVE_2.Z[CURVE_2.X>350], 'r-', label='Smoothed Curve')
-# ax.set_xlabel('Y')
-# ax.set_ylabel('X')
-# ax.set_zlabel('Z')
-ax.set_title('Holography')
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+# fig.colorbar(p)
+ax.set_title('Smoothed Track')
 pyplot.show()
 
 #%% Matplotlib scatter plot
 # 3D Scatter Plot
-# from mpl_toolkits.mplot3d import Axes3D
-# from matplotlib import pyplot
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot
 
-# # PKS = A.__array__()
-# # np.savetxt('locs.txt', PKS)
-# fig = pyplot.figure()
-# ax = Axes3D(fig)
+# PKS = A.__array__()
+# np.savetxt('locs.txt', PKS)
+fig = pyplot.figure()
+ax = Axes3D(fig)
 
-# X = LINKED.Y
-# Y = LINKED.X
-# Z = LINKED.Z
-# T = LINKED.FRAME
-# P = LINKED.PARTICLE
+X = LINKED.X
+Y = LINKED.Y
+Z = LINKED.Z
+T = LINKED.TIME
+P = LINKED.PARTICLE
 
 
-# ax.scatter(X, Y, Z, s=25, marker='o', c=P)
+ax.scatter(X, Y, Z, s=2, marker='o', c=P)
 # ax.plot(smoothed_curves_df.Y, smoothed_curves_df.X, smoothed_curves_df.Z, 'r-')
-# ax.tick_params(axis='both', labelsize=10)
-# ax.set_title('Cells Positions in 3D', fontsize='20')
-# ax.set_xlabel('x (pixels)', fontsize='18')
-# ax.set_ylabel('y (pixels)', fontsize='18')
-# ax.set_zlabel('z (slices)', fontsize='18')
-# # fig.colorbar(p)
-# pyplot.show()
+ax.tick_params(axis='both', labelsize=10)
+ax.set_title('Cells Positions in 3D', fontsize='20')
+ax.set_xlabel('x (um)', fontsize='18')
+ax.set_ylabel('y (um)', fontsize='18')
+ax.set_zlabel('z (um)', fontsize='18')
+# fig.colorbar(p, ax=ax)
+pyplot.show()
     
 
 #%%
@@ -383,7 +386,7 @@ from plotly.offline import plot
 
 # fig = px.scatter_3d(LINKED, x='X', y='Y', z='Z', color='PARTICLE', size='I_GS')
 # fig = px.line_3d(LINKED2, x='X', y='Y', z='ZZ', color='PARTICLE')
-fig = px.line_3d(smoothed_curves_df, x='Y', y='X', z='Z', color='PARTICLE')
+fig = px.line_3d(smoothed_curves_df, x='X', y='Y', z='Z', color='PARTICLE', hover_data=['TIME'])
 fig.update_traces(marker=dict(size=1))
 
 #fig.add_trace(fig2)

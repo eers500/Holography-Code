@@ -273,6 +273,8 @@ fig = go.Figure(data=[go.Scatter3d(
     hoverinfo='all'
     
 )])
+
+fig['layout']['scene']['aspectmode'] =  'cube'
 fig.show()
 plot(fig)
 
