@@ -165,7 +165,7 @@ def exportAVI(filename, IM, NI, NJ, fps):
 
 
 #%% rayleighSommerfeldPropagator
-def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
+def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandpass):
     ## Rayleigh-Sommerfeld Back Propagator
     #   Inputs:          I - hologram (grayscale)
     #             I_MEDIAN - median image
@@ -181,9 +181,12 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     #    IN = I - I_MEDIAN,
     #     IN[IN < 0] = 0
 
-    # Bandpass Filter
-    _, BP = bandpassFilter(IN, 2, 30)
-    E = np.fft.fftshift(BP) * np.fft.fftshift(np.fft.fft2(IN - 1))
+    if bandpass:
+        _, BP = bandpassFilter(IN, 2, 30)
+        E = np.fft.fftshift(BP) * np.fft.fftshift(np.fft.fft2(IN - 1))
+    else:
+        E = np.fft.fftshift(np.fft.fft2(IN - 1))
+
 
     # Patameters     #Set as input parameters
     # N = 1.3226               # Index of refraction
@@ -192,7 +195,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
     NI = np.shape(IN)[0]  # Number of rows
     NJ = np.shape(IN)[1]  # Nymber of columns
     # SZ = 10
-    Z = -SZ*np.arange(1, NUMSTEPS)
+    Z = SZ*np.arange(0, NUMSTEPS)
     # Z = (FS * (51 / 31)) * np.arange(0, NUMSTEPS)
     #    Z = SZ*np.arange(0, NUMSTEPS)
     K = 2 * np.pi * N / LAMBDA  # Wavenumber
@@ -219,7 +222,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
 
     for k in range(Z.shape[0]):
         R = np.exp((-1j*K*Z[k]*Q), dtype='complex64')
-        IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R)))
+        IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E*R)))
     #        print(('RS', k))
     return IZ
 
