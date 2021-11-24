@@ -25,8 +25,11 @@ from tqdm import tqdm
 # PATH = 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\June2021\\14\\sample_2\\40x_HCB1_60Hz_1.7us_10_700frames-1.avi'   
 # PATH = 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\June2021\\14\\sample_1\\40x_HCB1_60Hz_1.259us_03\\40x_HCB1_60Hz_1.259us_03_430frames.avi'
 # PATH = 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\June2021\\14\\sample_1\\40x_HCB1_60Hz_09us_06\\40x_HCB1_60Hz_09us_06_430frames.avi'
-PATH = 'C:\\Users\\eers500\\Documents\\PhD\\Archea_LW\\20x_ArchFM1_30Hz_150us_1_2000frames_every5_300.avi'
+# PATH = 'C:\\Users\\eers500\\Documents\\PhD\\Archea_LW\\20x_ArchFM1_30Hz_150us_1_2000frames_every5_300.avi'
 # PATH = 'C:\\Users\\eers500\\Documents\\PhD\\Archea_LW\\20x_ArchFM1_30Hz_150us_1_2000frames.avi'
+# PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/Archea_LW/DHM test/20x_ArchFM1_30Hz_150us_1_2000frames.avi'
+# PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/may2021/5/20x_100Hz_05us_EcoliHCB1-07/20x_100Hz_05us_EcoliHCB1-07_550_FRAMES.avi'
+PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/Archea_LW/20x_ArchFM1_30Hz_150us_1_2000frames_cropped_every5_300.avi'
 
 T0 = time.time()                                       
 VID = f.videoImport(PATH, 0)
@@ -34,10 +37,9 @@ FRAMES_MEDIAN = 20
 I_MEDIAN = f.medianImage(VID, FRAMES_MEDIAN)
 # I_MEDIAN = np.ones((VID.shape[0], VID.shape[1]))
 
-FRAME_RATE = 6
-THRESHOLD = 0.1
+FRAME_RATE = 30
+THRESHOLD = 0.2
 NUM_FRAMES = np.shape(VID)[-1]
-# NUM_FRAMES = 40
 
 #%%  Calculate propagators, gradient stack and compute particle position ins 3D
 
@@ -48,22 +50,22 @@ def positions_batch(TUPLE):
     N = 1.3226
     LAMBDA = 0.642              
     MPP = 20                     # Magnification
-    FS = 0.711                   # Sampling Frequency px/um
-    SZ = 5                       # Step size um
-    NUMSTEPS = 76
+    FS = (MPP/10)*0.711          # Sampling Frequency px/um
+    SZ = 2.5                       # Step size um
+    NUMSTEPS = 70
     LOCS = np.empty((1, 3), dtype=object)
     X, Y, Z, I_FS, I_GS = [], [] ,[], [], []
-    IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS).astype('float32')
+    IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True).astype('float32')
     GS = f.zGradientStack(IM).astype('float32')  
     # GS = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)  # Modified propagator
     GS[GS < THRESHOLD] = 0
-    LOCS[0, 0] = f.positions3D(GS, peak_min_distance=10)
+    LOCS[0, 0] = f.positions3D(GS, peak_min_distance=30)
     A = LOCS[0, 0].astype('int')
     LOCS[0, 1] = IM[A[:, 0], A[:, 1], A[:, 2]]
     LOCS[0, 2] = GS[A[:, 0], A[:, 1], A[:, 2]]
         
-    X.append(LOCS[0, 0][:, 0]*(1/FS)/MPP)
-    Y.append(LOCS[0, 0][:, 1]*(1/FS)/MPP)
+    X.append(LOCS[0, 0][:, 0]*(1/FS))
+    Y.append(LOCS[0, 0][:, 1]*(1/FS))
     Z.append(LOCS[0, 0][:, 2])
     I_FS.append(LOCS[0, 1])
     I_GS.append(LOCS[0, 2])
@@ -125,8 +127,8 @@ if __name__ == "__main__":
 # fig = pyplot.figure()
 # ax = Axes3D(fig)
 
-# X = POSITIONS.Y
-# Y = POSITIONS.X
+# X = POSITIONS.X
+# Y = POSITIONS.Y
 # Z = POSITIONS.Z
 # T = POSITIONS.FRAME
 
@@ -134,10 +136,10 @@ if __name__ == "__main__":
 # p = ax.scatter(X, Y, Z, s=5, marker='o', c=T)
 # ax.tick_params(axis='both', labelsize=10)
 # ax.set_title('Cells Positions in 3D', fontsize='20')
-# ax.set_xlabel('x (pixels)', fontsize='18')
-# ax.set_ylabel('y (pixels)', fontsize='18')
-# ax.set_zlabel('z (slices)', fontsize='18')
+# ax.set_xlabel('x (um)', fontsize='18')
+# ax.set_ylabel('y (um)', fontsize='18')
+# ax.set_zlabel('z (um)', fontsize='18')
 # fig.colorbar(p)
 # pyplot.show()
-    
+
     

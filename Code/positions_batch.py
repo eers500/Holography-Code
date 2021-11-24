@@ -65,7 +65,7 @@ N = 1.3226
 LAMBDA = 0.642              # HeNe
 MPP = 10 
 FS = 0.711                     # Sampling Frequency px/um
-SZ = 10                       # # Step size um
+SZ = 10                        # Step size um
 # NUMSTEPS = int(OPTIONS[4])
 # THRESHOLD = np.float(OPTIONS[0])
 # PEAK_MIN_DISTANCE = int(OPTIONS[3])
@@ -114,7 +114,7 @@ for j in range(len(THRESHOLD)):
         I = VID[:, :, i]
         
         T0_RS = time.time()
-        IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS[j]).astype('float32')
+        IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS[j], True).astype('float32')
         T_RS.append(time.time() - T0_RS)
     
         # IMM[:, :, :, i] = IM
@@ -255,9 +255,9 @@ import plotly.graph_objects as go
 from plotly.offline import plot, iplot
 
 # # To plot csv files
-PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
+# PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
 # POSITIONS = pd.read_csv(PATH, index_col=0)
-POSITIONS = pd.read_csv(PATH)
+# POSITIONS = pd.read_csv(PATH)
 
 fig = go.Figure(data=[go.Scatter3d(
     x=POSITIONS['X'], 

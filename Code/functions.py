@@ -396,7 +396,7 @@ def positions3D(GS, peak_min_distance):
     Z_SUM_XY_MAXS = np.array(Z_SUM_XY_MAXS)
 
     # Use Z_SUM_XY and Z_SUM_XY_MAXS
-    w = 2
+    w = 2 #2
     pol = lambda a, x: a[0]*x**2 + a[1]*x + a[2]
     z_max = []
     
@@ -409,13 +409,13 @@ def positions3D(GS, peak_min_distance):
         
         # val = Z_SUM_XY[idi, j]
                 
-        coefs = np.polyfit(idi+w, val, 2)
+        coefs = np.polyfit(idi, val, 2)
         
-        interp_idi = np.linspace(idi[0]+w, idi[-1]+w, 20)
+        interp_idi = np.linspace(idi[0], idi[-1], 10)
         interp_val = pol(coefs, interp_idi)
         
         idi_max = np.where(interp_val == interp_val.max())[0][0]
-        z_max.append(interp_idi[idi_max]-w)
+        z_max.append(interp_idi[idi_max])
         
         # plt.plot(idi, val, '.-', label='Raw')
         # plt.plot(idi, pol(coefs, idi), '.-', label='Fit with idi')
@@ -424,10 +424,10 @@ def positions3D(GS, peak_min_distance):
         # plt.axvline(interp_idi[idi_max], color='red')
         # plt.grid()
         # plt.legend()
+        # plt.show()
     
-    # XYZ_POSITIONS = np.hstack((XYZ_POSITIONS, Z_SUM_XY_MAXS[:, 0]))
-    YXZ_POSITIONS = np.insert(PKS, 2, Z_SUM_XY_MAXS[:, 0], axis=-1)         # Actually [Y, X, Z]
-    # YXZ_POSITIONS = np.insert(np.float16(PKS), 2, z_max, axis=-1) 
+    # XYZ_POSITIONS = np.hstack((XYZ_POSITIONS, Z_SUM_XY_MAXS[:, 0]))    # YXZ_POSITIONS = np.insert(PKS, 2, Z_SUM_XY_MAXS[:, 0], axis=-1)         # Actually [Y, X, Z]
+    YXZ_POSITIONS = np.insert(np.float16(PKS), 2, z_max, axis=-1) 
 
     return YXZ_POSITIONS   
 
@@ -662,15 +662,18 @@ def csaps_smoothing(L, smoothing_condition, filter_data):
     from scipy import ndimage
     from csaps import csaps, CubicSmoothingSpline
     
+    N = len(L)
     # L = LINKED[LINKED.PARTICLE == 2]
     # t_sample = np.linspace(0, 1, len(L))
-    t_sample = L.TIME.values
-    x_sample = L.X.values
-    y_sample = L.Y.values
-    z_sample = L.Z.values
+    t_sample = L['TIME'].values
+    t_frames = L['FRAME'].values
+    x_sample = L['X'].values
+    y_sample = L['Y'].values
+    z_sample = L['Z'].values
     data = [x_sample, y_sample, z_sample]
     # t_interp = np.linspace(0, 1, 1*len(L))
-    t_interp = t_sample
+    # t_interp = t_sample
+    t_interp = np.linspace(t_sample[0], t_sample[-1], 2*N)
     
     # smoothing_condition = 0.1
     
@@ -680,6 +683,8 @@ def csaps_smoothing(L, smoothing_condition, filter_data):
         x_smooth = smooth_data[0, :]
         y_smooth = smooth_data[1, :]
         z_smooth = smooth_data[2, :]
+        tn = t_interp
+        tframe = t_frames
         
         # # Smooth sample data with variable smoothing condition
         # xi, smooth_x = csaps(t_sample, x_sample, t_interp)
@@ -688,14 +693,16 @@ def csaps_smoothing(L, smoothing_condition, filter_data):
     elif filter_data == True:
         # Filter sample data
         jump = np.sqrt(np.diff(x_sample)**2 + np.diff(y_sample)**2 + np.diff(z_sample)**2) 
-        smooth_jump = ndimage.gaussian_filter1d(jump, 5, mode='wrap')  # window of size 5 is arbitrary
-        limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-        xn, yn, zn, tn = x_sample[:-1], y_sample[:-1], z_sample[:-1], t_sample[:-1]
+        smooth_jump = ndimage.gaussian_filter1d(jump, 2, mode='wrap')  # window of size 5 is arbitrary
+        # limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
+        limit = smooth_jump.max()*0.8
+        xn, yn, zn, tn, tframe = x_sample[:-1], y_sample[:-1], z_sample[:-1], t_sample[:-1], t_frames[:-1]
         xn = xn[(jump > 0) & (smooth_jump < limit)]
         yn = yn[(jump > 0) & (smooth_jump < limit)]
         zn = zn[(jump > 0) & (smooth_jump < limit)]
         # tn = np.linspace(0, 1, len(zn))
         tn = tn[(jump > 0) & (smooth_jump < limit)]
+        tframe = tframe[(jump > 0) & (smooth_jump < limit)]
         
         # Smooth filtered data
         datani_smooth = csaps(tn, [xn, yn, zn], tn, smooth=smoothing_condition)
@@ -761,4 +768,23 @@ def surf(array):
 
 
     return
+
+#%% Speed Analysis
+# s : Data frame of [X, Y, Z, TIME]
+# returns speed, x, y, z
+def get_speed(s):
+    import numpy as np
+    time = s['TIME'].values
+    x = s['X'].values
+    y = s['Y'].values
+    z = s['Z'].values
+    
+    DT = np.diff(time)
+    vx = np.diff(x) / DT
+    vy = np.diff(y) / DT
+    vz = np.diff(z) / DT
+    
+    return np.sqrt(vx**2 + vy**2 + vz**2), x[:-1], y[:-1], z[:-1]
+
+
     

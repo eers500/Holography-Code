@@ -196,7 +196,7 @@ for pn in particle_num:
         smoothed_curves = np.vstack((smoothed_curves, np.stack((X[0], X[1], X[2], X[3], pn*np.ones_like(X[1])), axis=1))) 
 
 smoothed_curves = smoothed_curves[1:, :]
-smoothed_curves_df = pd.DataFrame(smoothed_curves, columns=['X', 'Y' ,'Z', 'TIME', 'PARTICLE'])
+smoothed_curves_df = pd.DataFrame(smoothed_curves, columns=['X', 'Y' ,'Z', 'TIME','PARTICLE'])
 T_smooth = time.time() - T0_smooth
 
 # smoothed_curves_df.to_csv(PATH[:-4]+'_DBSCAN_smooth_200.csv', index=False)
@@ -292,10 +292,10 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
 # #%matplotlib qt
 
-p_number = 121
+p_number = 2
 CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
 CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
-# # CURVE_2 = smoothed_curves_df
+# CURVE_2 = smoothed_curves_df
 
 
 
@@ -307,13 +307,39 @@ ax = fig.add_subplot(111, projection='3d')
 ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=30, marker='.', alpha=0.3)
 # # ax.plot(CURVE_1.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
 ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
-# # ax.plot(CURVE_2.X[CURVE_2.X>350], CURVE_2.Y[CURVE_2.X>350], CURVE_2.Z[CURVE_2.X>350], 'r-', label='Smoothed Curve')
+# # # ax.plot(CURVE_2.X[CURVE_2.X>350], CURVE_2.Y[CURVE_2.X>350], CURVE_2.Z[CURVE_2.X>350], 'r-', label='Smoothed Curve')
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
 # fig.colorbar(p)
 ax.set_title('Smoothed Track')
 pyplot.show()
+
+#%% Speed
+#%matplotlib qt
+# plt.rcParams['figure.dpi'] = 150 
+fig = plt.figure(2)
+ax = fig.add_subplot(111, projection='3d')
+
+for pn in particle_num:
+    s = smoothed_curves_df[smoothed_curves_df['PARTICLE'] == pn]
+    speed, x, y, z = f.get_speed(s)
+    ax.scatter(x, y, z, c=speed, marker='.', s=5)
+    # ax.scatter(LINKED.Y, LINKED.X, LINKED.Z, '.', s=1)
+    # ax.plot(s.Y, s.X, s.Z, 'r-', linewidth=0.5, markersize=2)
+    
+# p = ax.scatter(s['X'][:-1], s['Y'][:-1], s['Z'][:-1], c=vv, s=2)
+# fig.colorbar(p)
+# cbar = plt.colorbar(p)
+# cbar.set_label('Speed ($\mu ms^{-1}$)')
+
+ax.axis('tight')
+ax.set_xlabel('x ($\mu$m)')
+ax.set_ylabel('y ($\mu$m)')
+ax.set_zlabel('-z ($\mu$m)')
+
+pyplot.show()
+
 
 #%% Matplotlib scatter plot
 # 3D Scatter Plot

@@ -14,7 +14,7 @@ import easygui as gui
 path = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/may2021/5/')
 VID = f.videoImport(path, 0)
 # VID, cdf = f.histeq(VID)
-I = VID[:, :, 133]
+I = VID[:, :, 0] #133
 # I, cdf = f.histeq(IN)
 
 # I_MEDIAN = f.medianImage(VID, 1000)
@@ -28,10 +28,11 @@ path_med = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/m
 I_MEDIAN = plt.imread(path_med)
 N = 1.3226
 LAMBDA = 0.642              # HeNe
-FS = 0.711                     # Sampling Frequency px/um
-SZ = (1/FS)*10   
+MPP = 20
+FS = 0.711 * (MPP/10)                     # Sampling Frequency px/um
+SZ = 2.5   
 
-rs = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 150, False)
+rs = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 150, True)
 # _, BINS = np.histogram(rs.flatten())
 # rs[rs < BINS[8]] = 0
 
