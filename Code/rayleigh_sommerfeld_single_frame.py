@@ -14,7 +14,7 @@ import easygui as gui
 path = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/may2021/5/')
 VID = f.videoImport(path, 0)
 # VID, cdf = f.histeq(VID)
-I = VID[:, :, 0] #133
+I = VID[:, :, 102] #133
 # I, cdf = f.histeq(IN)
 
 # I_MEDIAN = f.medianImage(VID, 1000)
@@ -28,16 +28,26 @@ path_med = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/m
 I_MEDIAN = plt.imread(path_med)
 N = 1.3226
 LAMBDA = 0.642              # HeNe
-MPP = 20
+MPP = 40
 FS = 0.711 * (MPP/10)                     # Sampling Frequency px/um
-SZ = 2.5   
+SZ = 5  
 
-rs = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 150, True)
+rs = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 50, True)
+gs = f.zGradientStack(rs)
+threshold = 0.5
+gs[gs < threshold] = 0
+locs = f.positions3D(gs, peak_min_distance=30, num_particles=10, MPP=MPP)
+
+plt.imshow(rs[:, :, 0], cmap='gray')
+plt.plot(locs[:, 1], locs[:, 0], 'r.')
+
+f.imshow_slider(rs, 2, 'gray')
+
 # _, BINS = np.histogram(rs.flatten())
 # rs[rs < BINS[8]] = 0
 
 #%%
-# path_write = gui.diropenbox()
+path_write = gui.diropenbox()
 
 rs_binary = np.empty_like(rs)
 for i in range(rs_binary.shape[-1]):
@@ -45,23 +55,55 @@ for i in range(rs_binary.shape[-1]):
     t = np.zeros_like(temp)
     t[temp >= temp.mean()] = 255
     rs_binary[:, :, i] = t
-    # plt.imsave(path_write+'\\'+str(i)+'.png', rs[ci-D:ci+D, cj-D:cj+D , i], cmap='gray')
+    np.uint8(rs_binary)
+    plt.imsave(path_write+'\\'+str(i)+'.png', rs_binary[ci-D:ci+D, cj-D:cj+D , i], cmap='gray')
+
+#%% Zero mean
+path_write = gui.diropenbox()
+
+#% To write VID ZM
+# for k, im in enumerate(img):
+#     temp = im
+#     mn, std = temp.mean(), temp.std()
+#     temp_zm = (temp - mn)/std
+#     b = temp_zm > 0
+#     temp_zm[temp_zm < 0] = 0
+#     eq, _ = f.histeq(temp_zm)
+#     # rs_zm[:, :, k] = eq
+#     plt.imsave(path_write+'\\'+str(k)+'.png',eq, cmap='gray')
     
-    
+#%
+
+rs_zm = np.empty_like(rs)
+for k in range(rs.shape[-1]):
+    temp = rs[:, :, k]
+    mn, std = temp.mean(), temp.std()
+    temp_zm = (temp - mn)/std
+    b = temp_zm > 0
+    temp_zm[temp_zm < 0] = 0
+    eq, _ = f.histeq(temp_zm)
+    rs_zm[:, :, k] = eq
+    plt.imsave(path_write+'\\'+str(k)+'.png', rs_zm[ci-D:ci+D, cj-D:cj+D , k], cmap='gray')
+
 #%% Export LUT
 
 path_write = gui.diropenbox()
 
-ci, cj = 227, 258
-D = 57
-binary = True
+ci, cj = 241, 403
+D = 80
+modes = ['Normal', 'Binary', 'ZM']
+mode = modes[0]
+
 # for i in range(rs.shape[-1]):
-for i in range(0, 40, 1):
+for i in range(rs.shape[-1]):
     # print(i)
-    if binary:
-        plt.imsave(path_write+'\\'+str(i)+'.png', rs_binary[ci-D:ci+D, cj-D:cj+D , i], cmap='gray') 
-    else:
+    if mode == 'Normal':
         plt.imsave(path_write+'\\'+str(i)+'.png', rs[ci-D:ci+D, cj-D:cj+D , i], cmap='gray') 
+    elif mode == 'Binary':
+        plt.imsave(path_write+'\\'+str(i)+'.png', rs_binary[ci-D:ci+D, cj-D:cj+D , i], cmap='gray') 
+    elif mode == 'ZM':
+        plt.imsave(path_write+'\\'+str(i)+'.png', rs_zm[ci-D:ci+D, cj-D:cj+D , i], cmap='gray')
+        
         
     
     

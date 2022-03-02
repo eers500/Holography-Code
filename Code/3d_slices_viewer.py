@@ -35,7 +35,7 @@ fig, ax = plt.subplots(1, 1)
 
 #gr =grad
 #gr[gr<1]=0
-X = rs
+X = IM
 
 tracker = IndexTracker(ax, X)
 

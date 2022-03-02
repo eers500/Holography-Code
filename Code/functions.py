@@ -146,7 +146,9 @@ def exportAVI(filename, IM, NI, NJ, fps):
     #          fps - frames per second of output file
     #   Output: .AVI file in working folder
     import os
+    import numpy as np
     from cv2 import VideoWriter, VideoWriter_fourcc
+    
     dir = os.getcwd()
     filenames = os.path.join(dir, filename)
     FOURCC = VideoWriter_fourcc(*'MJPG')
@@ -173,10 +175,12 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandp
     #   Output:        IMM - 3D array representing stack of images at different Z
     import numpy as np
     from functions import bandpassFilter
+    from scipy.ndimage import median_filter
 
     # Divide by Median image
     I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
     IN = I / I_MEDIAN
+    IN = median_filter(IN, size=1)
     
     #    IN = I - I_MEDIAN,
     #     IN[IN < 0] = 0
@@ -211,7 +215,7 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandp
     const = ((LAMBDA*FS)/(max([NI, NJ])*N))**2
     P = const*((ii-NI/2)**2 + (jj-NJ/2)**2)
 
-    # P = np.conj(P)
+    P = np.conj(P)
     Q = np.sqrt(1 - P) - 1
 
     if all(Z > 0):
@@ -356,20 +360,23 @@ def guiImport():
 
 #%% Positions3D
 # Particles positions in 3D
-def positions3D(GS, peak_min_distance):
+def positions3D(GS, peak_min_distance, num_particles, MPP):
     import numpy as np
     from skimage.feature import peak_local_max
    
     ZP = np.max(GS, axis=-1)
-    PKS = peak_local_max(ZP, min_distance=peak_min_distance)  # 30
+    if num_particles == 'None':
+        PKS = peak_local_max(ZP, min_distance=peak_min_distance)  # 30
+    elif num_particles > 0:
+        PKS = peak_local_max(ZP, min_distance=peak_min_distance, num_peaks=num_particles)
     
     # import matplotlib.pyplot as plt
     # plt.imshow(ZP, cmap='gray')
     # plt.scatter(PKS[:,1], PKS[:,0], marker='o', facecolors='none', s=80, edgecolors='r')
     # plt.show()
     
-    D1 = 8
-    D2 = 8
+    D1 = int(MPP/10)
+    D2 = int(MPP/10)
     Z_SUM_XY = np.empty((GS.shape[2], len(PKS)))
     for ii in range(len(PKS)):
         idi = PKS[ii, 0]
@@ -406,8 +413,6 @@ def positions3D(GS, peak_min_distance):
         idi = np.arange(i-w,i+w+1)
         temp = np.pad(Z_SUM_XY, ((w, w), (0, 0)))
         val = temp[idi+w, j]
-        
-        # val = Z_SUM_XY[idi, j]
                 
         coefs = np.polyfit(idi, val, 2)
         
@@ -416,20 +421,11 @@ def positions3D(GS, peak_min_distance):
         
         idi_max = np.where(interp_val == interp_val.max())[0][0]
         z_max.append(interp_idi[idi_max])
-        
-        # plt.plot(idi, val, '.-', label='Raw')
-        # plt.plot(idi, pol(coefs, idi), '.-', label='Fit with idi')
-        # plt.plot(interp_idi, interp_val, '.-', label='Fit with interp idi')
-        # plt.scatter(interp_idi[idi_max], interp_val[idi_max], c='r', marker='o', s=90)
-        # plt.axvline(interp_idi[idi_max], color='red')
-        # plt.grid()
-        # plt.legend()
-        # plt.show()
     
     # XYZ_POSITIONS = np.hstack((XYZ_POSITIONS, Z_SUM_XY_MAXS[:, 0]))    # YXZ_POSITIONS = np.insert(PKS, 2, Z_SUM_XY_MAXS[:, 0], axis=-1)         # Actually [Y, X, Z]
     YXZ_POSITIONS = np.insert(np.float16(PKS), 2, z_max, axis=-1) 
 
-    return YXZ_POSITIONS   
+    return YXZ_POSITIONS   # (x,y) in pixels, z in slice number
 
 
 #%% plot3D
@@ -655,7 +651,8 @@ def smooth_curve(L, spline_degree, lim, sc):
     return X
 
 #%% smoothing with CSAPS
-def csaps_smoothing(L, smoothing_condition, filter_data):
+#%% smoothing with CSAPS
+def csaps_smoothing(L, smoothing_condition, filter_data, limit):
     import numpy as np
     # import matplotlib.pyplot as plt
     # from mpl_toolkits.mplot3d import Axes3D
@@ -673,7 +670,7 @@ def csaps_smoothing(L, smoothing_condition, filter_data):
     data = [x_sample, y_sample, z_sample]
     # t_interp = np.linspace(0, 1, 1*len(L))
     # t_interp = t_sample
-    t_interp = np.linspace(t_sample[0], t_sample[-1], 2*N)
+    t_interp = np.linspace(t_sample[0], t_sample[-1], 4*N)
     
     # smoothing_condition = 0.1
     
@@ -695,7 +692,7 @@ def csaps_smoothing(L, smoothing_condition, filter_data):
         jump = np.sqrt(np.diff(x_sample)**2 + np.diff(y_sample)**2 + np.diff(z_sample)**2) 
         smooth_jump = ndimage.gaussian_filter1d(jump, 2, mode='wrap')  # window of size 5 is arbitrary
         # limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-        limit = smooth_jump.max()*0.8
+        # limit = smooth_jump.max()*0.2
         xn, yn, zn, tn, tframe = x_sample[:-1], y_sample[:-1], z_sample[:-1], t_sample[:-1], t_frames[:-1]
         xn = xn[(jump > 0) & (smooth_jump < limit)]
         yn = yn[(jump > 0) & (smooth_jump < limit)]
@@ -719,33 +716,6 @@ def csaps_smoothing(L, smoothing_condition, filter_data):
         # yni, smooth_yni = csaps(tn, yn, tn)
         # zni, smooth_zni = csaps(tn, zn, tn)
     
-    # Plot data
-    # import matplotlib.pyplot as plt
-    # fig = plt.figure(figsize=(7, 4.5))
-    
-    # ax1 = fig.add_subplot(111, projection='3d')
-    # # ax11.set_facecolor('none')
-    # ax1.plot(x_sample, y_sample, z_sample, 'ro', label='Sample Data')
-    # ax1.plot(x_smooth, y_smooth, z_smooth, 'b-', label='Smoothed Sample Data')
-    # ax1.legend(loc='upper left')
-    
-    # ax2 = fig.add_subplot(222, projection='3d')
-    # ax2.plot(x_sample, y_sample, z_sample, 'ro', label='Sample Data')
-    # # ax2.plot(xi, yi, zi, 'b-', label='Smoothed (variable) Sample Data')
-    # ax2.legend(loc='upper left')
-    
-    # # fig1 = plt.figure(figsize=(7, 4.5))
-    # ax3 = fig.add_subplot(223, projection='3d')
-    # # ax21.set_facecolor('none')
-    # ax3.plot(xn, yn, zn, 'ro', label='Sample Data (Filtered)')
-    # # ax3.plot(xni_smooth, yni_smooth, zni_smooth, 'b-', label='Smoothed Sample Data (Filtered)')
-    # ax3.legend(loc='upper left')
-    
-    # ax4 = fig.add_subplot(224, projection='3d')
-    # ax4.plot(xn, yn, zn, 'ro', label='Sample Data (Filtered)')
-    # # ax4.plot(xni, yni, zni, 'b-', label='Smoothed (variable) Sample Data (Filtered)')
-    # ax4.legend(loc='upper left') 
-    # plt.show()
     
     return [x_smooth, y_smooth, z_smooth, tn]
     
@@ -783,8 +753,137 @@ def get_speed(s):
     vx = np.diff(x) / DT
     vy = np.diff(y) / DT
     vz = np.diff(z) / DT
+    v = np.sqrt(vx**2 + vy**2 + vz**2)
     
-    return np.sqrt(vx**2 + vy**2 + vz**2), x[:-1], y[:-1], z[:-1]
+    return v, x[:-1], y[:-1], z[:-1], time[:-1]
 
 
+#%% Contiguous repeats
+
+def contiguous_repeats(array):
+    import numpy as np
     
+    x_b = 0*np.ones_like(array)
+
+    i = 0
+    while i < len(array):
+        repeats = 1
+        val = array[i]
+        for j in range(1, len(array)-i):
+            if array[i+j] == val:
+                repeats = repeats + 1
+            else:
+                break
+        x_b[i:i+j+1] = repeats
+        i = i+repeats
+        
+    return x_b
+
+#%% Clean LINKED tracks
+def clean_tracks(LL):
+    import numpy as np
+    from functions import contiguous_repeats
+    
+    t = LL['TIME'].values
+    fr = LL['FRAME'].values
+    p = LL['PARTICLE'].values
+    x = LL['X'].values
+    y = LL['Y'].values
+    z = LL['Z'].values
+    r = np.sqrt(x**2+y**2+z**2)
+
+    t_reps = contiguous_repeats(t)
+    reps_vals = set(t_reps)
+    reps_vals = [val for val in reps_vals if val > 1]
+
+    if reps_vals == []:
+        # print('No repeated values in time for PARTICLE = ', p[0])
+        xx, yy, zz, tt, ff, pp = x, y, z, t, fr, p
+
+    else:
+        # print('There are repeated values in time for PARTICLE =', p[0])
+        # for i, t_rep in enumerate(t_reps):
+        
+        if t_reps[0] > 1:
+            for i in range(1, int(t_reps[0])):
+                t[i] = np.nan
+                # print(i)
+
+            i = int(t_reps[0])
+            t_rep = t_reps[i]
+        else:
+            i=0
+            t_rep = t_reps[i]
+
+        while i < len(t_reps)-1 and i+t_rep >= len(t_reps):
+                
+            if t_rep > 1:
+                ids = np.arange(t_rep, dtype='int64')+i
+                ref_pos = r[i-1]
+                r_pos = r[ids]
+                dr = np.abs(ref_pos-r_pos)
+                idmin = np.argmin(dr)+i
+                idpop = ids[ids != idmin]
+                
+                for id in idpop:
+                    t[idpop] = np.nan
+
+                # if i+t_rep >= len(t_reps):
+                #     break
+                else:
+                    i = i+t_rep
+                    t_rep = t_reps[i]
+
+            else:
+                i= i+1
+                t_rep = t_reps[i]
+                
+                    
+        boolnan = np.isnan(t)
+        tt = t[~boolnan]
+        ff = fr[~boolnan]
+        xx = x[~boolnan]
+        yy = y[~boolnan]
+        zz = z[~boolnan]
+        pp = p[~boolnan]
+    
+    
+    return [xx, yy, zz, tt, ff, pp]
+
+#%% MSD
+def MSD(x, y, z):
+    import numpy as np
+    from scipy.optimize import curve_fit
+    
+    ntaus = np.floor(len(x)/2)
+    taus = np.arange(1, ntaus, dtype='uint64')
+    MSD = []
+    size = []
+    for tau in taus:
+        tau = int(tau)
+        length = int(len(x)-tau)
+        diff = np.empty(length)
+        for i in range(length):
+            diff[i] = (x[i]-x[i+tau])**2 + (y[i]-y[i+tau])**2 + (z[i]-z[i+tau])**2
+        
+        size.append(len(diff))
+        MSD.append(np.mean(diff))
+
+    def line(x, m, b):
+        return m*x + b
+
+    # def fun(t, v, D):
+    #     return t**2*v**2 + 4*D*t 
+
+    n = int(len(taus)/4)
+    # n = len(taus)
+    
+    params, cov = curve_fit(line, taus[:n], MSD[:n], p0=(1, 0))
+    # params, cov = curve_fit(fun, taus[:n], MSD[:n])
+    
+    if params[0] > 1.5:
+        swim = True
+    else:
+        swim = False
+        
+    return MSD, swim

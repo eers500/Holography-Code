@@ -20,6 +20,7 @@ import easygui as gui
 import hdbscan
 from scipy.optimize import linear_sum_assignment
 # from hungarian_algorithm import algorithm
+from tqdm import tqdm
 
 PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
 # DF = pd.read_csv(PATH, index_col=1)
@@ -165,32 +166,45 @@ elif method == 'HA':
     print(T_HA)
 
 LINKED = LINKED[LINKED.PARTICLE != -1]
-# ID = np.where(SHAPES >= 1000)[0]
-# IND  = np.in1d(TR.PARTICLE.values,  ID, invert=True)
-# LINKED = TR.loc[IND, :]
+
+
+#%% MSD
+particle_num = np.unique(LINKED['PARTICLE'])
+
+pp = []
+for p in particle_num:
+    
+    L = LINKED[LINKED['PARTICLE'] ==  p]
+    if len(L) > 50:
+        temp = f.clean_tracks(L)
+        L = pd.DataFrame.transpose(pd.DataFrame(temp, ['X', 'Y', 'Z', 'TIME', 'FRAME','PARTICLE']))
+       
+        _, swim = f.MSD(L.X.values, L.Y.values, L.Z.values)
+        print(swim)
+         
+        if swim == False:
+            LINKED = LINKED[LINKED['PARTICLE'] != p]
+      
+    else:
+        LINKED = LINKED[LINKED['PARTICLE'] != p]
 
 #%% Smooth trajectories
-# LINKED = LINKED[LINKED.PARTICLE != -1]
-
-# For Archea data that looks messy
-# value_counts = LINKED.PARTICLE.value_counts()
-# values = value_counts[value_counts.values < 1000]
-# idx = LINKED.PARTICLE.isin(values.index)
-# LINKED = LINKED.iloc[idx.values]
-
 spline_degree = 3  # 3 for cubic spline
 particle_num = np.sort(LINKED.PARTICLE.unique())
 T0_smooth = time.time()
 smoothed_curves = -np.ones((1, 5))
-for pn in particle_num:
+for pn in tqdm(particle_num):
     # Do not use this
     # L = LINKED[LINKED.PARTICLE == pn].values
     # X = f.smooth_curve(L, spline_degree=spline_degree, lim=20, sc=3000)
     
     L = LINKED[LINKED.PARTICLE == pn]
+    temp = f.clean_tracks(L)
+    L = pd.DataFrame.transpose(pd.DataFrame(temp, ['X', 'Y', 'Z', 'TIME', 'FRAME','PARTICLE']))
+
     if len(L) < 100:
         continue
-    X = f.csaps_smoothing(L, smoothing_condition=0.999, filter_data=True)
+    X = f.csaps_smoothing(L, smoothing_condition=0.999, filter_data=True, limit=5)
     
     if X != -1:
         smoothed_curves = np.vstack((smoothed_curves, np.stack((X[0], X[1], X[2], X[3], pn*np.ones_like(X[1])), axis=1))) 
@@ -201,132 +215,112 @@ T_smooth = time.time() - T0_smooth
 
 # smoothed_curves_df.to_csv(PATH[:-4]+'_DBSCAN_smooth_200.csv', index=False)
 
-#%% Ramer-Douglas-Peucker Algorithm to detect turns
-# from rdp import rdp
-# from mpl_toolkits.mplot3d import Axes3D
-# import matplotlib.pyplot as plt
-
-# # L = LINKED[LINKED.PARTICLE == 6]
-# L = smoothed_curves_df[smoothed_curves_df.PARTICLE == 9]
-# xx, yy, zz = L.X.values, L.Y.values, L.Z.values
-# xx = xx.reshape(len(xx), 1)
-# yy = yy.reshape(len(yy), 1)
-# zz = zz.reshape(len(zz), 1)
-
-# t = np.linspace(0, 1, len(xx))
-# t = t.reshape(len(t), 1)
-
-# stack =  np.hstack((xx, yy, zz))
-
-# eps = 0.03
-# eps3d = 2
-# xyz = rdp(stack, epsilon=eps3d)
-# x = rdp(np.hstack((t, xx)), epsilon=eps)
-# y = rdp(np.hstack((t, yy)), epsilon=eps)
-# z = rdp(np.hstack((t, zz)), epsilon=eps)
-
-# fig = plt.figure(figsize=(7, 4.5))
-# ax0 = plt.subplot2grid((6,6), (0, 0), 2, 3)
-# ax0.plot(t, xx, 'b-')
-# ax0.plot(x[:, 0], x[:, 1], 'r.')
-# ax0.set_ylabel('x')
-# ax0.set_title('eps = '+np.str(eps))
-
-# ax1 = plt.subplot2grid((6, 6), (2, 0), 2, 3)
-# ax1.plot(t, yy, 'b-')
-# ax1.plot(y[:, 0], y[:, 1], 'r.')
-# ax1.set_ylabel('y')
-
-# ax2 = plt.subplot2grid((6, 6), (4, 0), 2, 3)
-# ax2.plot(t, zz, 'b-')
-# ax2.plot(z[:, 0], z[:, 1], 'r.')
-# ax2.set_ylabel('z')
-
-# ax3 = plt.subplot2grid((6, 6), (0, 3), 3, 4, projection='3d')
-# ax3.set_facecolor('none')
-# ax3.plot(L.X, L.Y, L.Z, 'b-', label='original data')
-# ax3.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], 'r.', label='Turns')
-# ax3.set_title('Smoothed track')
-
-# ax4 = plt.subplot2grid((6, 6), (3, 3), 3, 4, projection='3d')
-# ax4.set_facecolor('none')
-# ax4.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], 'b-', label='RDP reconstructed eps = '+np.str(eps3d))
-# ax4.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], 'r.', label='Turns')
-# ax4.set_title('RDP reconstruction')
-# ax4.legend(loc='best')
-
-# # Use derivatives of r (distance to origin) to sense changes in direction
-# from scipy.signal import find_peaks
-# r = np.sqrt(L.X.values**2 + L.Y.values**2 + L.Z.values**2)
-# fig = plt.figure()
-# ax = fig.add_subplot(311)
-# ax.plot(r)
-
-# diff = np.diff(r)
-# diff2 = np.diff(diff)
-# peaks, _ = find_peaks(diff, height=0.04)
-# peaks2, _ = find_peaks(diff2, height=np.min(diff2)-1)   # to get all local maxima
-
-# axx = fig.add_subplot(312)
-# axx.plot(np.arange(len(diff)), diff)
-# axx.plot(peaks, diff[peaks], '.')
-
-# axx = fig.add_subplot(313)
-# axx.plot(np.arange(len(diff2)), diff2)
-# axx.plot(peaks2, diff2[peaks2], '.')
-
-# fig = plt.figure()
-# axxx = fig.add_subplot(121, projection='3d')
-# axxx.plot(L.X, L.Y, L.Z, 'b-', label='original data')
-# axxx.plot(L.X.values[peaks], L.Y.values[peaks], L.Z.values[peaks], 'r.')
-
-# axxx = fig.add_subplot(122, projection='3d')
-# axxx.plot(L.X, L.Y, L.Z, 'b-', label='original data')
-# axxx.plot(L.X.values[peaks2], L.Y.values[peaks2], L.Z.values[peaks2], 'r.')
-
-# plt.show()
 
 #%% Matplotlib scatter plot to compare detected points with smoothed curve
 # 3D Scatter Plot
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
-# #%matplotlib qt
+%matplotlib qt
 
-p_number = 2
-CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
-CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
-# CURVE_2 = smoothed_curves_df
+p_number = 0
+# CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
+CURVE_1 = LINKED
+# CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
+CURVE_2 = smoothed_curves_df
 
 
 
 fig = plt.figure(1)
 ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)), alpha=0.3)
+ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)), alpha=0.3)
 # p = ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=CURVE_1.TIME, alpha=0.3)
 
-ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=30, marker='.', alpha=0.3)
+# ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=30, marker='.', alpha=0.3)
 # # ax.plot(CURVE_1.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
-ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
+# ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
 # # # ax.plot(CURVE_2.X[CURVE_2.X>350], CURVE_2.Y[CURVE_2.X>350], CURVE_2.Z[CURVE_2.X>350], 'r-', label='Smoothed Curve')
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
+# ax.set_zlim(bottom=0, top=40)
 # fig.colorbar(p)
 ax.set_title('Smoothed Track')
 pyplot.show()
 
+#%% Crete Data Frame with Speed
+particle_num = np.unique(smoothed_curves_df['PARTICLE'])
+
+xx, yy, zz, tt, pp, sp = -1, -1, -1, -1, -1, -1
+
+for pn in particle_num:
+    s = smoothed_curves_df[smoothed_curves_df['PARTICLE'] == pn]
+    # print(pn, len(s))
+
+    if len(s) > 100:
+        speed, x, y, z, t = f.get_speed(s)
+        xx = np.hstack((xx, x))
+        yy = np.hstack((yy, y))
+        zz = np.hstack((zz, z))
+        tt = np.hstack((tt, t))
+        pp = np.hstack((pp, pn*np.ones(len(t))))
+        sp = np.hstack((sp, speed))
+    
+
+# tracks_w_speed = pd.DataFrame(np.transpose([xx[1:], yy[1:], zz[1:], tt[1:], pp[1:], sp[1:]]), columns=['X', 'Y', 'Z', 'TIME', 'PARTICLE', 'SPEED'])
+
+# PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
+tracks_w_speed = pd.read_csv(PATH,index_col=False)
+
+fig = plt.figure(1, dpi=150)
+ax = fig.add_subplot(111, projection='3d')
+
+
+# p = ax.scatter(tracks_w_speed['Y'], tracks_w_speed['X'], tracks_w_speed['Z'], c=tracks_w_speed['SPEED'], marker='.', s=20)
+# cbar = plt.colorbar(p)
+# cbar.set_label('Speed ($\mu ms^{-1}$)')
+
+for pn in particle_num:
+    # s = smoothed_curves_df[smoothed_curves_df['PARTICLE'] == pn]
+    s = tracks_w_speed[tracks_w_speed['PARTICLE'] == pn]
+    ax.plot(s['X'], s['Y'], s['Z'], linewidth=2)
+    # ax.scatter(s['Y'], s['X'], s['Z'])
+
+ax.axis('tight')
+ax.set_title('$\it{Escherichia \ Coli}$', fontsize=40)  # $\it{Escherichia \ Coli}$
+ax.set_xlabel('y ($\mu$m)', fontsize=20)
+ax.set_ylabel('x ($\mu$m)', fontsize=20)
+ax.set_zlabel('-z ($\mu$m)', fontsize=20)
+# ax.set_zlim(bottom=0, top=40)
+
+plt.figure(2)
+plt.hist(tracks_w_speed['SPEED'], 25)
+mean_speed = tracks_w_speed['SPEED'].mean()
+print(mean_speed)
+plt.title('Speed: $\mu$ = ' + str(np.float16(mean_speed)) + ' $\mu m s^{-1}$', fontsize=40)
+plt.xlabel('Speed ($\mu m s^{-1}$)', fontsize=20)
+plt.ylabel('Frequency', fontsize=20)
+
+pyplot.show()
+
 #%% Speed
-#%matplotlib qt
+# %matplotlib qt
 # plt.rcParams['figure.dpi'] = 150 
-fig = plt.figure(2)
+
+# PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
+# smoothed_curves_df = pd.read_csv(PATH,index_col=False)
+particle_num = np.unique(smoothed_curves_df['PARTICLE'])
+
+fig = plt.figure(2, dpi=150)
 ax = fig.add_subplot(111, projection='3d')
 
 for pn in particle_num:
     s = smoothed_curves_df[smoothed_curves_df['PARTICLE'] == pn]
-    speed, x, y, z = f.get_speed(s)
-    ax.scatter(x, y, z, c=speed, marker='.', s=5)
+    # speed, x, y, z = f.get_speed(s)
+    # ax.scatter(x, y, z, c=speed, marker='.', s=5)
     # ax.scatter(LINKED.Y, LINKED.X, LINKED.Z, '.', s=1)
-    # ax.plot(s.Y, s.X, s.Z, 'r-', linewidth=0.5, markersize=2)
+    b = s[s['Z'] < 40]
+    ax.plot(0.7*b.X, 0.7*b.Y, 1.2*b.Z, linewidth=2)
+    # ax.plot(0.7*s.X, 0.7*s.Y, s.Z, linewidth=2)
     
 # p = ax.scatter(s['X'][:-1], s['Y'][:-1], s['Z'][:-1], c=vv, s=2)
 # fig.colorbar(p)
@@ -334,12 +328,13 @@ for pn in particle_num:
 # cbar.set_label('Speed ($\mu ms^{-1}$)')
 
 ax.axis('tight')
-ax.set_xlabel('x ($\mu$m)')
-ax.set_ylabel('y ($\mu$m)')
-ax.set_zlabel('-z ($\mu$m)')
+# ax.set_title('Archea', fontsize=40)  # $\it{Escherichia \ Coli}$
+ax.set_xlabel('y ($\mu$m)', fontsize=20)
+ax.set_ylabel('x ($\mu$m)', fontsize=20)
+ax.set_zlabel('-z ($\mu$m)', fontsize=20)
+ax.set_zlim(bottom=0, top=40)
 
 pyplot.show()
-
 
 #%% Matplotlib scatter plot
 # 3D Scatter Plot
@@ -368,18 +363,6 @@ ax.set_zlabel('z (um)', fontsize='18')
 # fig.colorbar(p, ax=ax)
 pyplot.show()
     
-
-#%%
-# from scipy import interpolate
-# from mpl_toolkits.mplot3d import Axes3D
-# from scipy import ndimage
-
-# vals = CURVE_1.values
-# x, y, z, t = vals[:, 0], vals[:, 1], vals[:, 2], vals[:, 5]
-# x0, y0, z0, t0 = x[0], y[0], z[0], t[0]
-
-# for i in range(len(x)-1):
-#     dr = np.sqrt((x[i] - x[i+1])**2 + (y[i] - y[i+1])**2 + (z[i] - z[i+1])**2)
     
 
 

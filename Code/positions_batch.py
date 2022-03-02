@@ -63,9 +63,9 @@ T_median_image = time.time() - T0_median_image
 
 N = 1.3226
 LAMBDA = 0.642              # HeNe
-MPP = 10 
+MPP = 20 
 FS = 0.711                     # Sampling Frequency px/um
-SZ = 10                        # Step size um
+SZ = 5                        # Step size um
 # NUMSTEPS = int(OPTIONS[4])
 # THRESHOLD = np.float(OPTIONS[0])
 # PEAK_MIN_DISTANCE = int(OPTIONS[3])
@@ -132,7 +132,7 @@ for j in range(len(THRESHOLD)):
         # ID = np.where(CDF <= CDF.max()*0.9999)   
         # GS[GS <= BINS[ID[0][-1]]] = 0
         T0_positions3D = time.time()
-        LOCS[i, 0] = f.positions3D(GS, peak_min_distance=PEAK_MIN_DISTANCE[j])
+        LOCS[i, 0] = f.positions3D(GS, peak_min_distance=PEAK_MIN_DISTANCE[j],  num_particles=1, MPP=MPP)
         T_positions3D.append(time.time() - T0_positions3D)
     
         A = LOCS[i, 0].astype('int')

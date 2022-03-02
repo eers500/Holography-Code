@@ -32,3 +32,15 @@ for k in range(len(fn)):
 
     print(k)
     
+#%% CSV tracks to track files
+read_path = gui.fileopenbox()
+export_path = gui.dirfileopenbox()
+
+data = pd.read_csv(path, index_col=0)
+
+pnumber = np.unique(data['PARTICLE'])
+
+for pn in pnumber:
+    track_data = data[data['PARTICLE'] == 0]
+    np.savetxt(export_path+'/track{0}.txt'.format(pn), track_data.values, fmt='%d', delimiter='\t')
+    
