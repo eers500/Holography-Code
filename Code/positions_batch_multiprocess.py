@@ -112,11 +112,25 @@ if __name__ == "__main__":
     # if export_bool:
     POSITIONS = pd.DataFrame(columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME', 'TIME'])
     for i in range(NUM_FRAMES):
-        # XYZ, I_FS, I_GS, FRAME = LOCS[i, 0], LOCS[i, 1], LOCS[i, 2], i*np.ones_like(LOCS[i, 2])
+
+        X = results[i][0][0]
+        Y = results[i][1][0]
+        Z = results[i][2][0]
+        I_FS = results[i][3][0]
+        I_GS = results[i][4][0]
+        FRAME = i*np.ones_like(results[i][0][0])
+        TIME = i*np.ones_like(results[i][0][0])
         
-        X, Y, Z, I_FS, I_GS, FRAME, TIME = results[i][0][0], results[i][1][0], results[i][2][0], results[i][3][0], results[i][4][0], i*np.ones_like(results[i][0][0]), i*np.ones_like(results[i][0][0])
-        DATA = np.concatenate((np.expand_dims(X, axis=1), np.expand_dims(Y, axis=1), np.expand_dims(Z, axis=1), np.expand_dims(I_FS, axis=1), np.expand_dims(I_GS, axis=1), np.expand_dims(FRAME, axis=1), np.expand_dims(FRAME*(1/FRAME_RATE), axis=1)), axis=1)
-        POSITIONS = POSITIONS.append(pd.DataFrame(DATA, columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME', 'TIME']))
+        DATA = np.concatenate((np.expand_dims(X, axis=1), 
+                               np.expand_dims(Y, axis=1), 
+                               np.expand_dims(Z, axis=1), 
+                               np.expand_dims(I_FS, axis=1), 
+                               np.expand_dims(I_GS, axis=1), 
+                               np.expand_dims(FRAME, axis=1), 
+                               np.expand_dims(FRAME*(1/FRAME_RATE), axis=1)), 
+                              axis=1)
+        POSITIONS = POSITIONS.append(pd.DataFrame(DATA, 
+                                                  columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME', 'TIME']))
         
     if export_bool:
         # EXPORT_PATH = PATH[:-4]+'_TH01_MPD35_multiprocess.csv'
