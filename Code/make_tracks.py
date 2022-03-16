@@ -204,7 +204,7 @@ for pn in tqdm(particle_num):
 
     if len(L) < 100:
         continue
-    X = f.csaps_smoothing(L, smoothing_condition=0.999, filter_data=True, limit=5)
+    X = f.csaps_smoothing(L, smoothing_condition=0.999, filter_data=False, limit=5)
     
     if X != -1:
         smoothed_curves = np.vstack((smoothed_curves, np.stack((X[0], X[1], X[2], X[3], pn*np.ones_like(X[1])), axis=1))) 
@@ -266,10 +266,10 @@ for pn in particle_num:
         sp = np.hstack((sp, speed))
     
 
-# tracks_w_speed = pd.DataFrame(np.transpose([xx[1:], yy[1:], zz[1:], tt[1:], pp[1:], sp[1:]]), columns=['X', 'Y', 'Z', 'TIME', 'PARTICLE', 'SPEED'])
+tracks_w_speed = pd.DataFrame(np.transpose([xx[1:], yy[1:], zz[1:], tt[1:], pp[1:], sp[1:]]), columns=['X', 'Y', 'Z', 'TIME', 'PARTICLE', 'SPEED'])
 
 # PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
-tracks_w_speed = pd.read_csv(PATH,index_col=False)
+# tracks_w_speed = pd.read_csv(PATH, index_col=False)
 
 fig = plt.figure(1, dpi=150)
 ax = fig.add_subplot(111, projection='3d')
@@ -293,7 +293,7 @@ ax.set_zlabel('-z ($\mu$m)', fontsize=20)
 # ax.set_zlim(bottom=0, top=40)
 
 plt.figure(2)
-plt.hist(tracks_w_speed['SPEED'], 25)
+plt.hist(tracks_w_speed['SPEED'], 13)
 mean_speed = tracks_w_speed['SPEED'].mean()
 print(mean_speed)
 plt.title('Speed: $\mu$ = ' + str(np.float16(mean_speed)) + ' $\mu m s^{-1}$', fontsize=40)
@@ -353,7 +353,8 @@ T = LINKED.TIME
 P = LINKED.PARTICLE
 
 
-ax.scatter(X, Y, Z, s=2, marker='o', c=P)
+# ax.scatter(X, Y, Z, s=2, marker='o', c=P)
+ax.plot(X, Y, Z)
 # ax.plot(smoothed_curves_df.Y, smoothed_curves_df.X, smoothed_curves_df.Z, 'r-')
 ax.tick_params(axis='both', labelsize=10)
 ax.set_title('Cells Positions in 3D', fontsize='20')

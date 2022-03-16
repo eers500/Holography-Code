@@ -167,7 +167,7 @@ def exportAVI(filename, IM, NI, NJ, fps):
 
 
 #%% rayleighSommerfeldPropagator
-def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandpass):
+def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandpass, med_filter):
     ## Rayleigh-Sommerfeld Back Propagator
     #   Inputs:          I - hologram (grayscale)
     #             I_MEDIAN - median image
@@ -180,7 +180,8 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandp
     # Divide by Median image
     I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
     IN = I / I_MEDIAN
-    IN = median_filter(IN, size=1)
+    if med_filter:
+        IN = median_filter(IN, size=1)
     
     #    IN = I - I_MEDIAN,
     #     IN[IN < 0] = 0
@@ -887,3 +888,37 @@ def MSD(x, y, z):
         swim = False
         
     return MSD, swim
+
+#%%
+def positions_batch(TUPLE):
+    import numpy as np
+    import functions as f
+    I = TUPLE[0]
+    I_MEDIAN = TUPLE[1]    
+    N = TUPLE[2]
+    LAMBDA = TUPLE[3]
+    MPP = TUPLE[4]
+    FS = (MPP/10)*0.711
+    SZ = TUPLE[5]
+    NUMSTEPS = TUPLE[6]
+    THRESHOLD = TUPLE[7]
+    PMD = TUPLE[8]
+    
+    LOCS = np.empty((1, 3), dtype=object)
+    X, Y, Z, I_FS, I_GS = [], [] ,[], [], []
+    IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True, False).astype('float32')
+    GS = f.zGradientStack(IM).astype('float32')  
+    # GS = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)  # Modified propagator
+    GS[GS < THRESHOLD] = 0
+    LOCS[0, 0] = f.positions3D(GS, peak_min_distance=PMD, num_particles='None', MPP=MPP)
+    A = LOCS[0, 0].astype('int')
+    LOCS[0, 1] = IM[A[:, 0], A[:, 1], A[:, 2]]
+    LOCS[0, 2] = GS[A[:, 0], A[:, 1], A[:, 2]]
+        
+    X.append(LOCS[0, 0][:, 0]*(1/FS))
+    Y.append(LOCS[0, 0][:, 1]*(1/FS))
+    Z.append(LOCS[0, 0][:, 2]*SZ)
+    I_FS.append(LOCS[0, 1])
+    I_GS.append(LOCS[0, 2])
+        
+    return [X, Y, Z, I_FS, I_GS]

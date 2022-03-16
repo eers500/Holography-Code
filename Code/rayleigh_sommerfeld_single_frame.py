@@ -14,7 +14,7 @@ import easygui as gui
 path = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/may2021/5/')
 VID = f.videoImport(path, 0)
 # VID, cdf = f.histeq(VID)
-I = VID[:, :, 102] #133
+I = VID[:, :, 106+1] #133
 # I, cdf = f.histeq(IN)
 
 # I_MEDIAN = f.medianImage(VID, 1000)
@@ -28,15 +28,15 @@ path_med = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/m
 I_MEDIAN = plt.imread(path_med)
 N = 1.3226
 LAMBDA = 0.642              # HeNe
-MPP = 40
+MPP = 20
 FS = 0.711 * (MPP/10)                     # Sampling Frequency px/um
 SZ = 5  
 
-rs = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 50, True)
+rs = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 24, True, False)
 gs = f.zGradientStack(rs)
 threshold = 0.5
 gs[gs < threshold] = 0
-locs = f.positions3D(gs, peak_min_distance=30, num_particles=10, MPP=MPP)
+locs = f.positions3D(gs, peak_min_distance=30, num_particles=1, MPP=MPP)
 
 plt.imshow(rs[:, :, 0], cmap='gray')
 plt.plot(locs[:, 1], locs[:, 0], 'r.')
@@ -89,10 +89,10 @@ for k in range(rs.shape[-1]):
 
 path_write = gui.diropenbox()
 
-ci, cj = 241, 403
+ci, cj = 220, 261
 D = 80
 modes = ['Normal', 'Binary', 'ZM']
-mode = modes[0]
+mode = modes[1]
 
 # for i in range(rs.shape[-1]):
 for i in range(rs.shape[-1]):
