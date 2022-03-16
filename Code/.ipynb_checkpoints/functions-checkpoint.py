@@ -167,7 +167,7 @@ def exportAVI(filename, IM, NI, NJ, fps):
 
 
 #%% rayleighSommerfeldPropagator
-def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandpass):
+def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandpass, med_filter):
     ## Rayleigh-Sommerfeld Back Propagator
     #   Inputs:          I - hologram (grayscale)
     #             I_MEDIAN - median image
@@ -180,7 +180,8 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandp
     # Divide by Median image
     I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
     IN = I / I_MEDIAN
-    IN = median_filter(IN, size=1)
+    if med_filter:
+        IN = median_filter(IN, size=1)
     
     #    IN = I - I_MEDIAN,
     #     IN[IN < 0] = 0
@@ -887,3 +888,120 @@ def MSD(x, y, z):
         swim = False
         
     return MSD, swim
+
+#%%
+def positions_batch(TUPLE):
+    import numpy as np
+    import functions as f
+    I = TUPLE[0]
+    I_MEDIAN = TUPLE[1]    
+    N = TUPLE[2]
+    LAMBDA = TUPLE[3]
+    MPP = TUPLE[4]
+    FS = (MPP/10)*0.711
+    SZ = TUPLE[5]
+    NUMSTEPS = TUPLE[6]
+    THRESHOLD = TUPLE[7]
+    PMD = TUPLE[8]
+    
+    LOCS = np.empty((1, 3), dtype=object)
+    X, Y, Z, I_FS, I_GS = [], [] ,[], [], []
+    IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True, False).astype('float32')
+    GS = f.zGradientStack(IM).astype('float32')  
+    # GS = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)  # Modified propagator
+    GS[GS < THRESHOLD] = 0
+    LOCS[0, 0] = f.positions3D(GS, peak_min_distance=PMD, num_particles='None', MPP=MPP)
+    A = LOCS[0, 0].astype('int')
+    LOCS[0, 1] = IM[A[:, 0], A[:, 1], A[:, 2]]
+    LOCS[0, 2] = GS[A[:, 0], A[:, 1], A[:, 2]]
+        
+    X.append(LOCS[0, 0][:, 0]*(1/FS))
+    Y.append(LOCS[0, 0][:, 1]*(1/FS))
+    Z.append(LOCS[0, 0][:, 2]*SZ)
+    I_FS.append(LOCS[0, 1])
+    I_GS.append(LOCS[0, 2])
+        
+    return [X, Y, Z, I_FS, I_GS]
+
+#%% Clean tracks with Search Sphere
+def clean_tracks_search_sphere(track, rsphere):
+    import numpy as np
+    import pandas as pd
+    import functions as f
+    import matplotlib.pyplot as plt
+    from tqdm import tqdm
+    
+    # rsphere = 20
+    frame_skip = 10
+    min_size = 50
+    
+    x, y, z, t, fr = track['X'].values, track['Y'].values, track['Z'].values, track['TIME'].values, track['FRAME'].values
+    particle_number = track['PARTICLE'].unique()[0]
+    
+    track_frames = track['FRAME'].values
+    frames = np.unique(track_frames)
+    
+    reps = f.contiguous_repeats(track_frames)
+    reps_first_frame = int(reps[0])
+    
+    init_frames = track_frames[:reps_first_frame] 
+    id_init_frames = [i for i, val in enumerate(track_frames) if val==init_frames[0]]
+    
+    tracks = []
+    d = []
+    for idi in id_init_frames:
+        # print(idi)
+        x0, y0, z0, t0, fr0 = x[idi], y[idi], z[idi], t[idi], fr[idi] 
+        tr = [(x0, y0, z0, t0, fr0, idi)]
+        dd = []
+        frame_skip_counter = 0
+        for k in range(idi+1, len(track)):
+            # print(k)
+            x1, y1, z1, t1, fr1 = x[k], y[k], z[k], t[k], fr[k]
+            dist = np.sqrt((x1-x0)**2 + (y1-y0)**2 + (z1-z0)**2)
+            dd.append(dist)
+            
+            if dist <= rsphere:
+                tr.append((x1, y1, z1, t1, fr1, particle_number))
+                x0, y0, z0, t0, fr0 = x1, y1, z1, t1, fr1
+                frame_skip_counter = 0                
+                
+            elif dist > rsphere:
+                frame_skip_counter += 1
+                if frame_skip_counter > frame_skip:
+                    break
+                    print('Broke')
+
+        tracks.append(tr)
+        d.append(dd)
+        
+        
+        lengths = []
+        for k in range(len(tracks)):
+            lengths.append(len(tracks[k]))
+            
+        id_max = np.where(lengths == np.max(lengths))[0][0]
+        
+        trr = np.array(tracks[id_max])
+        
+        # fig, ax = plt.subplots(2, 1, sharex=True, sharey=True)
+        # ax[0].scatter(x, -y, c=t)
+        # ax[1].scatter(trr[:, 0], -trr[:, 1], c= trr[:, 3])
+        # ax.axis('square')
+        
+        
+        # fig = plt.figure(2)
+        # ax1 = fig.add_subplot(111, projection='3d') 
+        # # ax1.scatter(trr[:, 1], trr[:, 0], trr[:, 2], c=trr[:, 3])
+        # ax1.scatter(track.X, track.Y, track.Z, c=track.TIME)
+        # # ax1.scatter(track.X.values[:2], track.Y.values[:2], track.Z.values[:2], c=track.TIME.values[:2])
+        # pyplot.show()
+        
+        x_new = trr[:, 0]
+        y_new = trr[:, 1]
+        z_new = trr[:, 2]
+        t_new = trr[:, 3]
+        fr_new = trr[:, 4]
+        p_new = trr[:, 5]
+        
+        return [x_new, y_new, z_new, t_new, fr_new, p_new]
