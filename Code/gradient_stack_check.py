@@ -1,9 +1,3 @@
-# To add a new cell, type '# %%'
-# To add a new markdown cell, type '# %% [markdown]'
-# %%
-from IPython import get_ipython
-
-# %%
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -12,7 +6,7 @@ import easygui as gui
 import ipywidgets as widgets
 from skimage.feature import peak_local_max
 from scipy import ndimage
-get_ipython().run_line_magic('matplotlib', 'qt')
+#get_ipython().run_line_magic('matplotlib', 'qt')
 #%matplotlib widget
 
 files = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', multiple=True)
@@ -26,16 +20,16 @@ else:
 
 
 I =mpimg.imread(path[0]) 
-#I_MEDIAN = mpimg.imread(path[1])
-I_MEDIAN = np.ones((np.shape(I)[0], np.shape(I)[1]))
+I_MEDIAN = mpimg.imread(path[1])
+#I_MEDIAN = np.ones((np.shape(I)[0], np.shape(I)[1]))
 
 N = 1.3226
 LAMBDA = 0.642               # Diode
-#MPP = 20                      # Magnification: 10x, 20x, 50x, etc
-FS = 0.711                     # Sampling Frequency px/um
+MPP = 20                      # Magnification: 10x, 20x, 50x, etc
+FS = 0.711*(MPP/10)                     # Sampling Frequency px/um
 NI = np.shape(I)[0]
 NJ = np.shape(I)[1]
-SZ = 10                       # Step size in um
+SZ = 2.5                       # Step size in um
 # Z = (FS*(51/31))*np.arange(0, 150)       # Number of steps
 
 # %%
@@ -43,27 +37,21 @@ SZ = 10                       # Step size in um
 # ZZ = np.linspace(0, SZ*149, 150)
 # Z = FS*ZZ
 # K = 2*np.pi*N/LAMBDA            # Wavenumber
-NUMSTEPS = 150
+NUMSTEPS = 50
 
-RS = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)
+RS = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True, True)
 
-
-# %%
 # Sobel-type kernel
-SZ0 = np.array(([-1, -2, -1], [-2, -4, -2], [-1, -2, -1]), dtype='float')
+SZ0 = np.array(([-1, -2, -1], [-2, -4, -2], [-1, -2, -1]))
 SZ1 = np.zeros_like(SZ0)
 SZ2 = -SZ0
 SZ = np.stack((SZ0, SZ1, SZ2), axis=-1)
 
-
-# %%
 # Convolution IM*SZ
 IMM = np.dstack((RS[:, :, 0][:, :, np.newaxis], RS, RS[:, :, -1][:, :, np.newaxis]))
 GS = ndimage.convolve(RS, SZ, mode='mirror')
 GS = np.delete(GS, [0, np.shape(GS)[2]-1], axis=2)
 
-
-# %%
 # set up plot
 fig, ax = plt.subplots(figsize=(6, 4)) 
  
@@ -78,7 +66,3 @@ def update(threshold=0.1, peak_min_dist=30, show_scatter=True):
     ax.imshow(ZP, cmap='gray')
     if show_scatter==True:
         ax.scatter(PKS[:,1], PKS[:,0], marker='o', facecolors='none', s=80, edgecolors='r')
-
-
-
-
