@@ -15,4 +15,5 @@ pip install -U csaps
 conda install -c conda-forge hdbscan 
 conda install -c anaconda natsort 
 conda install -c conda-forge cupy
+pip install streamlit
 echo Finished!

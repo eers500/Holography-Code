@@ -652,7 +652,6 @@ def smooth_curve(L, spline_degree, lim, sc):
     return X
 
 #%% smoothing with CSAPS
-#%% smoothing with CSAPS
 def csaps_smoothing(L, smoothing_condition, filter_data, limit):
     import numpy as np
     # import matplotlib.pyplot as plt
@@ -889,7 +888,7 @@ def MSD(x, y, z):
         
     return MSD, swim
 
-#%%
+#%% Positions batch
 def positions_batch(TUPLE):
     import numpy as np
     import functions as f
@@ -1005,3 +1004,64 @@ def clean_tracks_search_sphere(track, rsphere):
         p_new = trr[:, 5]
         
         return [x_new, y_new, z_new, t_new, fr_new, p_new]
+    
+#%% Search Sphere tracking
+def search_sphere_tracking(DF, rsphere, frame_skip, min_size):
+    import numpy as np
+    import pandas as pd
+    from tqdm import tqdm
+    
+    # rsphere = 5
+    # frame_skip = 10
+    # min_size = 20
+
+    # dd = DF[DF['FRAME'] == 0]
+    # frames = np.unique(DF['FRAME'])
+
+    dd = DF
+    frames = np.unique(dd['FRAME'])
+    num_particles = len(dd[dd['FRAME'] == 0])
+
+
+
+    tracks = []
+    for n in tqdm(range(num_particles)):
+
+        # n = 70
+        x0, y0, z0, t0, fr0 = dd['X'][n], dd['Y'][n], dd['Z'][n], dd['TIME'][n], dd['FRAME'][n]
+        
+        track = [(x0, y0, z0, t0, fr0, n)]
+        frame_skip_counter = 0
+        
+        for k in range(1, len(frames)):
+            s = DF[DF['FRAME'] == k]
+            x, y, z, tt, fr = s['X'].values, s['Y'].values, s['Z'].values, s['TIME'].values, s['FRAME'].values
+            
+            dist = np.sqrt((x-x0)**2+(y-y0)**2+(z-z0)**2)
+            
+            if (dist<rsphere).any():
+                id_min = np.where(dist == dist.min())[0][0]
+                track.append((x[id_min], y[id_min], z[id_min], tt[id_min], fr[id_min], n))
+                x0, y0, z0 = x[id_min], y[id_min], z[id_min]
+                frame_skip_counter = 0
+            else:
+                frame_skip_counter += 1
+                if frame_skip_counter > frame_skip:
+                    break
+        
+        if len(track) > min_size:
+            track = pd.DataFrame(np.array(track), columns=['X', 'Y', 'Z', 'TIME', 'FRAME', 'PARTICLE'])
+            tracks.append(track)
+            
+
+    LINKED = pd.concat(tracks)  
+    
+    return LINKED
+
+
+
+
+
+
+
+
