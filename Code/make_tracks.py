@@ -165,7 +165,7 @@ for pn in particle_num:
 
     if len(L) < 100:
         continue
-    X = f.csaps_smoothing(L, smoothing_condition=0.999999, filter_data=True, limit=5)
+    X = f.csaps_smoothing(L, smoothing_condition=0.95, filter_data=True, limit=5)
     
     if X != -1:
         smoothed_curves = np.vstack((smoothed_curves, np.stack((X[0], X[1], X[2], X[3], pn*np.ones_like(X[1])), axis=1))) 
@@ -208,7 +208,7 @@ ax.set_zlabel('Z')
 ax.set_title('Smoothed Track')
 pyplot.show()
 
-#%% Crete Data Frame with S
+#%% Crete Data Frame with Speed
 from matplotlib import pyplot
 particle_num = np.unique(smoothed_curves_df['PARTICLE'])
 
