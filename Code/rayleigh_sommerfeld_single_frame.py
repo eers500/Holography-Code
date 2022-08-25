@@ -11,41 +11,47 @@ import matplotlib.pyplot as plt
 import functions as f
 import easygui as gui
 
-path = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/may2021/5/')
+path = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/Thesis/')
 VID = f.videoImport(path, 0)
 # VID, cdf = f.histeq(VID)
-I = VID[:, :, 106+1] #133
+I = VID[:, :, 0] #133
 # I, cdf = f.histeq(IN)
 
-# I_MEDIAN = f.medianImage(VID, 1000)
+I_MEDIAN = f.medianImage(VID, 20)
 # I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
 
 # IN = I / I_MEDIAN
 # IN, cdf = f.histeq(IN)
 
-path_med = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/may2021/5/')
+# path_med = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/may2021/5/')
 # I_MEDIAN = np.ones_like(I)
-I_MEDIAN = plt.imread(path_med)
+# I_MEDIAN = plt.imread(path_med)
 N = 1.3226
 LAMBDA = 0.642              # HeNe
-MPP = 20
+MPP = 40
 FS = 0.711 * (MPP/10)                     # Sampling Frequency px/um
-SZ = 5  
+SZ = 2.5  
 
-rs = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 24, True, False)
-gs = f.zGradientStack(rs)
-threshold = 0.5
-gs[gs < threshold] = 0
-locs = f.positions3D(gs, peak_min_distance=30, num_particles=1, MPP=MPP)
+rs = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, 70, True, False)
+# gs = f.zGradientStack(rs)
+# threshold = 0.1
+# gs[gs < threshold] = 0
+# locs = f.positions3D(gs, peak_min_distance=20, num_particles='None', MPP=MPP)
 
-plt.imshow(rs[:, :, 0], cmap='gray')
-plt.plot(locs[:, 1], locs[:, 0], 'r.')
+# plt.imshow(rs[:, :, 0], cmap='gray')
+# plt.plot(locs[:, 1], locs[:, 0], 'r.')
 
 f.imshow_slider(rs, 2, 'gray')
 
 # _, BINS = np.histogram(rs.flatten())
 # rs[rs < BINS[8]] = 0
 
+#%%
+fr = np.array([0, 10, 15, 20])*SZ
+
+plt.imsave('archea_gs_100.png', gs[:, :, 20], cmap='gray')
+
+f
 #%%
 path_write = gui.diropenbox()
 

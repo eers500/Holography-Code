@@ -6,7 +6,7 @@ Created on Thu Jul 29 13:21:30 2021
 @author: erick
 """
 
-#%% Import vido and set paramaters
+#%% Import video and set paramaters
 import time
 import numpy as np
 import easygui
@@ -19,12 +19,12 @@ from multiprocessing import cpu_count
 from tqdm import tqdm
 from scipy.ndimage import median_filter
 
-# PATH = easygui.fileopenbox(default='F:\\PhD')
-# PATH = 'MF1_30Hz_200us_awaysection.avi'
-#PATH = '10x_laser_50Hz_10us_g1036_bl1602_500frames.avi'
-# PATH = 'F:\\PhD\\Colloids\\20x_50Hz_100us_642nm_colloids_2000frames.avi'
-PATH= 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\may2021\\5\\20x_100Hz_05us_EcoliHCB1_07\\NEW ANALYSIS\\20x_100Hz_05us_EcoliHCB1-07-1.avi'
-# PATH = 'C:\\Users\\eers500\\Documents\\PhD\\E_coli\\June2021\\14\\sample_1\\40x_HCB1_60Hz_1.259us_03\\NEW ANALYSIS\\40x_HCB1_60Hz_1.259us_03_430frames.avi'
+# PATH = easygui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD')
+# PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/Test/Archea/20x_ArchFM1_30Hz_150us_1_2000frames_every5_300.avi'
+# PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/June2021/14/sample_1/40x_HCB1_60Hz_1.259us_03/40x_HCB1_60Hz_1.259us_03_430frames.avi'
+# PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/E_coli/may2021/5/20x_100Hz_05us_EcoliHCB1-05/20x_100Hz_05us_EcoliHCB1-05.avi'
+PATH = '/media/erick/NuevoVol/LINUX_LAP/PhD/Colloids/20x_50Hz_100us_642nm_colloids_2000frames.avi'
+
 
 T0 = time.time()
 VID = f.videoImport(PATH, 0)
@@ -33,19 +33,19 @@ I_MEDIAN = f.medianImage(VID, FRAMES_MEDIAN)
 I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
 # I_MEDIAN = np.ones((400, 400))
 
-export_csv = True
+export_csv = False
 # N = 1.3226
 # LAMBDA = 0.642              # HeNe
 # # MPP = 10
 # FS = 0.711                     # Sampling Frequency px/um
 # SZ = 5                       # # Step size um
 # NUMSTEPS = 150
-THRESHOLD = 0.5
+# THRESHOLD = 0.1
 
 #%%  Calculate propagators, gradient stack and compute particle position ins 3D
-# NUM_FRAMES = np.shape(VID)[-1]
+NUM_FRAMES = np.shape(VID)[-1]
 # NUM_FRAMES = int(np.floor(np.shape(VID)[-1]/2))
-NUM_FRAMES = 275
+# NUM_FRAMES = 100
 # LOCS = np.empty((NUM_FRAMES, 3), dtype=object)
 # INTENSITY = np.empty(NUM_FRAMES, dtype=object)
 
@@ -57,29 +57,33 @@ def my_function(TUPLE):
     # I_MEDIAN = np.load('/media/erick/NuevoVol/LINUX_LAP/PhD/Colloids/MED_20x_50Hz_100us_642nm_colloids-1.npy')
     N = 1.3226
     LAMBDA = 0.642              # HeNe
-    MPP = 20
+    MPP = 10
     FS = 0.711 * (MPP/10)                  # Sampling Frequency px/um
     psize = 1/FS
     SZ = 5                       # # Step size um
-    NUMSTEPS = 50
+    NUMSTEPS = 80
+    bandpass = True
+    med_filter = False
     X, Y, Z, I_FS, I_GS = [], [] ,[], [], []
     # X, Y, Z, I_FS, I_GS = np.empty(0), np.empty(0), np.empty(0), np.empty(0), np.empty(0)
 #
     # for i in range(NUM_FRAMES):
     # I = IT[i]
-    IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True).astype('float32')
-    GS = f.zGradientStack(IM).astype('float32')  
+    # IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True).astype('float32')
+    # GS = f.zGradientStack(IM).astype('float32')  
     # GS = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)  # Modified propagator
-    GS[GS < THRESHOLD] = 0
+    GS = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandpass, med_filter)
+      
+    # GS[GS < THRESHOLD] = 0
     LOCS = np.empty((1, 3), dtype=object)
-    LOCS[0, 0] = f.positions3D(GS, peak_min_distance=40, num_particles='None', MPP=MPP)  # , peak_min_distance, num_particles, MP
+    LOCS[0, 0] = f.positions3D(GS, peak_min_distance=20, num_particles='None', MPP=MPP)  # , peak_min_distance, num_particles, MP
     A = LOCS[0, 0].astype('int')
     # LOCS[0, 1] = IM[A[:, 0], A[:, 1], A[:, 2]]
     LOCS[0, 1] = GS[A[:, 0], A[:, 1], A[:, 2]]        #LOCS are in pixels, still need o be converteed to um
     LOCS[0, 2] = GS[A[:, 0], A[:, 1], A[:, 2]]
         
-    Y.append(LOCS[0, 0][:, 0] * psize) 
-    X.append(LOCS[0, 0][:, 1] * psize)
+    Y.append(LOCS[0, 0][:, 1] * psize) 
+    X.append(LOCS[0, 0][:, 0] * psize)
     Z.append(LOCS[0, 0][:, 2]*SZ)
     I_FS.append(LOCS[0, 1])
     I_GS.append(LOCS[0, 2])
@@ -126,20 +130,23 @@ if __name__ == "__main__":
         POSITIONS.to_csv(EXPORT_PATH)  # For leptospira data
 	
 #%%  3D Scatter Plot
-# from mpl_toolkits.mplot3d import Axes3D
-# from matplotlib import pyplot
-# #%matplotlib qt 
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot as plt
+# %matplotlib qt 
 
-# fig = pyplot.figure()
-# ax = Axes3D(fig)
-# title = '3d plot'
-# LOCS = POSITIONS.values
-# # ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2], s=25, marker='.')
+#ax = Axes3D(fig)
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+
+title = '3d plot'
+LOCS = POSITIONS.values
+ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2], s=25, c=LOCS[:, 5], marker='.')
 # ax.plot(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2])
-# ax.tick_params(axis='both', labelsize=10)
-# ax.set_title(title, fontsize='20')
-# ax.set_xlabel('x ($\mu m$)', fontsize='18')
-# ax.set_ylabel('y ($\mu m$)', fontsize='18')
-# ax.set_zlabel('z ($\mu m$)', fontsize='18')
-# pyplot.show()
+ax.tick_params(axis='both', labelsize=10)
+ax.set_title(title, fontsize='20')
+ax.set_xlabel('x ($\mu m$)', fontsize='18')
+ax.set_ylabel('y ($\mu m$)', fontsize='18')
+ax.set_zlabel('z ($\mu m$)', fontsize='18')
+plt.show()
+
    

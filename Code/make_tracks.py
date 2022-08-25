@@ -22,7 +22,7 @@ from scipy.optimize import linear_sum_assignment
 # from hungarian_algorithm import algorithm
 from tqdm import tqdm
 
-PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/')
+PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/Thesis/Results/1/')
 DF = pd.read_csv(PATH)
 DF = DF[['X','Y','Z','I_FS','I_GS','FRAME', 'TIME']]
 DF.index = np.arange(len(DF))
@@ -42,8 +42,10 @@ if method == 'Search Sphere':
                                     'Max Frame Skip (5)',
                                     'MIN SAMPLES (e.g. 10):'])
     
+    t_sphere = time.time()
     LINKED = f.search_sphere_tracking(DF, float(rsphere), float(frame_skip), float(min_size))
-    
+    print(rsphere, frame_skip, min_size)
+    print(time.time()-t_sphere)
 
 elif method == 'KMeans':
 
@@ -127,29 +129,53 @@ elif method == 'HA':
 
 LINKED = LINKED[LINKED.PARTICLE != -1]
 
+#%% Visualize individual particles
+# particle_num = np.unique(LINKED['PARTICLE'])
+# print(particle_num)
+# df = LINKED[LINKED['PARTICLE'] == particle_num[2]] # 1 2
 
-#%% 
+
+# fig = plt.figure(2, figsize=(5, 5))
+# ax = plt.axes(projection='3d')
+
+# X, Y, Z, T, P = df.X, df.Y, df.Z, df.TIME, df.PARTICLE
+
+# ax.scatter(X, Y, Z, s=2, marker='o', c=T)
+
+# plt.show()
+
+
+#%% Clean tracks
 particle_num = np.unique(LINKED['PARTICLE'])
 
 pp = []
-for p in tqdm(particle_num):
+tracks = []
+t_clean = time.time()
+for i, p in tqdm(enumerate(particle_num)):
     
     L = LINKED[LINKED['PARTICLE'] ==  p]
     if len(L) > 50:
-        temp = f.clean_tracks(L)
-        L = pd.DataFrame.transpose(pd.DataFrame(temp, ['X', 'Y', 'Z', 'TIME', 'FRAME','PARTICLE']))
+        temp = f.search_sphere_clean(L, 3, 10, 1000) # L, rsphere, frame_skip, min_size
+        
+        if len(temp) > 0:
+            tracks.append(temp)
+        # temo = f.clean_tracks(L)
+        # L = pd.DataFrame.transpose(pd.DataFrame(temp, ['X', 'Y', 'Z', 'TIME', 'FRAME','PARTICLE']))
        
-        _, swim = f.MSD(L.X.values, L.Y.values, L.Z.values)
-        print(swim)
-         
-        if swim == False:
-            LINKED = LINKED[LINKED['PARTICLE'] != p]
-      
-    else:
-        LINKED = LINKED[LINKED['PARTICLE'] != p]
+        # if i == 0:
+            # LL = L.copy()   
+       
+        # else:
+            # LL = pd.concat([LL, L])
 
+LINKED = pd.concat(tracks)
+# LINKED = LL.copy()
+print(time.time()-t_clean)
+
+LINKED.to_csv(PATH[:-4]+'_LINKED_'+method+'_'+'cleaned.csv', index=False)
 #%% Smooth trajectories
 spline_degree = 3  # 3 for cubic spline
+smoothing_condition = 0.95
 particle_num = np.sort(LINKED.PARTICLE.unique())
 T0_smooth = time.time()
 smoothed_curves = -np.ones((1, 5))
@@ -165,7 +191,7 @@ for pn in particle_num:
 
     if len(L) < 100:
         continue
-    X = f.csaps_smoothing(L, smoothing_condition=0.95, filter_data=True, limit=5)
+    X = f.csaps_smoothing(L, smoothing_condition=smoothing_condition, filter_data=False, limit=5)
     
     if X != -1:
         smoothed_curves = np.vstack((smoothed_curves, np.stack((X[0], X[1], X[2], X[3], pn*np.ones_like(X[1])), axis=1))) 
@@ -173,17 +199,36 @@ for pn in particle_num:
 smoothed_curves = smoothed_curves[1:, :]
 smoothed_curves_df = pd.DataFrame(smoothed_curves, columns=['X', 'Y' ,'Z', 'TIME','PARTICLE'])
 T_smooth = time.time() - T0_smooth
+print(T_smooth)
 
-smoothed_curves_df.to_csv(PATH[:-4]+'_'+method+'_smoothed.csv', index=False)
+# smoothed_curves_df.to_csv(PATH[:-4]+'_'+method+'_smoothed_'+str(smoothing_condition)+'.csv', index=False)
 
+#%% MSD
+T_MSD = time.time()
+for p in tqdm(particle_num):
+    
+    L = smoothed_curves_df[smoothed_curves_df['PARTICLE'] ==  p]
+    if len(L) > 50:
+       
+        _, swim = f.MSD(L.X.values, L.Y.values, L.Z.values, L.TIME.values)
+        print(swim)
+         
+        if swim == False:
+            smoothed_curves_df = smoothed_curves_df[smoothed_curves_df['PARTICLE'] != p]
+      
+    else:
+        smoothed_curves_df = smoothed_curves_df[smoothed_curves_df['PARTICLE'] != p]
+
+print(time.time()-T_MSD)
+
+smoothed_curves_df.to_csv(PATH[:-4]+'_'+method+'_smoothed_'+str(smoothing_condition)+'.csv', index=False)
 
 #%% Matplotlib scatter plot to compare detected points with smoothed curve
 # 3D Scatter Plot
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
-%matplotlib qt
 
-p_number = 1
+p_number = particle_num[1]
 CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
 # CURVE_1 = LINKED
 CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
@@ -193,7 +238,7 @@ CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
 
 fig = plt.figure(1)
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)), alpha=0.3)
+# ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)), alpha=0.3)
 # p = ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=CURVE_1.TIME, alpha=0.3)
 
 # ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arangeee(len(CURVE_2.X)), s=30, marker='.', alpha=0.3)
@@ -206,62 +251,6 @@ ax.set_zlabel('Z')
 # ax.set_zlim(bottom=0, top=40)
 # fig.colorbar(p)
 ax.set_title('Smoothed Track')
-pyplot.show()
-
-#%% Crete Data Frame with Speed
-from matplotlib import pyplot
-particle_num = np.unique(smoothed_curves_df['PARTICLE'])
-
-xx, yy, zz, tt, pp, sp = -1, -1, -1, -1, -1, -1
-
-for pn in particle_num:
-    s = smoothed_curves_df[smoothed_curves_df['PARTICLE'] == pn]
-    # print(pn, len(s))
-
-    if len(s) > 100:
-        speed, x, y, z, t = f.get_speed(s)
-        xx = np.hstack((xx, x))
-        yy = np.hstack((yy, y))
-        zz = np.hstack((zz, z))
-        tt = np.hstack((tt, t))
-        pp = np.hstack((pp, pn*np.ones(len(t))))
-        sp = np.hstack((sp, speed))
-    
-
-tracks_w_speed = pd.DataFrame(np.transpose([xx[1:], yy[1:], zz[1:], tt[1:], pp[1:], sp[1:]]), columns=['X', 'Y', 'Z', 'TIME', 'PARTICLE', 'SPEED'])
-
-# PATH = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/', filetypes='.csv')
-# tracks_w_speed = pd.read_csv(PATH, index_col=False)
-
-fig = plt.figure(4, dpi=150)
-ax = fig.add_subplot(111, projection='3d')
-
-
-# p = ax.scatter(tracks_w_speed['Y'], tracks_w_speed['X'], tracks_w_speed['Z'], c=tracks_w_speed['SPEED'], marker='.', s=20)
-# cbar = plt.colorbar(p)
-# cbar.set_label('Speed ($\mu ms^{-1}$)')
-
-for pn in particle_num:
-    # s = smoothed_curves_df[smoothed_curves_df['PARTICLE'] == pn]
-    s = tracks_w_speed[tracks_w_speed['PARTICLE'] == pn]
-    ax.plot(s['X'], s['Y'], s['Z'], linewidth=2)
-    # ax.scatter(s['Y'], s['X'], s['Z'])
-
-ax.axis('tight')
-ax.set_title('$\it{Escherichia \ Coli}$', fontsize=40)  # $\it{Escherichia \ Coli}$
-ax.set_xlabel('y ($\mu$m)', fontsize=20)
-ax.set_ylabel('x ($\mu$m)', fontsize=20)
-ax.set_zlabel('-z ($\mu$m)', fontsize=20)
-# ax.set_zlim(bottom=0, top=40)
-
-plt.figure(3)
-plt.hist(tracks_w_speed['SPEED'], 13)
-mean_speed = tracks_w_speed['SPEED'].mean()
-print(mean_speed)
-plt.title('Speed: $\mu$ = ' + str(np.float16(mean_speed)) + ' $\mu m s^{-1}$', fontsize=40)
-plt.xlabel('Speed ($\mu m s^{-1}$)', fontsize=20)
-plt.ylabel('Frequency', fontsize=20)
-
 pyplot.show()
 
 #%% 
@@ -303,30 +292,33 @@ pyplot.show()
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
 
-# PKS = A.__array__()
-# np.savetxt('locs.txt', PKS)
-fig = pyplot.figure()
-ax = Axes3D(fig)
 
-X = LINKED.X
-Y = LINKED.Y
-Z = LINKED.Z
-T = LINKED.TIME
-P = LINKED.PARTICLE
-
-
-ax.scatter(X, Y, Z, s=2, marker='o', c=P)
-# ax.plot(X, Y, Z)
-# ax.plot(smoothed_curves_df.Y, smoothed_curves_df.X, smoothed_curves_df.Z, 'r-')
-ax.tick_params(axis='both', labelsize=10)
-ax.set_title('Cells Positions in 3D', fontsize='20')
-ax.set_xlabel('x (um)', fontsize='18')
-ax.set_ylabel('y (um)', fontsize='18')
-ax.set_zlabel('z (um)', fontsize='18')
-# fig.colorbar(p, ax=ax)
-pyplot.show()
+def scatter3d(LINKED):
+    # PKS = A.__array__()
+    # np.savetxt('locs.txt', PKS)
+    fig = pyplot.figure()
+    ax = Axes3D(fig)
+    
+    X = LINKED.X
+    Y = LINKED.Y
+    Z = LINKED.Z
+    T = LINKED.TIME
+    P = LINKED.PARTICLE
     
     
+    ax.scatter(X, Y, Z, s=2, marker='o', c=P)
+    # ax.plot(X, Y, Z)
+    # ax.plot(smoothed_curves_df.Y, smoothed_curves_df.X, smoothed_curves_df.Z, 'r-')
+    ax.tick_params(axis='both', labelsize=10)
+    ax.set_title('Cells Positions in 3D', fontsize='20')
+    ax.set_xlabel('x (um)', fontsize='18')
+    ax.set_ylabel('y (um)', fontsize='18')
+    ax.set_zlabel('z (um)', fontsize='18')
+    # fig.colorbar(p, ax=ax)
+    pyplot.show()
+    
+scatter3d(LINKED)
+# scatter3d(smoothed_curves_df)
 
 
 #%% Plotly scatter plot
@@ -357,48 +349,50 @@ from plotly.offline import plot
 # LINKED2['ZZ'] = LINKED['Z']*5
 
 # fig = px.scatter_3d(LINKED, x='X', y='Y', z='Z', color='PARTICLE', size='I_GS')
-# fig = px.line_3d(LINKED, x='X', y='Y', z='ZZ', color='PARTICLE')
+# fig = px.line_3d(LINKED, x='X', y='Y', z='Z', color='PARTICLE')
 fig = px.line_3d(smoothed_curves_df, x='X', y='Y', z='Z', color='PARTICLE', hover_data=['TIME'])
 fig.update_traces(marker=dict(size=1))
 
 #fig.add_trace(fig2)
 plot(fig)
 
-fig.write_html(PATH[:-4]+method+'.html')
+# fig.write_html(PATH[:-4]+'_'+method+'_smoothed_'+str(smoothing_condition)+'.html')
+
 
 
 # %%
-# from plotly.subplots import make_subplots
-# import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+from plotly.offline import plot
 
-# fig = make_subplots(rows=1, cols=2,
-#                     specs=[[{'is_3d': True}, {'is_3d': True}],
-#                            ])
+fig = make_subplots(rows=1, cols=2,
+                    specs=[[{'is_3d': True}, {'is_3d': True}],
+                            ])
 
-# fig.add_trace(go.Scatter3d(
-#     x=CURVE.X, 
-#     y=CURVE.Y, 
-#     z=CURVE.Z,
-#     mode='markers', 
-#     marker=dict(
-#         size=1,
-#         color=CURVE['FRAME'].values,
-#         colorscale='Viridis'
-#         ),
-#     hovertext=['X+Y+Z+FRAME'],
-#     hoverinfo='all'
+fig.add_trace(go.Scatter3d(
+    x=LINKED.X, 
+    y=LINKED.Y, 
+    z=LINKED.Z,
+    mode='markers', 
+    marker=dict(
+        size=1,
+        color=LINKED['FRAME'].values,
+        colorscale='Viridis'
+        ),
+    hovertext=['X+Y+Z+FRAME'],
+    hoverinfo='all'
     
-# ),row=1, col=1)
+),row=1, col=1)
 
-# fig.add_trace(go.Scatter3d(x=LINKED.X, y=LINKED.Y, z=LINKED.Z,
-#                     mode='markers',
-#                     marker=dict(
-#                         size=1,
-#                         color=CURVE.PARTICLE.values,
-#                         colorscale='Viridis',
-#                         )
-# ), row=1, col=2)
+fig.add_trace(go.Scatter3d(x=LINKED.X, y=LINKED.Y, z=LINKED.Z,
+                    mode='markers',
+                    marker=dict(
+                        size=1,
+                        color=LINKED.PARTICLE.values,
+                        colorscale='Viridis',
+                        )
+), row=1, col=2)
 
-# fig.show()
-# plot(fig)
+fig.show()
+plot(fig)
 # %%

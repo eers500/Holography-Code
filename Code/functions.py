@@ -178,13 +178,11 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandp
     from scipy.ndimage import median_filter
 
     # Divide by Median image
-    I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
+    I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN) 
     IN = I / I_MEDIAN
+    
     if med_filter:
         IN = median_filter(IN, size=1)
-    
-    #    IN = I - I_MEDIAN,
-    #     IN[IN < 0] = 0
 
     if bandpass:
         _, BP = bandpassFilter(IN, 2, 30)
@@ -215,11 +213,14 @@ def rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandp
     jj, ii = np.meshgrid(np.arange(NJ), np.arange(NI))
     const = ((LAMBDA*FS)/(max([NI, NJ])*N))**2
     P = const*((ii-NI/2)**2 + (jj-NJ/2)**2)
-
+    
+    if (P > 1).any():
+        P = P / P.max()
+    
     P = np.conj(P)
     Q = np.sqrt(1 - P) - 1
 
-    if all(Z > 0):
+    if all(Z >= 0):
         Q = np.conj(Q)
 
     # R = np.empty([NI, NJ, Z.shape[0]], dtype=complex)
@@ -430,17 +431,17 @@ def positions3D(GS, peak_min_distance, num_particles, MPP):
 
 
 #%% plot3D
-def plot3D(LOCS, title, fig, ax):
+def plot3D(LOCS):
     # 3D Scatter Plot
     from mpl_toolkits.mplot3d import Axes3D
     from matplotlib import pyplot
 
-    # fig = pyplot.figure()
-    # ax = Axes3D(fig)
+    fig = pyplot.figure()
+    ax = Axes3D(fig)
 
     ax.scatter(LOCS[:, 0], LOCS[:, 1], LOCS[:, 2], s=25, marker='o')
     ax.tick_params(axis='both', labelsize=10)
-    ax.set_title(title, fontsize='20')
+    # ax.set_title(title, fontsize='20')
     ax.set_xlabel('x (pixels)', fontsize='18')
     ax.set_ylabel('y (pixels)', fontsize='18')
     ax.set_zlabel('z (slices)', fontsize='18')
@@ -526,76 +527,72 @@ def imshow_slider(cube, axis, color_map):
     plt.show()
     
 #%% modified_propagator
-def modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS):
-    ## Rayleigh-Sommerfeld Back Propagator
+def modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, bandpass, med_filter):
+    ## Modified Propagator
     #   Inputs:          I - hologram (grayscale)
     #             I_MEDIAN - median image
     #                    Z - numpy array defining defocusing distances
-    #   Output:        IMM - 3D array representing stack of images at different Z
+    #   Output:        GS - 3D Gradient Stack
+    
     import numpy as np
     from functions import bandpassFilter, histeq
+    from scipy.ndimage import median_filter
 
     # Divide by Median image
     I_MEDIAN[I_MEDIAN == 0] = np.mean(I_MEDIAN)
     IN = I / I_MEDIAN
-    #    IN = I - I_MEDIAN,
-    #     IN[IN < 0] = 0
+
+    if med_filter:
+        IN = median_filter(IN, size=1)
 
     # Bandpass Filter
-    _, BP = bandpassFilter(IN, 2, 30)
-    E = np.fft.fftshift(BP) * np.fft.fftshift(np.fft.fft2(IN - 1))
+    if bandpass:
+        _, BP = bandpassFilter(IN, 2, 30)
+        E = np.fft.fftshift(BP) * np.fft.fftshift(np.fft.fft2(IN - 1))
+    else:
+        E = np.fft.fftshift(np.fft.fft2(IN - 1))
 
-    # Patameters     #Set as input parameters
-    # N = 1.3226               # Index of refraction
+    # Patameter
     LAMBDA = LAMBDA       # HeNe
     FS = FS               # Sampling Frequency px/um
     NI = np.shape(IN)[0]  # Number of rows
     NJ = np.shape(IN)[1]  # Nymber of columns
-    # SZ = 10
     Z = SZ*np.arange(0, NUMSTEPS)
-    # Z = (FS * (51 / 31)) * np.arange(0, NUMSTEPS)
-    #    Z = SZ*np.arange(0, NUMSTEPS)
     K = 2 * np.pi * N / LAMBDA  # Wavenumber
 
     # Rayleigh-Sommerfeld Arrays
-    # Q = np.empty_like(I_MEDIAN, dtype='complex64')
-    # for i in range(NI):
-    #     for j in range(NJ):
-    #         Q[i, j] = ((LAMBDA * FS) / (max([NI, NJ]) * N)) ** 2 * ((i - NI / 2) ** 2 + (j - NJ / 2) ** 2)
-
     jj, ii = np.meshgrid(np.arange(NJ), np.arange(NI))
     const = ((LAMBDA*FS)/(max([NI, NJ])*N))**2
-    Q = const*((ii-NI/2)**2 + (jj-NJ/2)**2)
+    q = (ii-NI/2)**2 + (jj-NJ/2)**2
 
-    # P = np.conj(P)
-    Q = np.sqrt(1 - Q) - 1
+    # const = ((LAMBDA*FS)/(max([NI, NJ])*N))**2
+    # ff = np.fft.fftfreq(NI, FS)
+    # ff = ff**2+ff**2
+    # P = const*ff
+
+    P = const*q
+    
+    if (P > 1).any():
+        P = P / P.max()
+        
+    P = np.conj(P)
+    Q = np.sqrt(1 - P)-1
 
     if all(Z > 0):
         Q = np.conj(Q)
 
-    R = np.empty([NI, NJ, Z.shape[0]], dtype='complex64')
     GS = np.empty([NI, NJ, Z.shape[0]], dtype='float32')
-    # R1 = np.empty([NI, NJ, Z.shape[0]], dtype='complex64')
-    # IZ = np.empty([NI, NJ, Z.shape[0]], dtype='float32')
 
     for k in range(Z.shape[0]):
-        R = 1j*K*Q*np.exp((1j*K*Z[k]*Q), dtype='complex64')
-        # R1 = np.exp((-1j*K*Z[k]*Q), dtype='complex64')
-        GS[:, :, k] = np.abs(1 + np.fft.ifft2(np.fft.ifftshift(E*R)))
-        # IZ[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E * R1)))
-        
-    # GS, _ = histeq(GS)
-    # TH = 254.9
-    # GS[GS < TH] = 0
-    # GS = 255*((GS - TH) / np.max(GS - TH))
-    # GS[GS < 250] = 0
+        R = 2*np.pi*1j*q * np.exp(1j*K*Z[k]*Q)
+        # GS[:, :, k] = np.abs(1 + np.fft.ifft2(np.fft.ifftshift(E*R)))
+        GS[:, :, k] = np.real(1 + np.fft.ifft2(np.fft.ifftshift(E*R)))
+
+    # _, BINS = np.histogram(GS.flatten(), bins=100)
+    # GS[GS < BINS[60]] = 0   # 60
+    # GS[GS < 400] = 0
     
-    GS = GS - 1
-    _, BINS = np.histogram(GS.flatten())
-    GS[GS < BINS[9]] = 0
-
     return GS
-
 #%% Smooth trajectories piecewise cubic spline
 def smooth_curve(L, spline_degree, lim, sc):
     import numpy as np
@@ -670,7 +667,7 @@ def csaps_smoothing(L, smoothing_condition, filter_data, limit):
     data = [x_sample, y_sample, z_sample]
     # t_interp = np.linspace(0, 1, 1*len(L))
     # t_interp = t_sample
-    t_interp = np.linspace(t_sample[0], t_sample[-1], 4*N)
+    t_interp = np.linspace(t_sample[0], t_sample[-1], 2*N)
     
     # smoothing_condition = 0.1
     
@@ -691,8 +688,6 @@ def csaps_smoothing(L, smoothing_condition, filter_data, limit):
         # Filter sample data
         jump = np.sqrt(np.diff(x_sample)**2 + np.diff(y_sample)**2 + np.diff(z_sample)**2) 
         smooth_jump = ndimage.gaussian_filter1d(jump, 2, mode='wrap')  # window of size 5 is arbitrary
-        # limit = 2*np.median(smooth_jump)    # factor 2 is arbitrary
-        # limit = smooth_jump.max()*0.2
         xn, yn, zn, tn, tframe = x_sample[:-1], y_sample[:-1], z_sample[:-1], t_sample[:-1], t_frames[:-1]
         xn = xn[(jump > 0) & (smooth_jump < limit)]
         yn = yn[(jump > 0) & (smooth_jump < limit)]
@@ -779,7 +774,7 @@ def contiguous_repeats(array):
         
     return x_b
 
-#%% Clean LINKED tracks
+#%% Clean LINKED
 def clean_tracks(LL):
     import numpy as np
     from functions import contiguous_repeats
@@ -851,35 +846,73 @@ def clean_tracks(LL):
     return [xx, yy, zz, tt, ff, pp]
 
 #%% MSD
-def MSD(x, y, z):
+def MSD(x, y, z, t):
+    # import numpy as np
+    # from scipy.optimize import curve_fit
+    
+    # ntaus = np.floor(len(x)/4)
+    # taus = np.arange(1, ntaus, dtype='uint64')
+    # MSD = []
+    # size = []
+    # for tau in taus:
+    #     tau = int(tau)
+    #     length = int(len(x)-tau)
+    #     diff = np.empty(length)
+    #     for i in range(length):
+    #         diff[i] = (x[i]-x[i+tau])**2 + (y[i]-y[i+tau])**2 + (z[i]-z[i+tau])**2
+        
+    #     size.append(len(diff))
+    #     MSD.append(np.mean(diff))
+
+    # def line(x, m, b):
+    #     return m*x + b
+
+    # # def fun(t, v, D):
+    # #     return t**2*v**2 + 4*D*t 
+
+    # n = int(len(taus)/4)
+    # # n = len(taus)
+    
+    # params, cov = curve_fit(line, taus[:n], MSD[:n], p0=(1, 0))
+    # # params, cov = curve_fit(fun, taus[:n], MSD[:n])
+    
+    # if params[0] > 1.5:
+    #     swim = True
+    # else:
+    #     swim = False
+        
+    # return MSD, swim
+    
     import numpy as np
     from scipy.optimize import curve_fit
-    
-    ntaus = np.floor(len(x)/2)
+
+    # particle_num = np.unique(LINKED['PARTICLE'])
+    # print(particle_num)
+
+    # df = smoothed_curves_df[smoothed_curves_df['PARTICLE'] == particle_num[8]]
+
+    # x, y, z, t = df.X.values, df.Y.values, df.Z.values, df.TIME.values
+
+    # ntaus = np.floor(len(x)/4)
+    ntaus = 50
     taus = np.arange(1, ntaus, dtype='uint64')
     MSD = []
     size = []
-    for tau in taus:
-        tau = int(tau)
-        length = int(len(x)-tau)
-        diff = np.empty(length)
-        for i in range(length):
-            diff[i] = (x[i]-x[i+tau])**2 + (y[i]-y[i+tau])**2 + (z[i]-z[i+tau])**2
-        
-        size.append(len(diff))
-        MSD.append(np.mean(diff))
+    tstep = t[1]-t[0]
+
+    for i in range(1, len(taus)+1):
+        MSD.append(np.average((x[i:] - x[:-i])**2 + (y[i:] - y[:-i])**2 + (z[i:] - z[:-i])**2))
 
     def line(x, m, b):
         return m*x + b
 
-    # def fun(t, v, D):
-    #     return t**2*v**2 + 4*D*t 
+    params, cov = curve_fit(line, tstep*taus, MSD)
+    # print(params)
 
-    n = int(len(taus)/4)
-    # n = len(taus)
-    
-    params, cov = curve_fit(line, taus[:n], MSD[:n], p0=(1, 0))
-    # params, cov = curve_fit(fun, taus[:n], MSD[:n])
+    # plt.plot(taus/30, MSD, '-', label='MSD')
+    # plt.plot(taus/30, line(taus/30, params[0], params[1]), '--', label='FIT: m = '+str(round(params[0], 2)))
+    # plt.legend()
+    # plt.show()
     
     if params[0] > 1.5:
         swim = True
@@ -887,6 +920,7 @@ def MSD(x, y, z):
         swim = False
         
     return MSD, swim
+
 
 #%% Positions batch
 def positions_batch(TUPLE):
@@ -905,7 +939,7 @@ def positions_batch(TUPLE):
     
     LOCS = np.empty((1, 3), dtype=object)
     X, Y, Z, I_FS, I_GS = [], [] ,[], [], []
-    IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True, False).astype('float32')
+    IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True, True).astype('float32')
     GS = f.zGradientStack(IM).astype('float32')  
     # GS = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)  # Modified propagator
     GS[GS < THRESHOLD] = 0
@@ -922,6 +956,42 @@ def positions_batch(TUPLE):
         
     return [X, Y, Z, I_FS, I_GS]
 
+#%% Positions batch modified
+def positions_batch_modified(TUPLE):
+    import numpy as np
+    import functions as f
+    I = TUPLE[0]
+    I_MEDIAN = TUPLE[1]    
+    N = TUPLE[2]
+    LAMBDA = TUPLE[3]
+    MPP = TUPLE[4]
+    FS = (MPP/10)*0.711
+    SZ = TUPLE[5]
+    NUMSTEPS = TUPLE[6]
+    THRESHOLD = TUPLE[7]
+    PMD = TUPLE[8]
+    
+        # 0   1    2  3    4    5    6         7
+    # zip(IT, MED, n, lam, mpp, sz, numsteps, pmd)
+    
+    LOCS = np.empty((1, 3), dtype=object)
+    X, Y, Z, I_FS, I_GS = [], [] ,[], [], []
+    # IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True, False).astype('float32')
+    # GS = f.zGradientStack(IM).astype('float32')  
+    GS = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True, True)  # Modified propagator
+    GS[GS < THRESHOLD] = 0
+    LOCS[0, 0] = f.positions3D(GS, peak_min_distance=PMD, num_particles='None', MPP=MPP)
+    A = LOCS[0, 0].astype('int')
+    LOCS[0, 1] = GS[A[:, 0], A[:, 1], A[:, 2]]
+    LOCS[0, 2] = GS[A[:, 0], A[:, 1], A[:, 2]]
+        
+    X.append(LOCS[0, 0][:, 0]*(1/FS))
+    Y.append(LOCS[0, 0][:, 1]*(1/FS))
+    Z.append(LOCS[0, 0][:, 2]*SZ)
+    I_FS.append(LOCS[0, 1])
+    I_GS.append(LOCS[0, 2])
+        
+    return [X, Y, Z, I_FS, I_GS]
 #%% Clean tracks with Search Sphere
 def clean_tracks_search_sphere(track, rsphere):
     import numpy as np
@@ -930,7 +1000,7 @@ def clean_tracks_search_sphere(track, rsphere):
     import matplotlib.pyplot as plt
     from tqdm import tqdm
     
-    # rsphere = 20
+    rsphere = 5
     frame_skip = 10
     min_size = 50
     
@@ -941,88 +1011,95 @@ def clean_tracks_search_sphere(track, rsphere):
     frames = np.unique(track_frames)
     
     reps = f.contiguous_repeats(track_frames)
-    reps_first_frame = int(reps[0])
     
-    init_frames = track_frames[:reps_first_frame] 
-    id_init_frames = [i for i, val in enumerate(track_frames) if val==init_frames[0]]
+    if (reps == 1).all():
+        return [x, y, z, t, fr, particle_number*np.ones(len(x))]
     
-    tracks = []
-    d = []
-    for idi in id_init_frames:
-        # print(idi)
-        x0, y0, z0, t0, fr0 = x[idi], y[idi], z[idi], t[idi], fr[idi] 
-        tr = [(x0, y0, z0, t0, fr0, idi)]
-        dd = []
-        frame_skip_counter = 0
-        for k in range(idi+1, len(track)):
-            # print(k)
-            x1, y1, z1, t1, fr1 = x[k], y[k], z[k], t[k], fr[k]
-            dist = np.sqrt((x1-x0)**2 + (y1-y0)**2 + (z1-z0)**2)
-            dd.append(dist)
-            
-            if dist <= rsphere:
-                tr.append((x1, y1, z1, t1, fr1, particle_number))
-                x0, y0, z0, t0, fr0 = x1, y1, z1, t1, fr1
-                frame_skip_counter = 0                
+    else:
+        reps_first_frame = int(reps[0])
+        
+        init_frames = track_frames[:reps_first_frame] 
+        id_init_frames = [i for i, val in enumerate(track_frames) if val==init_frames[0]]
+        
+        tracks = []
+        d = []
+        for idi in id_init_frames:
+            # print(idi)
+            x0, y0, z0, t0, fr0 = x[idi], y[idi], z[idi], t[idi], fr[idi] 
+            tr = [(x0, y0, z0, t0, fr0, idi)]
+            dd = []
+            frame_skip_counter = 0
+            for k in range(idi+1, len(track)):
+                # print(k)
+                x1, y1, z1, t1, fr1 = x[k], y[k], z[k], t[k], fr[k]
+                dist = np.sqrt((x1-x0)**2 + (y1-y0)**2 + (z1-z0)**2)
+                dd.append(dist)
                 
-            elif dist > rsphere:
-                frame_skip_counter += 1
-                if frame_skip_counter > frame_skip:
-                    break
-                    print('Broke')
-
-        tracks.append(tr)
-        d.append(dd)
-        
-        
-        lengths = []
-        for k in range(len(tracks)):
-            lengths.append(len(tracks[k]))
+                if dist <= rsphere:
+                    tr.append((x1, y1, z1, t1, fr1, particle_number))
+                    x0, y0, z0, t0, fr0 = x1, y1, z1, t1, fr1
+                    frame_skip_counter = 0                
+                    
+                elif dist > rsphere:
+                    frame_skip_counter += 1
+                    if frame_skip_counter > frame_skip:
+                        break
+                        print('Broke')
+    
+            tracks.append(tr)
+            d.append(dd)
             
-        id_max = np.where(lengths == np.max(lengths))[0][0]
-        
-        trr = np.array(tracks[id_max])
-        
-        # fig, ax = plt.subplots(2, 1, sharex=True, sharey=True)
-        # ax[0].scatter(x, -y, c=t)
-        # ax[1].scatter(trr[:, 0], -trr[:, 1], c= trr[:, 3])
-        # ax.axis('square')
-        
-        
-        # fig = plt.figure(2)
-        # ax1 = fig.add_subplot(111, projection='3d') 
-        # # ax1.scatter(trr[:, 1], trr[:, 0], trr[:, 2], c=trr[:, 3])
-        # ax1.scatter(track.X, track.Y, track.Z, c=track.TIME)
-        # # ax1.scatter(track.X.values[:2], track.Y.values[:2], track.Z.values[:2], c=track.TIME.values[:2])
-        # pyplot.show()
-        
-        x_new = trr[:, 0]
-        y_new = trr[:, 1]
-        z_new = trr[:, 2]
-        t_new = trr[:, 3]
-        fr_new = trr[:, 4]
-        p_new = trr[:, 5]
-        
-        return [x_new, y_new, z_new, t_new, fr_new, p_new]
+            
+            lengths = []
+            for k in range(len(tracks)):
+                lengths.append(len(tracks[k]))
+                
+            id_max = np.where(lengths == np.max(lengths))[0][0]
+            
+            trr = np.array(tracks[id_max])
+            
+            # fig, ax = plt.subplots(2, 1, sharex=True, sharey=True)
+            # ax[0].scatter(x, -y, c=t)
+            # ax[1].scatter(trr[:, 0], -trr[:, 1], c= trr[:, 3])
+            # ax.axis('square')
+            
+            
+            # fig = plt.figure(2)
+            # ax1 = fig.add_subplot(111, projection='3d') 
+            # # ax1.scatter(trr[:, 1], trr[:, 0], trr[:, 2], c=trr[:, 3])
+            # ax1.scatter(track.X, track.Y, track.Z, c=track.TIME)
+            # # ax1.scatter(track.X.values[:2], track.Y.values[:2], track.Z.values[:2], c=track.TIME.values[:2])
+            # pyplot.show()
+            
+            x_new = trr[:, 0]
+            y_new = trr[:, 1]
+            z_new = trr[:, 2]
+            t_new = trr[:, 3]
+            fr_new = trr[:, 4]
+            p_new = trr[:, 5]
+            
+            return [x_new, y_new, z_new, t_new, fr_new, p_new]
     
 #%% Search Sphere tracking
 def search_sphere_tracking(DF, rsphere, frame_skip, min_size):
     import numpy as np
     import pandas as pd
     from tqdm import tqdm
+    from functions import contiguous_repeats
+    from time import time
     
-    # rsphere = 5
+    # rsphere = 15
     # frame_skip = 10
-    # min_size = 20
+    # min_size = 200
 
-    # dd = DF[DF['FRAME'] == 0]
-    # frames = np.unique(DF['FRAME'])
+    dd = DF[DF['FRAME'] == 0]
+    frames = np.unique(DF['FRAME'])
 
     dd = DF
+    dd = dd.reset_index(drop=True)
     frames = np.unique(dd['FRAME'])
     num_particles = len(dd[dd['FRAME'] == 0])
-
-
+    num_particles = int(num_particles)
 
     tracks = []
     for n in tqdm(range(num_particles)):
@@ -1054,9 +1131,138 @@ def search_sphere_tracking(DF, rsphere, frame_skip, min_size):
             tracks.append(track)
             
 
-    LINKED = pd.concat(tracks)  
+    tt = pd.concat(tracks)  
     
-    return LINKED
+    return tt
+    
+    
+    ####### NEW #####
+    
+    # dd = DF
+    # dd = dd.reset_index(drop=True)
+    # frames = np.array(np.unique(dd['FRAME']), dtype=int)
+    # # particle = dd['PARTICLE'][0]
+    # # num_particles = len(dd[dd['FRAME'] == 0])
+    # num_particles = contiguous_repeats(dd['FRAME'].values).max()  # Asume that repeated values mean new particle
+    # num_particles = int(num_particles)
+    # frame_skip_counter = 0
+    
+    # tracks = []
+    # work = True
+    # pn = 0
+    # T0 = time()
+    
+    # while work:
+        
+    #     idtrack = []
+        
+    #     ddframes = np.unique(dd.FRAME)
+    #     ddframes = np.array(ddframes, dtype=int)
+    #     # for i in range(len(dd)):
+    #     for i in range(len(ddframes)):
+            
+    #         if i == 0:
+    #             x0, y0, z0, i_fs0, i_gs0, fr0, t0 = dd['X'][i], dd['Y'][i], dd['Z'][i], dd['I_FS'][i], dd['I_GS'][i], dd['FRAME'][i], dd['TIME'][i]
+    #             track = [(x0, y0, z0, i_fs0, i_gs0, fr0, t0, pn)]
+    #             idtrack.append(i)
+                
+    #         else:
+    #             df = dd[dd['FRAME'] == fr0+1]
+    #             x, y, z, i_fs, i_gs, fr, t = df['X'].values, df['Y'].values, df['Z'].values, df['I_FS'].values, df['I_GS'].values, df['FRAME'].values, df['TIME'].values
+                
+    #             dist = np.sqrt((x-x0)**2 + (y-y0)**2 + (z-z0)**2)                
+                
+    #             if any(dist < rsphere) and abs(fr[0]-fr0)>0:
+    #                 id_df = np.where(dist == dist.min())[0][0]
+    #                 idtrack.append(df.index[id_df])
+    #                 track.append((x[id_df], y[id_df], z[id_df], i_fs[id_df], i_gs[id_df], fr[id_df], t[id_df], pn))
+    #                 x0, y0, z0, i_fs0, i_gs0, fr0, t0 = x[id_df], y[id_df], z[id_df], i_fs[id_df], i_gs[id_df], fr[id_df], t[id_df]
+    #                 frame_skip_counter = 0
+                    
+    #             else:
+    #                 frame_skip_counter += 1
+    #                 if frame_skip_counter > frame_skip:
+    #                     break
+        
+    #     if len(track) >= min_size:
+    #         t = pd.DataFrame(np.array(track), columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME', 'TIME', 'PARTICLE'])
+    #         tracks.append(t)
+    #         pn += 1     
+            
+    #     dd = dd.drop(idtrack)
+    #     dd = dd.reset_index(drop=True)
+        
+    #     print(pn, len(dd))
+    #     if len(dd)<min_size:
+    #         break
+                
+    # tt = pd.concat(tracks) if len(tracks) > 0 else []
+    
+    # T = time() - T0
+    # print(T)
+    
+    # return pd.concat(tracks) if len(tracks) > 0 else []
+
+#%%
+def search_sphere_clean(DF, rsphere, frame_skip, min_size):
+    import numpy as np
+    import pandas as pd
+    from tqdm import tqdm
+    
+    # rsphere = 15
+    # frame_skip = 10
+    # min_size = 200
+    
+    dd = DF
+    dd = dd.reset_index(drop=True)
+    frames = np.unique(dd['FRAME'])
+    particle = dd['PARTICLE'][0]
+    # num_particles = len(dd[dd['FRAME'] == 0])
+    num_particles = contiguous_repeats(dd['FRAME'].values).max()  # Asume that repeated values mean new particle
+    num_particles = int(num_particles)
+    frame_skip_counter = 0
+    
+    if num_particles == 1:
+        return dd
+    
+    else:
+        tracks = []
+        for n in range(num_particles):
+    
+            idtrack = []    
+            for i in range(len(dd)):
+                
+                if i==0:
+                    x0, y0, z0, i_fs0, i_gs0, fr0, t0 = dd['X'][i], dd['Y'][i], dd['Z'][i], dd['I_FS'][i], dd['I_GS'][i], dd['FRAME'][i], dd['TIME'][i]
+                    track = [(x0, y0, z0, i_fs0, i_gs0, fr0, t0, particle+0.1*(n+1))]
+                    idtrack.append(i)
+                    
+                    
+                else:
+                    x, y, z, i_fs, i_gs, fr, t = dd['X'][i], dd['Y'][i], dd['Z'][i], dd['I_FS'][i], dd['I_GS'][i], dd['FRAME'][i], dd['TIME'][i]
+                    dist = np.sqrt((x-x0)**2+(y-y0)**2+(z-z0)**2)
+                    
+                    if dist < rsphere and abs(t-t0)>0:
+                        track.append((x, y, z, i_fs, i_gs, fr, t, particle+0.1*(n+1)))
+                        idtrack.append(i)
+                        x0, y0, z0, i_fs0, i_gs0, fr0, t0 = x, y, z, i_fs, i_gs, fr, t
+                        frame_skip_counter = 0
+                    else:
+                        frame_skip_counter += 1
+                        if frame_skip_counter > frame_skip:
+                            break
+            if len(track) >= min_size:
+                t = pd.DataFrame(np.array(track), columns=['X', 'Y', 'Z', 'I_FS', 'I_GS', 'FRAME', 'TIME', 'PARTICLE'])
+                tracks.append(t)
+                
+            dd = dd.drop(idtrack)
+            dd = dd.reset_index(drop=True)
+           
+            if len(dd)<min_size:
+                break
+            
+        return pd.concat(tracks) if len(tracks) > 0 else []
+
 
 #%% get_turns
 # def get_turns(data):

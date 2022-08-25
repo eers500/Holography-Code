@@ -1,4 +1,9 @@
 {
     "python.pythonPath": "/home/erick/anaconda3/bin/python3",
-    "python.linting.enabled": false
+    "python.linting.enabled": false,
+    "python.testing.pytestArgs": [
+        "__pycache__"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

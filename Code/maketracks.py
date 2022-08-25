@@ -245,17 +245,17 @@ TOOLS = "crosshair,pan,wheel_zoom,box_zoom,reset,box_select,lasso_select,hover"
 p1 = figure(title='eps = '+np.str(eps), y_axis_label='x', 
             tools=TOOLS)
 p1.line(t[:, 0], xx[:, 0], legend_label="Temp.", line_width=2)
-p1.circle(x[:, 0], x[:, 1], fill_color='red', line_color='red', radius=0.005)
+# p1.circle(x[:, 0], x[:, 1], fill_color='red', line_color='red', radius=0.005)
 
 p2 = figure(title='eps = '+np.str(eps), y_axis_label='y', 
             tools=TOOLS)
 p2.line(t[:, 0], yy[:, 0], legend_label="Temp.", line_width=2)
-p2.circle(y[:, 0], y[:, 1], fill_color='red', line_color='red', radius=0.005)
+# p2.circle(y[:, 0], y[:, 1], fill_color='red', line_color='red', radius=0.005)
 
 p3 = figure(title='eps = '+np.str(eps), y_axis_label='z', 
             tools=TOOLS)
 p3.line(t[:, 0], zz[:, 0], legend_label="Temp.", line_width=2)
-p3.circle(z[:, 0], z[:, 1], fill_color='red', line_color='red', radius=0.005)
+# p3.circle(z[:, 0], z[:, 1], fill_color='red', line_color='red', radius=0.005)
 
 grid = gridplot([p1, p2, p3], ncols=1, plot_width=900, plot_height=150)
 show(grid)

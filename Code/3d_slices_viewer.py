@@ -3,7 +3,8 @@ from __future__ import print_function
 #from functions import dataCursor2D
 import numpy as np
 import matplotlib.pyplot as plt
-
+#%matplotlib qt
+get_ipython().run_line_magic('matplotlib', 'qt')
 
 class IndexTracker(object):
     def __init__(self, ax, X):
@@ -34,8 +35,9 @@ class IndexTracker(object):
 fig, ax = plt.subplots(1, 1)
 
 #gr =grad
-#gr[gr<1]=0
-X = IM
+#gr[gr<1]=0[
+X = GS[:, :, 1:]
+# X = GS
 
 tracker = IndexTracker(ax, X)
 
