@@ -20,14 +20,24 @@ path = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/Thesis/Resul
 smoothed_curves_df = pd.read_csv(path)
 
 #%%
+# For Noramal video
+particle_num = [7.1, 4.1, 26.0, 3.1, 16.1]   # Ecoli DHM 0.99, 0.95, 0.9, 0.85
 
-particle_num = np.unique(smoothed_curves_df['PARTICLE'])
+
+
+# Fov BS video
+# particle_num = np.unique(smoothed_curves_df['PARTICLE'])   # Coli Optical LUT80 0.99, Speed
+# particle_num = [6.1, 1.1, 5.1, 19.1] # Ecoli DHM 0.95, 0.99 Speed 20.62
+# particle_num = [8.0, 2.0, 5.0, 1.0, 4.0]   # Ecoli GPU LUT80 0.99
+# particle_num = [8.0, 3.0, 5.0, 1.1, 4.0]     # Ecoli GPU LUT160 0.99
+# particle_num = [12.0, 10.0, 8.1, 1.1, 6.0]
+# particle_num = [8.0, 10.0, 3.1, 2.2, 7.1]       # Ecoli Optical LUT80 0.95, 0.9, 
 
 xx, yy, zz, tt, pp, sp = -1, -1, -1, -1, -1, -1
 
 for pn in particle_num:
     s = smoothed_curves_df[smoothed_curves_df['PARTICLE'] == pn]
-    # print(pn, len(s))
+    print(pn, len(s))
 
     if len(s) > 100:
         speed, x, y, z, t = f.get_speed(s)
@@ -85,8 +95,8 @@ from plotly.offline import plot
 pns = tracks_w_speed.PARTICLE.unique()
 curve = tracks_w_speed[tracks_w_speed['PARTICLE'] == pns[1]]
 
-# fig = px.line_3d(tracks_w_speed, x='X', y='Y', z='Z', color='PARTICLE', hover_data=['TIME'])
-fig = px.scatter_3d(tracks_w_speed, x='X', y='Y', z='Z', color='SPEED')
+fig = px.line_3d(tracks_w_speed, x='X', y='Y', z='Z', color='PARTICLE', hover_data=['TIME'])
+# fig = px.scatter_3d(tracks_w_speed, x='X', y='Y', z='Z', color='SPEED')
 fig.update_traces(marker=dict(size=1))
 
 plot(fig)

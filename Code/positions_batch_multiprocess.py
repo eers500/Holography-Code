@@ -252,38 +252,40 @@ if __name__ == '__main__':
         
     print('Done!')
     
-#%% Scatter Plot
-import easygui as gui
-import pandas as pd
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import pyplot
-# %matplotlib qt
-# %matplotlib inline
-
-
-# path = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/Thesis/', multiple=False)
-# POSITIONS = pd.read_csv(path)
-POSITIONS = data[0]
-# POSITIONS = DF
-
-X = POSITIONS.X
-Y = POSITIONS.Y
-Z = POSITIONS.Z
-T = POSITIONS.FRAME
-
-# maxx = Z == Z.max()
-
-fig = pyplot.figure(1, figsize=(5, 5))
-ax = pyplot.axes(projection='3d')
-
-ax.scatter(X, Y, Z, s=1, marker='.', c=T)
-#ax.plot(X, Y, Z)
-# ax.scatter(X[maxx], Y[maxx], Z[maxx], c='red')
-ax.tick_params(axis='both', labelsize=10)
-ax.set_title('Cells Positions in 3D', fontsize='20')
-ax.set_xlabel('y (um)', fontsize='18')
-ax.set_ylabel('x (um)', fontsize='18')
-ax.set_zlabel('z (um)', fontsize='18')
-
-pyplot.show()
+    plot = False
+    if plot:
+        #%% Scatter Plot
+        import easygui as gui
+        import pandas as pd
+        from mpl_toolkits.mplot3d import Axes3D
+        from matplotlib import pyplot
+        # # %matplotlib qt
+        # # %matplotlib inline
+        
+        
+        # path = gui.fileopenbox(default='/media/erick/NuevoVol/LINUX_LAP/PhD/Thesis/', multiple=False)
+        # POSITIONS = pd.read_csv(path)
+        POSITIONS = data[0]
+        # # POSITIONS = DF
+        
+        X = POSITIONS.X
+        Y = POSITIONS.Y
+        Z = POSITIONS.Z
+        T = POSITIONS.FRAME
+        
+        # # maxx = Z == Z.max()
+        
+        fig = pyplot.figure(1, figsize=(5, 5))
+        ax = pyplot.axes(projection='3d')
+        
+        ax.scatter(X, Y, Z, s=1, marker='.', c=T)
+        # #ax.plot(X, Y, Z)
+        # # ax.scatter(X[maxx], Y[maxx], Z[maxx], c='red')
+        ax.tick_params(axis='both', labelsize=10)
+        ax.set_title('Cells Positions in 3D', fontsize='20')
+        ax.set_xlabel('y (um)', fontsize='18')
+        ax.set_ylabel('x (um)', fontsize='18')
+        ax.set_zlabel('z (um)', fontsize='18')
+        
+        pyplot.show()
 

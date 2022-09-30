@@ -130,20 +130,32 @@ elif method == 'HA':
 LINKED = LINKED[LINKED.PARTICLE != -1]
 
 #%% Visualize individual particles
-# particle_num = np.unique(LINKED['PARTICLE'])
-# print(particle_num)
-# df = LINKED[LINKED['PARTICLE'] == particle_num[2]] # 1 2
+particle_num = np.unique(LINKED['PARTICLE'])
+print(particle_num)
+df = LINKED[LINKED['PARTICLE'] == 7] # 1 2
 
 
-# fig = plt.figure(2, figsize=(5, 5))
-# ax = plt.axes(projection='3d')
+fig = plt.figure(2, figsize=(5, 5))
+ax = plt.axes(projection='3d')
+
+X, Y, Z, T, P = df.X, df.Y, df.Z, df.TIME, df.PARTICLE
+
+ax.scatter(X, Y, Z, s=2, marker='o', c=T)
+
+plt.show()
+
+#%% Test
+
+dfc = f.search_sphere_clean(df, 8, 35, 10)
+
+fig = plt.figure(2, figsize=(5, 5))
+ax = plt.axes(projection='3d')
 
 # X, Y, Z, T, P = df.X, df.Y, df.Z, df.TIME, df.PARTICLE
 
-# ax.scatter(X, Y, Z, s=2, marker='o', c=T)
+ax.scatter(dfc.X, dfc.Y, dfc.Z, s=2, marker='o', c=dfc.TIME)
 
-# plt.show()
-
+plt.show()
 
 #%% Clean tracks
 particle_num = np.unique(LINKED['PARTICLE'])
@@ -155,7 +167,7 @@ for i, p in tqdm(enumerate(particle_num)):
     
     L = LINKED[LINKED['PARTICLE'] ==  p]
     if len(L) > 50:
-        temp = f.search_sphere_clean(L, 3, 10, 1000) # L, rsphere, frame_skip, min_size
+        temp = f.search_sphere_clean(L, 15, 35, 10) # L, rsphere, frame_skip, min_size
         
         if len(temp) > 0:
             tracks.append(temp)
@@ -175,7 +187,7 @@ print(time.time()-t_clean)
 LINKED.to_csv(PATH[:-4]+'_LINKED_'+method+'_'+'cleaned.csv', index=False)
 #%% Smooth trajectories
 spline_degree = 3  # 3 for cubic spline
-smoothing_condition = 0.95
+smoothing_condition = 0.85
 particle_num = np.sort(LINKED.PARTICLE.unique())
 T0_smooth = time.time()
 smoothed_curves = -np.ones((1, 5))
@@ -208,7 +220,7 @@ T_MSD = time.time()
 for p in tqdm(particle_num):
     
     L = smoothed_curves_df[smoothed_curves_df['PARTICLE'] ==  p]
-    if len(L) > 50:
+    if len(L) > 100:
        
         _, swim = f.MSD(L.X.values, L.Y.values, L.Z.values, L.TIME.values)
         print(swim)
@@ -228,7 +240,8 @@ smoothed_curves_df.to_csv(PATH[:-4]+'_'+method+'_smoothed_'+str(smoothing_condit
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot
 
-p_number = particle_num[1]
+particle_num = np.sort(smoothed_curves_df.PARTICLE.unique())
+p_number = 89
 CURVE_1 = LINKED[LINKED.PARTICLE == p_number]
 # CURVE_1 = LINKED
 CURVE_2 = smoothed_curves_df[smoothed_curves_df.PARTICLE == p_number]
@@ -241,9 +254,9 @@ ax = fig.add_subplot(111, projection='3d')
 # ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=np.arange(len(CURVE_1.X)), alpha=0.3)
 # p = ax.scatter(CURVE_1.X, CURVE_1.Y, CURVE_1.Z, 'r.', label='Detected Positions', c=CURVE_1.TIME, alpha=0.3)
 
-# ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arangeee(len(CURVE_2.X)), s=30, marker='.', alpha=0.3)
-# # ax.plot(CURVE_1.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
-ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
+ax.scatter(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, label='Detected Positions', c=np.arange(len(CURVE_2.X)), s=30, marker='.', alpha=0.3)
+# ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
+# ax.plot(CURVE_2.X, CURVE_2.Y, CURVE_2.Z, 'r-', label='Smoothed Curve')
 # # # ax.plot(CURVE_2.X[CURVE_2.X>350], CURVE_2.Y[CURVE_2.X>350], CURVE_2.Z[CURVE_2.X>350], 'r-', label='Smoothed Curve')
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
@@ -316,9 +329,10 @@ def scatter3d(LINKED):
     ax.set_zlabel('z (um)', fontsize='18')
     # fig.colorbar(p, ax=ax)
     pyplot.show()
-    
-scatter3d(LINKED)
-# scatter3d(smoothed_curves_df)
+    # 
+# scatter3d(LINKED)
+# scatter3d(dfc)
+scatter3d(smoothed_curves_df)
 
 
 #%% Plotly scatter plot
@@ -348,9 +362,11 @@ from plotly.offline import plot
 # LINKED2 = LINKED
 # LINKED2['ZZ'] = LINKED['Z']*5
 
-# fig = px.scatter_3d(LINKED, x='X', y='Y', z='Z', color='PARTICLE', size='I_GS')
+fig = px.scatter_3d(LINKED, x='X', y='Y', z='Z', color='PARTICLE', size='I_GS')
+
+# fig = px.scatter_3d(LINKED, x='X', y='Y', z='Z', color='FRAME', size='I_GS')
 # fig = px.line_3d(LINKED, x='X', y='Y', z='Z', color='PARTICLE')
-fig = px.line_3d(smoothed_curves_df, x='X', y='Y', z='Z', color='PARTICLE', hover_data=['TIME'])
+# fig = px.line_3d(smoothed_curves_df, x='X', y='Y', z='Z', color='PARTICLE', hover_data=['TIME'])
 fig.update_traces(marker=dict(size=1))
 
 #fig.add_trace(fig2)

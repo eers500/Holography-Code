@@ -939,7 +939,7 @@ def positions_batch(TUPLE):
     
     LOCS = np.empty((1, 3), dtype=object)
     X, Y, Z, I_FS, I_GS = [], [] ,[], [], []
-    IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True, True).astype('float32')
+    IM = f.rayleighSommerfeldPropagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS, True, False).astype('float32')
     GS = f.zGradientStack(IM).astype('float32')  
     # GS = f.modified_propagator(I, I_MEDIAN, N, LAMBDA, FS, SZ, NUMSTEPS)  # Modified propagator
     GS[GS < THRESHOLD] = 0
